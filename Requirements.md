@@ -56,7 +56,7 @@ The quantity of credits should be stored per individual Organisational Unit.
 Assets are the items that are traded between Organisations.
 There is no limit to the number of Assets that an Organisation can have or the quantity of a given asset.
 
-##Orders
+## Orders
 Orders are used to track the trades between organisation units. There is no limit to the number of orders that can be listed by either a user or organisation. 
 There are to be two (2) types of orders, Buy orders & Sell orders. 
 
@@ -74,7 +74,7 @@ All orders *must* be automatically reconciled by the system.
 
 If an order exceeds either the total credits an organisation has (Buy Order), or the total number of a given Asset (Sell Order) the system must ***not*** process the order and should give some feedback to the user to explain why the order was not processed.
 
-###Orders - Nice to Haves
+### Orders - Nice to Haves
 Users should be able to view a list of current orders that have not yet been processed. Using this list users should be able to cancel an order. 
 
 A graph showing the historical trading data for the given asset. The graph should contain the following items:
@@ -85,7 +85,7 @@ Current offers including:
 - Buy/Sell price
 - Quantity
 
-##Individual Users
+## Individual Users
 Individual users are the personnel that will be placing & requesting the trades. There is to be no limit to the number of users. Users will neeed to be able to complete the following functions:
 - Placing Buy/Sell Orders
 - View current organisational orders
@@ -98,7 +98,7 @@ Users will inherit their organisations credits. As such, the cost of trades will
 
 Each user will have their own unique username and password. Users should be allowed to change thier own passwords without external assistance. 
 
-###Administrators
+### Administrators
 There should also be a second user type for administrators.
 Administrators are to have the ability to:
 - Edit the number of credits that an organisation has (Confirm if this is any or if it it their specific organisation)
@@ -110,7 +110,7 @@ Administrators are to have the ability to:
 - Create new Administrator Users with the same level of access
 
 
-##GUI Requirements
+## GUI Requirements
 - Users to recieve a message upon fulfilment of an order.
 - Current orders graph 
 
@@ -121,7 +121,7 @@ Administrators are to have the ability to:
 ![img_1.png](Images/GUI References/img_1.png)
 
 
-##Additional Documentation
+## Additional Documentation
 ### Configuration File
 The configuration file for the application is to contain the IP address and Port Number of the server that the application is hosted on.
 Additionally the configuration file for the Server is to also contain these details.
