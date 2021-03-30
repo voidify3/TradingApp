@@ -29,7 +29,7 @@ Briefly recapping the server-side core functionality table above.
 - **Asset types**. The full range of assets is not known in advanced.
   Therefore, the system needs to be flexible to universally accept any future assets.
 - **Outstanding trade info** needs to temporarily be stored as the data is crucial in order for us to match and execute successful trades.
-  This data also temporarily decreases a unit's budget / asset quantity so they do not oversell / overspend.
+  This data also temporarily decreases a unit's budget/asset quantity so they do not oversell/overspend.
   This data can also be used to generate the CURRENT average price so that user's can make a better judgement on orders.
   The reason this info is temporary is because users can cancel trades at any time and the current average price is always fluctuating.
 - **Executed trade info** should be stored permanently if the trade was executed.
@@ -42,40 +42,56 @@ Briefly recapping the server-side core functionality table above.
 ## Client-side core functionality
 Requirements that are needed for the Client-side to be functional.
 
-| Requirement               | Description                                     | Priority      |
-| :---                      | :---                                            | :---:         |
-| Set SELL order            | Per asset: set quantity and price               |      Must have|
-| Set BUY order             | Per asset: set quantity and price               |      Must have|
-| Cancel an order           | Ability to cancel outstanding orders after requesting to see current orders       |      Must have|
-| BUY/SELL restrictions     | Quantities match & BUY price >= SELL price      |      Must have|
-| Frequent checks           | Client frequently tries to match a BUY/SELL if requirements are met               |      Must have|
-| Executing trades          | Execute at the SELL price. Decrease credits & increase quantity, store trade info |      Must have|
-| Request current orders    | Before the GUI, request to see the unit's orders|      Must have|
-| Request available quantity| Before the GUI, request to see quantity         |      Must have|
-| Request available credits | Before the GUI, request to see credits          |      Must have|
-| Request average BUY/SELL  | Before the GUI, request to see average prices   |    Should have|
-| Graphical User Interface  | A more user friendly app instead of the terminal|     Could have|
-| Generate visual graph     | Per asset: a historical (stock-like) graph of time (x-axis) and price (y-axis)    |     Could have|
-| Password Self Service     | Allow users to change their own passwords       |     Could have|
-| Trade successfully executed alert | Push an alert to (all?) members of the organisational unit                |     Could have|
+| Requirement               | Description                                                   | Priority   |
+| :---                      | :---                                                          | :---:      |
+| Set SELL order            | As a user I want to sell assets by setting quantity & price   | Must have  |
+| Set BUY order             | As a user I want to buy assets by setting quantity & price    | Must have  |
+| Cancel an order           | As a user I want to cancel outstanding orders                 | Must have  |
+| BUY/SELL restrictions     | Client checks that quantities match & BUY price >= SELL price | Must have  |
+| Frequent checks           | Client frequently checks to match BUY/SELL orders             | Must have  |
+| Executing trades          | Client permanently stores trade info & updates units' credit/asset quantity changes | Must have |
+| Request current orders    | As a user I want to view my unit's outstanding orders         | Must have  |
+| Request available quantity| As a user I want to view my unit's assets and quantities      | Must have  |
+| Request available credits | As a user I want to view my unit's available credits          | Must have  |
+| Request average BUY/SELL  | As a user I want to view an asset's current average price     | Should have|
+| Graphical User Interface  | A more user friendly UI instead of the terminal               | Could have |
+| Generate visual graph     | A (stock-like) graph showing an asset's value fluctuating     | Could have |
+| Password Self Service     | As a user I want to be able to change my own passwords        | Could have |
+| Trade executed alert      | Push an alert to (all?) members of that organisational unit   | Could have |
 | Client to read config file| Changes the Client's server IP address and port to connect to                     |     Could have|
 
 Briefly recapping the client-side core functionality table above.
-- To successful set a SELL order, available quantity >= trade quantity.
-  Temporarily decrease that asset's quantity.
-- To successful set a BUY order, available credits >= trade credit.
+- **SELL orders** are successful when available quantity >= trade quantity.
+  Temporarily decrease that asset's quantity for the unit.
+- **BUY orders** are successful when available credits >= trade credit.
   Temporarily decrease that unit's credits.
-- IF the trade hasn't executed, allow users to cancel the trade.
-  This deletes all trade info that was stored temporarily and increases 
-- For the restrictions, no unit will pay more or sell for less than they specified.
+- **CANCEL orders**. If the trade is still outstanding, allow users to cancel the trade.
+  This deletes all trade info that was stored temporarily and increases the unit's asset quantities and credits using the trade info.
+  User must be able to request to see their unit's current oustanding trade orders (as the GUI is not crucial).
+- **BUY/SELL restrictions** prevents outstanding trades from executing. 
+  No unit will pay more or sell for less than they specified.
   As long as the BUY price is higher than the asset's SELL price AND quantities match,
   Then the trade can be executed at the LOWEST price (aka the SELL price).
-- Frequent checks are made by the client in an attempt to match BUY/SELL orders and execute.
-- The client will use the (temporary) data of all outstanding BUY/SELL orders to generate the most up-to-date average price.
-- The GUI is a could have as stated it would "be nice to have", but the system can be completely functional without it.
-  This means that users should be able to request the average BUY/SELL prices, their avaliable assets' quantities and credits from the command line.
-- Password Self Service is a could have, allowing users to change their passwords WITHOUT input from the IT Admin team.
-- Trade successfully executed alert is a simple gesture that would notify members of a particular organisational unit that a change has been made (credits and an asset's quantity)
+- **Frequent checks** are made by the client in an attempt to match outstanding BUY/SELL orders and execute if requirements are met.
+- **Executed trades** will permanently store the trade info & update a unit's credits/asset quantity.
+- **Requesting current orders, assets & credits** will be done at the user's request.
+  Requesting current orders pulls the oustanding trade info while assets and credits are pulled from their unit's account.
+- **Requesting average BUY/SELL price** is done per asset.
+  The client will use the (temporary) outstanding trade data to generate the current average price.
+- **A user-friendly GUI** would "be nice to have", but the system can be completely functional without it.
+  This means that users must be able to request the average prices, their avaliable assets' quantities, and credits from the command line.
+- **Stock-like graph** for each asset shows it's historical value.
+  Historical graph of time (x-axis) and price (y-axis) using data from executed trades.
+- **Password Self Service** is a could have, allowing users to change their passwords WITHOUT input from the IT Admin team.
+- **Trade successfully executed alert** is a simple gesture that would notify members of a particular organisational unit that a change has been made (credits and an asset's quantity).
+- **Read config file** would be modified by the IT Administration team. 
+  Allowing the Client to use a new server IP address and connect to a new port.
+  The same config file should be read by both the Server and Client.
+
+
+
+
+
 
 
 
