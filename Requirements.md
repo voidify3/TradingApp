@@ -13,8 +13,10 @@ The data must all be stored in the server-side database.
 | Credit system             | A mini internal economy & a new currency        |      Must have|
 | Create new asset types    | Ability to create any asset type (universal)    |      Must have|       
 | Create organisational unit| Assign name & budget, relevant assets & quantity|      Must have|
-| Store trade info (temporary)| BUY/SELL, unit, asset, quantity, price, date    |      Must have|
+| Store trade info (temporary)| BUY/SELL, unit, asset, quantity, price, date  |      Must have|
 | Store trade history       | Identical data to the above                     |      Must have|
+| Hash passwords            | When sending over network & storing in database |    Should have|      
+| Retrieve Client-side's port number| Read the config file to see Client's currently connected port|    Could have|
 
 Briefly recapping the server-side core functionality table above.
 - For each user we must have this core information, so their account is unique, secure and functional.
@@ -37,19 +39,24 @@ Requirements that are needed for the Client-side to be functional.
 | :---                      | :---                                            | :---:         |
 | Set SELL order            | Per asset: set quantity and price               |      Must have|
 | Set BUY order             | Per asset: set quantity and price               |      Must have|
-| Cancel an order           | See your unit's current orders and cancel them  |      Must have|
+| Cancel an order           | Ability to cancel outstanding orders after requesting to see current orders       |      Must have|
 | BUY/SELL restrictions     | Quantities match & BUY price >= SELL price      |      Must have|
-| Frequent checks           | Client frequently tries to match a BUY/SELL if requirements are met               |   Must have|
+| Frequent checks           | Client frequently tries to match a BUY/SELL if requirements are met               |      Must have|
 | Executing trades          | Execute at the SELL price. Decrease credits & increase quantity, store trade info |      Must have|
 | Request current orders    | Before the GUI, request to see the unit's orders|      Must have|
-| Request average BUY/SELL  | Before the GUI, request to see average prices   |      Must have|
-| Request avaliable quantity| Before the GUI, request to see quantity         |      Must have|
-| Request avaliable credits | Before the GUI, request to see credits          |      Must have|
+| Request available quantity| Before the GUI, request to see quantity         |      Must have|
+| Request available credits | Before the GUI, request to see credits          |      Must have|
+| Request average BUY/SELL  | Before the GUI, request to see average prices   |    Should have|
+| Graphical User Interface  | A more user friendly app instead of the terminal|     Could have|
+| Generate visual graph     | Per asset: a historical (stock-like) graph of time (x-axis) and price (y-axis)    |     Could have|
+| Password Self Service     | Allow users to change their own passwords       |     Could have|
+| Trade successfully executed alert | Push an alert to (all?) members of the organisational unit                |     Could have|
+| Client to read config file| Changes the Client's server IP address and port to connect to                     |     Could have|
 
 Briefly recapping the client-side core functionality table above.
-- To successful set a SELL order, avaliable quantity >= trade quantity.
+- To successful set a SELL order, available quantity >= trade quantity.
   Temporarily decrease that asset's quantity.
-- To successful set a BUY order, avaliable credits >= trade credit.
+- To successful set a BUY order, available credits >= trade credit.
   Temporarily decrease that unit's credits.
 - IF the trade hasn't executed, allow users to cancel the trade.
   This deletes all trade info that was stored temporarily and increases 
@@ -57,8 +64,13 @@ Briefly recapping the client-side core functionality table above.
   As long as the BUY price is higher than the asset's SELL price AND quantities match,
   Then the trade can be executed at the LOWEST price (aka the SELL price).
 - Frequent checks are made by the client in an attempt to match BUY/SELL orders and execute.
-- The GUI is a could have as stated it would "be nice to have" but the system can be completely functional without it.
+- The client will use the (temporary) data of all outstanding BUY/SELL orders to generate the most up-to-date average price.
+- The GUI is a could have as stated it would "be nice to have", but the system can be completely functional without it.
   This means that users should be able to request the average BUY/SELL prices, their avaliable assets' quantities and credits from the command line.
+- Password Self Service is a could have, allowing users to change their passwords WITHOUT input from the IT Admin team.
+- Trade successfully executed alert is a simple gesture that would notify members of a particular organisational unit that a change has been made (credits and an asset's quantity)
+
+
 
 
 
