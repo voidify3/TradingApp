@@ -1,10 +1,11 @@
-# Client Requirements 
+# Client Requirements
 
+----
 ## Server-side core functionality
 Only the IT Administration team is authorised to add/edit the requirements in the table below.
 The data must all be stored in the server-side database.
 
-| Requirement                 | Desc                                                             | Priority   |
+| Requirement                 | Descriptions                                                             | Priority   |
 | :---                        | :---                                                             | :---:      |
 | Create usernames            | As an IT admin I want to create unique usernames                 | Must have  |
 | Generate passwords          | As an IT admin I want to generate passwords for users            | Must have  |
@@ -67,7 +68,7 @@ Briefly recapping the client-side core functionality table above.
   Temporarily decrease that unit's credits.
 - **CANCEL orders**. If the trade is still outstanding, allow users to cancel the trade.
   This deletes all trade info that was stored temporarily and increases the unit's asset quantities and credits using the trade info.
-  User must be able to request to see their unit's current oustanding trade orders (as the GUI is not crucial).
+  User must be able to request to see their unit's current outstanding trade orders (as the GUI is not crucial).
 - **BUY/SELL restrictions** prevents outstanding trades from executing. 
   No unit will pay more or sell for less than they specified.
   As long as the BUY price is higher than the asset's SELL price AND quantities match,
@@ -75,19 +76,19 @@ Briefly recapping the client-side core functionality table above.
 - **Frequent checks** are made by the client in an attempt to match outstanding BUY/SELL orders and execute if requirements are met.
 - **Executed trades** will permanently store the trade info & update a unit's credits/asset quantity.
 - **Requesting current orders, assets & credits** will be done at the user's request.
-  Requesting current orders pulls the oustanding trade info while assets and credits are pulled from their unit's account.
+  Requesting current orders pulls the outstanding trade info while assets and credits are pulled from their unit's account.
 - **Requesting average BUY/SELL price** is done per asset.
   The client will use the (temporary) outstanding trade data to generate the current average price.
 - **A user-friendly GUI** would "be nice to have", but the system can be completely functional without it.
-  This means that users must be able to request the average prices, their avaliable assets' quantities, and credits from the command line.
-- **Stock-like graph** for each asset shows it's historical value.
-  Historical graph of time (x-axis) and price (y-axis) using data from executed trades.
+  This means that users must be able to request the average prices, their available assets' quantities, and credits from the command line.
+- **Stock-like graph** for each asset shows its historical value.
+  Historical graphs of time (x-axis) and price (y-axis) using data from executed trades.
 - **Password Self Service** is a could have, allowing users to change their passwords WITHOUT input from the IT Admin team.
 - **Trade successfully executed alert** is a simple gesture that would notify members of a particular organisational unit that a change has been made (credits and an asset's quantity).
 - **Read config file** would be modified by the IT Administration team. 
   Allowing the Client to use a new server IP address and connect to a new port.
   The same config file should be read by both the Server and Client.
-
+----
 
 
 
