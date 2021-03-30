@@ -4,33 +4,40 @@
 Only the IT Administration team is authorised to add/edit the requirements in the table below.
 The data must all be stored in the server-side database.
 
-| Requirement               | Description                                     | Priority      |
-| :---                      | :---                                            | :---:         |
-| Create usernames          | Per user: a UNIQUE username                     |      Must have|
-| Generate passwords        | Per user: an initial password                   |      Must have|
-| Assign account type       | Per user: level of access (IT admin v user)     |      Must have|
-| Assign user to unit       | Per user: access to a unit's resources & credits|      Must have|
-| Credit system             | A mini internal economy & a new currency        |      Must have|
-| Create new asset types    | Ability to create any asset type (universal)    |      Must have|       
-| Create organisational unit| Assign name & budget, relevant assets & quantity|      Must have|
-| Store trade info (temporary)| BUY/SELL, unit, asset, quantity, price, date  |      Must have|
-| Store trade history       | Identical data to the above                     |      Must have|
-| Hash passwords            | When sending over network & storing in database |    Should have|      
-| Retrieve Client-side's port number| Read the config file to see Client's currently connected port|    Could have|
+| Requirement                 | Desc                                                             | Priority   |
+| :---                        | :---                                                             | :---:      |
+| Create usernames            | As an IT admin I want to create unique usernames                 | Must have  |
+| Generate passwords          | As an IT admin I want to generate passwords for users            | Must have  |
+| Assign account type         | As an IT admin I want to specify each account's level of access  | Must have  |
+| Assign user to unit         | As an IT admin I want to assign users to a unit                  | Must have  |
+| Credit system               | As an IT admin I want to add the budget assigned to a unit       | Must have  |
+| Create new asset types      | As an IT admin I want to add any asset type                      | Must have  |       
+| Create organisational unit  | As an IT admin I want to assign asset types, quantity & budget   | Must have  |
+| Store outstanding trade info| System stores BUY/SELL, unit, asset, quantity, price & date      | Must have  |
+| Store executed trade info   | System permanently stores the outstanding data                   | Must have  |
+| Hash passwords              | System hashes passwords                                          | Should have|      
+| Read config file            | System reads config file to get Client's currently connected port| Could have |
 
 Briefly recapping the server-side core functionality table above.
-- For each user we must have this core information, so their account is unique, secure and functional.
-- The true range of asset types will not be known in advanced, therefore the system needs to be flexible for any future assets.
-- Organisational units are like special accounts that hold the sensitive information (current budget, current assets, quantity etc).
+- **Usernames** must be unique
+- **Passwords** should be unique and complex
+- **Account type** is either IT admin v user (access level)
+- **Credit system** is our mini internal economy with a new currency
+- **Organisational units** are like special accounts that hold the sensitive information (current budget, current assets, quantity etc).
   This information can be ACCESSED by users assigned to the unit (changing the values through BUY/SELL trades).
   Only the IT Administration team can directly alter this sensitive information.
-- Storing the current trade info is crucial to match and execute BUY/SELL orders.
-  This info also allows the current asset quantity to decrease, so the unit does not oversell.
-  This info also allows us to get the CURRENT average BUY/SELL prices so that unit's looking to trade can make a better judgement.
-  The reason this info is temporary is because the current price is always fluctuating. 
-  Also users can always cancel a trade before execution and all that info shouldn't be stored.
-- Storing the trade history for the long-term is best practice so if anything goes wrong we can find out where and when.
-  This info also allows us to generate graphs of an asset's historical trade value.
+- **Asset types**. The full range of assets is not known in advanced.
+  Therefore, the system needs to be flexible to universally accept any future assets.
+- **Outstanding trade info** needs to temporarily be stored as the data is crucial in order for us to match and execute successful trades.
+  This data also temporarily decreases a unit's budget / asset quantity so they do not oversell / overspend.
+  This data can also be used to generate the CURRENT average price so that user's can make a better judgement on orders.
+  The reason this info is temporary is because users can cancel trades at any time and the current average price is always fluctuating.
+- **Executed trade info** should be stored permanently if the trade was executed.
+  It is best practice to keep this data on record in case anything goes wrong (a receipt of sorts).
+  This info also allows us to generate graphs of an asset's historical trade value (stock-like graph).
+- **Hash passwords** should be done automatically when sending passwords over the network & storing in database.
+- **Read config file** would allow the IT admins to easily move the server around. 
+  By only modifying a config file, the Server can easily retrieve the Client's currently connected port number.
 
 ## Client-side core functionality
 Requirements that are needed for the Client-side to be functional.
