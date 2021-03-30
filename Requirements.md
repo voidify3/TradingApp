@@ -1,4 +1,70 @@
 # Client Requirements 
+
+## Server-side core functionality
+Only the IT Administration team is authorised to add/edit the requirements in the table below.
+The data must all be stored in the server-side database.
+
+| Requirement               | Description                                     | Priority      |
+| :---                      | :---                                            | :---:         |
+| Create usernames          | Per user: a UNIQUE username                     |      Must have|
+| Generate passwords        | Per user: an initial password                   |      Must have|
+| Assign account type       | Per user: level of access (IT admin v user)     |      Must have|
+| Assign user to unit       | Per user: access to a unit's resources & credits|      Must have|
+| Credit system             | A mini internal economy & a new currency        |      Must have|
+| Create new asset types    | Ability to create any asset type (universal)    |      Must have|       
+| Create organisational unit| Assign name & budget, relevant assets & quantity|      Must have|
+| Store trade info (temporary)| BUY/SELL, unit, asset, quantity, price, date    |      Must have|
+| Store trade history       | Identical data to the above                     |      Must have|
+
+Briefly recapping the server-side core functionality table above.
+- For each user we must have this core information, so their account is unique, secure and functional.
+- The true range of asset types will not be known in advanced, therefore the system needs to be flexible for any future assets.
+- Organisational units are like special accounts that hold the sensitive information (current budget, current assets, quantity etc).
+  This information can be ACCESSED by users assigned to the unit (changing the values through BUY/SELL trades).
+  Only the IT Administration team can directly alter this sensitive information.
+- Storing the current trade info is crucial to match and execute BUY/SELL orders.
+  This info also allows the current asset quantity to decrease, so the unit does not oversell.
+  This info also allows us to get the CURRENT average BUY/SELL prices so that unit's looking to trade can make a better judgement.
+  The reason this info is temporary is because the current price is always fluctuating. 
+  Also users can always cancel a trade before execution and all that info shouldn't be stored.
+- Storing the trade history for the long-term is best practice so if anything goes wrong we can find out where and when.
+  This info also allows us to generate graphs of an asset's historical trade value.
+
+## Client-side core functionality
+Requirements that are needed for the Client-side to be functional.
+
+| Requirement               | Description                                     | Priority      |
+| :---                      | :---                                            | :---:         |
+| Set SELL order            | Per asset: set quantity and price               |      Must have|
+| Set BUY order             | Per asset: set quantity and price               |      Must have|
+| Cancel an order           | See your unit's current orders and cancel them  |      Must have|
+| BUY/SELL restrictions     | Quantities match & BUY price >= SELL price      |      Must have|
+| Frequent checks           | Client frequently tries to match a BUY/SELL if requirements are met               |   Must have|
+| Executing trades          | Execute at the SELL price. Decrease credits & increase quantity, store trade info |      Must have|
+| Request current orders    | Before the GUI, request to see the unit's orders|      Must have|
+| Request average BUY/SELL  | Before the GUI, request to see average prices   |      Must have|
+| Request avaliable quantity| Before the GUI, request to see quantity         |      Must have|
+| Request avaliable credits | Before the GUI, request to see credits          |      Must have|
+
+Briefly recapping the client-side core functionality table above.
+- To successful set a SELL order, avaliable quantity >= trade quantity.
+  Temporarily decrease that asset's quantity.
+- To successful set a BUY order, avaliable credits >= trade credit.
+  Temporarily decrease that unit's credits.
+- IF the trade hasn't executed, allow users to cancel the trade.
+  This deletes all trade info that was stored temporarily and increases 
+- For the restrictions, no unit will pay more or sell for less than they specified.
+  As long as the BUY price is higher than the asset's SELL price AND quantities match,
+  Then the trade can be executed at the LOWEST price (aka the SELL price).
+- Frequent checks are made by the client in an attempt to match BUY/SELL orders and execute.
+- The GUI is a could have as stated it would "be nice to have" but the system can be completely functional without it.
+  This means that users should be able to request the average BUY/SELL prices, their avaliable assets' quantities and credits from the command line.
+
+
+
+
+
+
 ## Functionality
 The application must have the following items implemented for basic functionality:
 - Organisational Units
