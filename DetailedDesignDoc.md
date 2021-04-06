@@ -1,7 +1,8 @@
-#Detailed Design Document
-##OVERALL FUNCTIONALITY<br />a.k.a the flow of the system
+# Detailed Design Document
+____
+## OVERALL FUNCTIONALITY
 
-###Public class Main
+## Public class Main
 *Class desc:* Where the program starts running from.
 
 *Method desc:* Where the user will log in. User's will have to input the
@@ -33,7 +34,7 @@ asking the user to contact their IT Administrator to join an organisational unit
       ("contact your IT Administrator to join an organisational unit)
     - IF the access level is Admin, list the Admin interface methods
 
-###Public interface User
+##Public interface User
 *Class desc:* Abstract (since an interface) that comprises a 
 series of methods that a user would call.
 
@@ -153,7 +154,7 @@ listed as BUY or SELL).<br />
     - IF there is a match, delete the outstanding trade info and return the 
       asset quantity or credits (depending if BUY or SELL trade)
 
-###TODO: Public interface Admin
+## TODO: Public interface Admin
 *Class desc:* Abstract (since an interface) that comprises a
 series of methods that an IT Admin would call.
 
