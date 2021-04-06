@@ -77,23 +77,27 @@ quantity, price, type of BUY/SELL, trade ID).<br />
       array list (possibly sorting) and using a loop, print each 
       trade out (date/time, quantity, price, type of BUY/SELL, trade ID).
 
-*Method desc:* Method user calls to place an order. Method extends a general
+*Method desc:* Method user calls to place a buy order. Method extends a general
 ORDER method, using polymorphism to automatically store the trade info in a
-specific database (if this method is called, trade info will be stored in a 
-BUY data section which is ultimately part of the outstanding trade data). 
-This will separate BUY/SELL trades so matching and executing trades can be 
-done with ease. The user must specify the asset and quantity they are requesting 
+specific database (if this method is called, trade info will be stored in a
+BUY data section which is ultimately part of the outstanding trade data).
+This will separate BUY/SELL trades so matching and executing trades can be
+done with ease. The user must specify the asset and quantity they are requesting
 to BUY along with the price they're willing to pay for.<br />
 *@throws* Exception if the asset does not exist in the system<br />
 *@throws* Exception if the organisational unit does not enough available credits<br />
+*@throws* Exception if the offer price is out of bounds <br />
 **Public void buyOrder(asset, quantity, price)**
 
     - Check whether the asset type exists (does not mean if the asset is currently 
-      being sold selling, instead making sure the asset type has been added to 
+      being sold, instead making sure the asset type has been added to 
       the system by an IT Administrator).
     - IF the asset does not exist, throw an exception.
     - IF the asset exists, temporarily store the asset type for the order.
     - Temporarily store the quantity for the order.
+    - Check wheteher the price is within the bounds.
+    - IF the asking price is out of bounds throw an exception.
+    - IF the asking price is within bounds, temporarily store the price.
     - Check whether the organisational unit's available funds >= price they 
       are willing to pay.
     - IF the price is larger than the amount of available credits, throw an exception.
@@ -141,7 +145,7 @@ to BUY along with the price they're willing to pay for.<br />
 
 *Method desc:* Method user calls if they want to cancel an outstanding order.
 User should first use the viewOrders method to see all outstanding orders along
-with their unique trade ID. From here, the user passes the unique trade into 
+with their unique trade ID. From here, the user passes the unique trade into
 the method, where the method will then delete all temporary data for that trade
 and return the quantity or credits back (depending if the outstanding trade was
 listed as BUY or SELL).<br />
@@ -151,8 +155,76 @@ listed as BUY or SELL).<br />
 
     - Match the quiried trade ID with the one in the outstanding order database.
     - IF the trade ID is not found throw an exception.
-    - IF there is a match, delete the outstanding trade info and return the 
-      asset quantity or credits (depending if BUY or SELL trade)
+    - IF there is a match, ask the user if they are sure they want to cancel the trade.
+    - IF the user responds with "No", break from the method.
+    - IF the user responds with "Yes", delete the outstanding trade info and return the 
+      asset quantity or credits (depending if BUY or SELL trade).
+
+*Method desc:* Method user calls to view the average BUY/SELL price of an asset 
+type throughout the entire company, not including outstanding trade data. A 
+time frame can be selected by the user to see the average price over any 
+specified period. If the time frame is invalid, an exception will be thrown. <br />
+*@throws* Exception if the asset does not exist in the system<br />
+*@throws* Exception if dateFrom is invalid <br />
+*@throws* Exception if dateTO is invalid <br />
+**Public void viewAveragePrice(assetType, dateFrom, dateTo)**
+
+        - Check whether the asset type exists (does not mean if the asset is currently
+          being sold selling, instead making sure the asset type has been added to
+          the system by an IT Administrator).
+        - IF the asset does not exist, throw an exception.
+        - IF the asset does exist, check if the given time frame is invalid.
+        - IF dateFrom is after dateTo, throw an exception.
+        - IF dateTo is after the current date, throw an exception.
+        - IF dateFrom is earlier than the first stored order data, fill with empty data.
+        - IF time frame is valid, gather all price data within time frame in an array.
+        - Calculate the average price.
+        - Print the price to the user as a double.
+
+*Method desc:* Method user calls to view the visual price history of a 
+specified asset type throughout the entire company, not including outstanding 
+trade data. A time frame can be selected by the user to see the average price 
+over any specified period. If the time frame is invalid, an exception will 
+be thrown. <br />
+*@throws* Exception if the asset does not exist in the system<br />
+*@throws* Exception if dateFrom is invalid <br />
+*@throws* Exception if dateTO is invalid <br />
+**Public void viewPriceHistory(assetType, dateFrom, dateTo)**
+
+        - Check whether the asset type exists (does not mean if the asset is currently
+          being sold selling, instead making sure the asset type has been added to
+          the system by an IT Administrator).
+        - IF the asset does not exist, throw an exception.
+        - IF the asset does exist, check if the given time frame is invalid.
+        - IF dateFrom is after dateTo, throw an exception.
+        - IF dateTo is after the current date, throw an exception.
+        - IF dateFrom is earlier than the first stored order data, fill with empty data.
+        - IF time frame is valid, gather all order data within the time frame in array,
+          including price, time of execution and quantity.
+        - Display a graphical plot of price over time with quantities.
+
+*Method desc:* Method user calls to change their password. User must enter their 
+current password before being prompted to enter a new password. The password 
+must be successfully confirmed, and must also meet the requirements of 
+password length and character usage. The login details HashMap collection 
+is then updated.
+*@throws* Exception if the current password is incorrect
+*@throws* Exception if new password is invalid
+*@throws* Exception if the confirmed password does not match the new password
+**Public void changePassword()**
+
+        - Prompt the user to enter their current password.
+        - Check if the entered string matches the users current password.
+        - IF the string does not match, throw an exception.
+        - IF the string does match, prompt the user to enter their new password.
+        - Check if the entered string meets the password requirements 
+          (i.e. minimum character count).
+        - IF the string does not meet the requirements, throw an exception.
+        - IF the string is valid, prompt the user to confirm the new password.
+        - Check if the entered string matches the previous string.
+        - IF the strings are not equal, throw an exception.
+        - IF the strings are equal, update the login details HashMap collection
+          for the user.
 
 ## TODO: Public interface Admin
 *Class desc:* Abstract (since an interface) that comprises a
