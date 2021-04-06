@@ -34,7 +34,7 @@ asking the user to contact their IT Administrator to join an organisational unit
       ("contact your IT Administrator to join an organisational unit)
     - IF the access level is Admin, list the Admin interface methods
 
-##Public interface User
+## Public interface User
 *Class desc:* Abstract (since an interface) that comprises a 
 series of methods that a user would call.
 
