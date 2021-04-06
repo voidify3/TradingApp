@@ -157,14 +157,4 @@ listed as BUY or SELL).<br />
 *Class desc:* Abstract (since an interface) that comprises a
 series of methods that an IT Admin would call.
 
-| Users   | IT Admin |
-| :--     | :---                        |
-| -       | Add asset (type/name) |
-| -       | Add org (assets, quantity, credits) |
-| -       | Add user (access level, username, password)
-| -       | Request asset data |
-| -       | Request org data |
-| -       | Request user data |
-| -       | Update asset data |
-| -       | Update org data |
-| -       | Update user data |
+
