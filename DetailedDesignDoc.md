@@ -207,10 +207,10 @@ be thrown. <br />
 current password before being prompted to enter a new password. The password 
 must be successfully confirmed, and must also meet the requirements of 
 password length and character usage. The login details HashMap collection 
-is then updated.
-*@throws* Exception if the current password is incorrect
-*@throws* Exception if new password is invalid
-*@throws* Exception if the confirmed password does not match the new password
+is then updated. <br />
+*@throws* Exception if the current password is incorrect <br />
+*@throws* Exception if new password is invalid <br />
+*@throws* Exception if the confirmed password does not match the new password <br />
 **Public void changePassword()**
 
         - Prompt the user to enter their current password.
