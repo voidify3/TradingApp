@@ -177,7 +177,8 @@ specified period. If the time frame is invalid, an exception will be thrown. <br
         - IF dateFrom is after dateTo, throw an exception.
         - IF dateTo is after the current date, throw an exception.
         - IF dateFrom is earlier than the first stored order data, fill with empty data.
-        - IF time frame is valid, gather all price data within time frame in an array.
+        - IF time frame is valid, gather all price data within time frame in an array
+          using a loop.
         - Calculate the average price.
         - Print the price to the user as a double.
 
@@ -199,8 +200,8 @@ be thrown. <br />
         - IF dateFrom is after dateTo, throw an exception.
         - IF dateTo is after the current date, throw an exception.
         - IF dateFrom is earlier than the first stored order data, fill with empty data.
-        - IF time frame is valid, gather all order data within the time frame in array,
-          including price, time of execution and quantity.
+        - IF time frame is valid, gather all order data within the time frame in array 
+          using a loop, including price, time of execution and quantity.
         - Display a graphical plot of price over time with quantities.
 
 *Method desc:* Method user calls to change their password. User must enter their 
@@ -209,7 +210,7 @@ must be successfully confirmed, and must also meet the requirements of
 password length and character usage. The login details HashMap collection 
 is then updated. <br />
 *@throws* Exception if the current password is incorrect <br />
-*@throws* Exception if new password is invalid <br />
+*@throws* Exception if the new password is invalid <br />
 *@throws* Exception if the confirmed password does not match the new password <br />
 **Public void changePassword()**
 
@@ -229,5 +230,134 @@ is then updated. <br />
 ## TODO: Public interface Admin
 *Class desc:* Abstract (since an interface) that comprises a
 series of methods that an IT Admin would call.
+
+*Method desc:* Method used to create a new unique username with a password 
+and access level. The method will check that the username does not exist 
+in the database already, before assigning it the given password and access 
+level. By default, the user will not be part of any organisational unit. <br />
+*@throws* Exception if the username already exists <br />
+*@throws* Exception if the password is invalid <br />
+*@throws* Exception if the access level is invalid (must be "User" or "Admin") <br />
+**void createUser(userName, password, accessLevel)**
+
+        - Check to see if username already exists in the database.
+        - IF username exists, throw exception.
+        - IF username does not exist, check if password is valid.
+        - IF password is not vaild, throw exception.
+        - IF password is valid, check if access level is valid.
+        - IF access level is invalid, throw exception.
+        - IF access level is valid, add username details to login details HashMap 
+          collection.
+
+*Method desc:* Method used to generate a new password for users who have 
+forgotten theirs. The username will be checked to see if it exists in the 
+database, and the password will be checked to see if it is valid. <br />
+*@throws* Exception if the username does not exist <br />
+*@throws* Exception if the password is invalid <br />
+**void generatePassword(userName, password)**
+
+        - Check to see if username exists in the database.
+        - IF username does not exist, throw exception.
+        - IF username exists, check if password is valid.
+        - IF password is not vaild, throw exception.
+        - IF password is valid, update username details in the login details 
+          HashMap collection.
+
+*Method desc:* Method used by IT admins to set the access level of an existing 
+user. This can be used if a general users joins the IT administration team, or 
+vice versa. <br />
+*@throws* Exception if the username does not exist <br />
+*@throws* Exception if the access level is invalid (must be "User" or "Admin") <br />
+**void setAccess(userName, accessLevel)**
+
+        - Check to see if username exists in the database.
+        - IF username does not exist, throw exception.
+        - IF username exists, check if access level is valid.
+        - IF access level is invalid, throw exception.
+        - IF access level is valid, update username details in the login details 
+          HashMap collection.
+
+*Method desc:* Method used by IT admins to assign a user to an organisational 
+unit. By default, users are not assigned to a unit, so this method will be 
+called at least once for each user. The method can also be called when a user 
+changes to a new organisational unit, where confirmation will be required to
+avoid accidental changes. <br />
+*@throws* Exception if the username does not exist <br />
+*@throws* Exception if the organisational unit does not exist <br />
+**void assignToUnit(userName, orgUnit)**
+
+        - Check to see if username exists in the database.
+        - IF username does not exist, throw exception.
+        - IF username exists, check if organisational unit exists.
+        - IF organisational unit does not exist, throw exception.
+        - IF organisational unit does exist, check if username is assigned
+          to an organisational unit already.
+        - IF the username is not assigned to a unit, update username details.
+        - IF the username is already assigned to a unit, prompt user for confirmation
+          by entering "Yes" or "No"
+        - IF the user enters, "No", break from method.
+        - IF the user enters, "Yes", update username details.
+
+*Method desc:* Method used by IT admins to change the amount of a specified
+asset within an organisational unit. This can be used to make corrections to 
+asset amounts when an error has occurred. All BUY/SELL orders within the unit 
+made with this asset type will be during this method. IT admins may want to 
+give appropriate notice of this change to prevent any issues.<br />
+**(NOTE: is there a better way to modify the assets without cancelling orders?)** <br />
+*@throws* Exception if the organisational unit does not exist <br />
+*@throws* Exception if the asset does not exist in the system <br />
+*@throws* Exception the amount is out of bounds <br />
+**void modifyAsset(orgUnit, asset, amount)**
+
+        - Check if organisational unit exists.
+        - IF organisational unit does not exist, throw exception.
+        - IF organisational unit does exist, check if asset exists.
+        - IF asset does not exist, throw exception.
+        - IF asset does exist, check if amount is out of bounds.
+        - IF amount < 0, throw exception.
+        - IF amount >= 0, use a loop with cancelOrder() to cancel all orders
+          containing the specified asset.
+        - Overide asset amount for organisational unit.
+
+*Method desc:* Method used by IT admins to change the amount of credits an 
+organisational unit has. This can be used to make corrections to credit amounts 
+when an error has occured, or to add/subtract credits for other reasons.
+All BUY/SELL orders within the unit will be during this method. IT admins 
+may want to give appropriate notice of this change to prevent any issues. <br />
+**(NOTE: is there a better way to modify the assets without cancelling orders?)** <br />
+*@throws* Exception if the organisational unit does not exist <br />
+*@throws* Exception the amount is out of bounds <br />
+**void modifyCredits(orgUnit, amount)**
+
+        - Check if organisational unit exists.
+        - IF organisational unit does not exist, throw exception.
+        - IF organisational unit does exist, check if amount is out of bounds.
+        - IF amount < 0, throw exception.
+        - IF amount >= 0, use a loop with cancelOrder() to cancel all orders
+          within the unit.
+        - Overide credit amount for organisational unit.
+
+*Method desc:* Method used by IT admins to create a new organisational unit. 
+The method will check if the organisational unit exists in the systems
+already, before adding it to the database. By default the organisational unit 
+will have zero credits and zero assets. <br />
+*@throws* Exception if organisational unit already exists. <br />
+**void createUnit(orgName)**
+
+        - Using a loop, check if organisational unit exists in the system 
+          already.
+        - IF the unit exists, throw exception.
+        - IF the unit does not exist, add the new unit to the database
+          with 0 credits and 0 of all assets.
+
+*Method desc:* Method used by IT admins to create a new asset type. The 
+method will check if the asset type exists in the systems already, before 
+adding it to the database. <br />
+*@throws* Exception if asset type already exists. <br />
+**void newAssetType(assetName)**
+
+        - Using a loop, check if asset type exists in the system already.
+        - IF the asset type exists, throw exception.
+        - IF the asset type does not exist, add the new asset to the database.
 
 
