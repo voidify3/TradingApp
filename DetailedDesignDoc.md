@@ -321,10 +321,10 @@ give appropriate notice of this change to prevent any issues.<br />
 
 *Method desc:* Method used by IT admins to change the amount of credits an 
 organisational unit has. This can be used to make corrections to credit amounts 
-when an error has occured, or to add/subtract credits for other reasons.
+when an error has occurred, or to add/subtract credits for other reasons.
 All BUY/SELL orders within the unit will be during this method. IT admins 
 may want to give appropriate notice of this change to prevent any issues. <br />
-**(NOTE: is there a better way to modify the assets without cancelling orders?)** <br />
+**(NOTE: is there a better way to modify credits without cancelling orders?)** <br />
 *@throws* Exception if the organisational unit does not exist <br />
 *@throws* Exception the amount is out of bounds <br />
 **void modifyCredits(orgUnit, amount)**
