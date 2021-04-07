@@ -34,13 +34,13 @@ asking the user to contact their IT Administrator to join an organisational unit
       ("contact your IT Administrator to join an organisational unit)
     - IF the access level is Admin, list the Admin interface methods
 
-## Public interface User
-*Class desc:* Abstract (since an interface) that comprises a 
+## Public interface OrgUnit
+*Class desc:* Abstract (since an interface) that comprises a
 series of methods that a user would call.
 
-*Method desc:* To view quantity of an organisational unit's asset. The user 
-calls method with the asset name, the method will check that organisation's 
-assets for the queried asset. If the asset is found, method will finally print 
+*Method desc:* To view quantity of an organisational unit's asset. The user
+calls method with the asset name, the method will check that organisation's
+assets for the queried asset. If the asset is found, method will finally print
 the quantity.<br />
 *@param* String for the name of the queried asset<br />
 *@throws* Exception if the asset is not found (does not exist)<br />
@@ -52,6 +52,45 @@ the quantity.<br />
     - IF the asset is found, print the quantity as a string
     - IF the asset is NOT found, throw an exception
 
+*Method desc:* Method used by IT admins to change the amount of a specified
+asset within an organisational unit. This can be used to make corrections to
+asset amounts when an error has occurred. All BUY/SELL orders within the unit
+made with this asset type will be during this method. IT admins may want to
+give appropriate notice of this change to prevent any issues.<br />
+**(NOTE: is there a better way to modify the assets without cancelling orders?)** <br />
+*@throws* Exception if the organisational unit does not exist <br />
+*@throws* Exception if the asset does not exist in the system <br />
+*@throws* Exception the amount is out of bounds <br />
+**void modifyAsset(orgUnit, asset, amount)**
+
+        - Check if organisational unit exists.
+        - IF organisational unit does not exist, throw exception.
+        - IF organisational unit does exist, check if asset exists.
+        - IF asset does not exist, throw exception.
+        - IF asset does exist, check if amount is out of bounds.
+        - IF amount < 0, throw exception.
+        - IF amount >= 0, use a loop with cancelOrder() to cancel all orders
+          containing the specified asset.
+        - Overide asset amount for organisational unit.
+
+*Method desc:* Method used by IT admins to change the amount of credits an
+organisational unit has. This can be used to make corrections to credit amounts
+when an error has occurred, or to add/subtract credits for other reasons.
+All BUY/SELL orders within the unit will be during this method. IT admins
+may want to give appropriate notice of this change to prevent any issues. <br />
+**(NOTE: is there a better way to modify credits without cancelling orders?)** <br />
+*@throws* Exception if the organisational unit does not exist <br />
+*@throws* Exception the amount is out of bounds <br />
+**void modifyCredits(orgUnit, amount)**
+
+        - Check if organisational unit exists.
+        - IF organisational unit does not exist, throw exception.
+        - IF organisational unit does exist, check if amount is out of bounds.
+        - IF amount < 0, throw exception.
+        - IF amount >= 0, use a loop with cancelOrder() to cancel all orders
+          within the unit.
+        - Overide credit amount for organisational unit.
+
 *Method desc:* To view available credits of an organisational unit. The user
 calls this method with no parameters. The method will print the available credits.<br />
 *@returns* Integer for the amount of available credits<br />
@@ -60,22 +99,97 @@ calls this method with no parameters. The method will print the available credit
     - Quiries the user's organisational unit's current available credits
     - Prints the available credits for that unit as a string
 
-*Method desc:* To view current outstanding orders before they are executed, the
-user calls this method with no parameters. The method will check the database for
-the outstanding orders (temporary data). All temporary orders linked to the organisation
-will be retrieved and stored in an array list (possible to sort via date but not required). 
-From here, the method will loop through the data printing each outstanding order (date/time, 
-quantity, price, type of BUY/SELL, trade ID).<br />
-*@throws* Exception if no outstanding orders are found<br />
-**Public void viewOrders()**
+## Public class User
+*Attributes:* <b />
 
-    - Quiries the temporary outstanding trade data for outstanding
-      trades linked to the organisational unit.
-    - If the organisational unit has no outstanding trades, simply
-      throw an exception.
-    - If at least 1 outstanding trade is found, store it in an 
-      array list (possibly sorting) and using a loop, print each 
-      trade out (date/time, quantity, price, type of BUY/SELL, trade ID).
+        - String username
+        - String password
+        - String orgUnit
+        - boolean adminAccess
+
+*Method desc:* Method user calls to change their password. User must enter their
+current password before being prompted to enter a new password. The password
+must be successfully confirmed, and must also meet the requirements of
+password length and character usage. The login details HashMap collection
+is then updated. <br />
+*@throws* Exception if the current password is incorrect <br />
+*@throws* Exception if the new password is invalid <br />
+*@throws* Exception if the confirmed password does not match the new password <br />
+**Public void changePassword()**
+
+        - Prompt the user to enter their current password.
+        - Check if the entered string matches the users current password.
+        - IF the string does not match, throw an exception.
+        - IF the string does match, prompt the user to enter their new password.
+        - Check if the entered string meets the password requirements 
+          (i.e. minimum character count).
+        - IF the string does not meet the requirements, throw an exception.
+        - IF the string is valid, prompt the user to confirm the new password.
+        - Check if the entered string matches the previous string.
+        - IF the strings are not equal, throw an exception.
+        - IF the strings are equal, update the login details HashMap collection
+          for the user.
+
+## Public class Asset
+*Attributes:* <b />
+
+        - String assetID
+        - String description
+        - ? historicalPrices
+
+*Method desc:* Method user calls to view the average BUY/SELL price of an asset
+type throughout the entire company, not including outstanding trade data. A
+time frame can be selected by the user to see the average price over any
+specified period. If the time frame is invalid, an exception will be thrown. <br />
+*@throws* Exception if the asset does not exist in the system<br />
+*@throws* Exception if dateFrom is invalid <br />
+*@throws* Exception if dateTO is invalid <br />
+**Public void viewAveragePrice(assetType, dateFrom, dateTo)**
+
+        - Check whether the asset type exists (does not mean if the asset is currently
+          being sold selling, instead making sure the asset type has been added to
+          the system by an IT Administrator).
+        - IF the asset does not exist, throw an exception.
+        - IF the asset does exist, check if the given time frame is invalid.
+        - IF dateFrom is after dateTo, throw an exception.
+        - IF dateTo is after the current date, throw an exception.
+        - IF dateFrom is earlier than the first stored order data, fill with empty data.
+        - IF time frame is valid, gather all price data within time frame in an array
+          using a loop.
+        - Calculate the average price.
+        - Print the price to the user as a double.
+
+*Method desc:* Method user calls to view the visual price history of a
+specified asset type throughout the entire company, not including outstanding
+trade data. A time frame can be selected by the user to see the average price
+over any specified period. If the time frame is invalid, an exception will
+be thrown. <br />
+*@throws* Exception if the asset does not exist in the system<br />
+*@throws* Exception if dateFrom is invalid <br />
+*@throws* Exception if dateTO is invalid <br />
+**Public void viewPriceHistory(assetType, dateFrom, dateTo)**
+
+        - Check whether the asset type exists (does not mean if the asset is currently
+          being sold selling, instead making sure the asset type has been added to
+          the system by an IT Administrator).
+        - IF the asset does not exist, throw an exception.
+        - IF the asset does exist, check if the given time frame is invalid.
+        - IF dateFrom is after dateTo, throw an exception.
+        - IF dateTo is after the current date, throw an exception.
+        - IF dateFrom is earlier than the first stored order data, fill with empty data.
+        - IF time frame is valid, gather all order data within the time frame in array 
+          using a loop, including price, time of execution and quantity.
+        - Display a graphical plot of price over time with quantities.
+
+## Public class Orders
+*Attributes:* <b />
+
+        - String tradeID
+        - String tradeType (BUY / SELL)
+        - Asset
+        - int quantity
+        - double price
+        - OrgUnit / User
 
 *Method desc:* Method user calls to place a buy order. Method extends a general
 ORDER method, using polymorphism to automatically store the trade info in a
@@ -160,77 +274,24 @@ listed as BUY or SELL).<br />
     - IF the user responds with "Yes", delete the outstanding trade info and return the 
       asset quantity or credits (depending if BUY or SELL trade).
 
-*Method desc:* Method user calls to view the average BUY/SELL price of an asset 
-type throughout the entire company, not including outstanding trade data. A 
-time frame can be selected by the user to see the average price over any 
-specified period. If the time frame is invalid, an exception will be thrown. <br />
-*@throws* Exception if the asset does not exist in the system<br />
-*@throws* Exception if dateFrom is invalid <br />
-*@throws* Exception if dateTO is invalid <br />
-**Public void viewAveragePrice(assetType, dateFrom, dateTo)**
+*Method desc:* To view current outstanding orders before they are executed, the
+user calls this method with no parameters. The method will check the database for
+the outstanding orders (temporary data). All temporary orders linked to the organisation
+will be retrieved and stored in an array list (possible to sort via date but not required). 
+From here, the method will loop through the data printing each outstanding order (date/time, 
+quantity, price, type of BUY/SELL, trade ID).<br />
+*@throws* Exception if no outstanding orders are found<br />
+**Public void viewOrders()**
 
-        - Check whether the asset type exists (does not mean if the asset is currently
-          being sold selling, instead making sure the asset type has been added to
-          the system by an IT Administrator).
-        - IF the asset does not exist, throw an exception.
-        - IF the asset does exist, check if the given time frame is invalid.
-        - IF dateFrom is after dateTo, throw an exception.
-        - IF dateTo is after the current date, throw an exception.
-        - IF dateFrom is earlier than the first stored order data, fill with empty data.
-        - IF time frame is valid, gather all price data within time frame in an array
-          using a loop.
-        - Calculate the average price.
-        - Print the price to the user as a double.
+    - Quiries the temporary outstanding trade data for outstanding
+      trades linked to the organisational unit.
+    - If the organisational unit has no outstanding trades, simply
+      throw an exception.
+    - If at least 1 outstanding trade is found, store it in an 
+      array list (possibly sorting) and using a loop, print each 
+      trade out (date/time, quantity, price, type of BUY/SELL, trade ID).
 
-*Method desc:* Method user calls to view the visual price history of a 
-specified asset type throughout the entire company, not including outstanding 
-trade data. A time frame can be selected by the user to see the average price 
-over any specified period. If the time frame is invalid, an exception will 
-be thrown. <br />
-*@throws* Exception if the asset does not exist in the system<br />
-*@throws* Exception if dateFrom is invalid <br />
-*@throws* Exception if dateTO is invalid <br />
-**Public void viewPriceHistory(assetType, dateFrom, dateTo)**
-
-        - Check whether the asset type exists (does not mean if the asset is currently
-          being sold selling, instead making sure the asset type has been added to
-          the system by an IT Administrator).
-        - IF the asset does not exist, throw an exception.
-        - IF the asset does exist, check if the given time frame is invalid.
-        - IF dateFrom is after dateTo, throw an exception.
-        - IF dateTo is after the current date, throw an exception.
-        - IF dateFrom is earlier than the first stored order data, fill with empty data.
-        - IF time frame is valid, gather all order data within the time frame in array 
-          using a loop, including price, time of execution and quantity.
-        - Display a graphical plot of price over time with quantities.
-
-*Method desc:* Method user calls to change their password. User must enter their 
-current password before being prompted to enter a new password. The password 
-must be successfully confirmed, and must also meet the requirements of 
-password length and character usage. The login details HashMap collection 
-is then updated. <br />
-*@throws* Exception if the current password is incorrect <br />
-*@throws* Exception if the new password is invalid <br />
-*@throws* Exception if the confirmed password does not match the new password <br />
-**Public void changePassword()**
-
-        - Prompt the user to enter their current password.
-        - Check if the entered string matches the users current password.
-        - IF the string does not match, throw an exception.
-        - IF the string does match, prompt the user to enter their new password.
-        - Check if the entered string meets the password requirements 
-          (i.e. minimum character count).
-        - IF the string does not meet the requirements, throw an exception.
-        - IF the string is valid, prompt the user to confirm the new password.
-        - Check if the entered string matches the previous string.
-        - IF the strings are not equal, throw an exception.
-        - IF the strings are equal, update the login details HashMap collection
-          for the user.
-
-## TODO: Public interface Admin
-*Class desc:* Abstract (since an interface) that comprises a
-series of methods that an IT Admin would call.
-
+## Public class UserDatabaseAccess
 *Method desc:* Method used to create a new unique username with a password 
 and access level. The method will check that the username does not exist 
 in the database already, before assigning it the given password and access 
@@ -298,44 +359,7 @@ avoid accidental changes. <br />
         - IF the user enters, "No", break from method.
         - IF the user enters, "Yes", update username details.
 
-*Method desc:* Method used by IT admins to change the amount of a specified
-asset within an organisational unit. This can be used to make corrections to 
-asset amounts when an error has occurred. All BUY/SELL orders within the unit 
-made with this asset type will be during this method. IT admins may want to 
-give appropriate notice of this change to prevent any issues.<br />
-**(NOTE: is there a better way to modify the assets without cancelling orders?)** <br />
-*@throws* Exception if the organisational unit does not exist <br />
-*@throws* Exception if the asset does not exist in the system <br />
-*@throws* Exception the amount is out of bounds <br />
-**void modifyAsset(orgUnit, asset, amount)**
-
-        - Check if organisational unit exists.
-        - IF organisational unit does not exist, throw exception.
-        - IF organisational unit does exist, check if asset exists.
-        - IF asset does not exist, throw exception.
-        - IF asset does exist, check if amount is out of bounds.
-        - IF amount < 0, throw exception.
-        - IF amount >= 0, use a loop with cancelOrder() to cancel all orders
-          containing the specified asset.
-        - Overide asset amount for organisational unit.
-
-*Method desc:* Method used by IT admins to change the amount of credits an 
-organisational unit has. This can be used to make corrections to credit amounts 
-when an error has occurred, or to add/subtract credits for other reasons.
-All BUY/SELL orders within the unit will be during this method. IT admins 
-may want to give appropriate notice of this change to prevent any issues. <br />
-**(NOTE: is there a better way to modify credits without cancelling orders?)** <br />
-*@throws* Exception if the organisational unit does not exist <br />
-*@throws* Exception the amount is out of bounds <br />
-**void modifyCredits(orgUnit, amount)**
-
-        - Check if organisational unit exists.
-        - IF organisational unit does not exist, throw exception.
-        - IF organisational unit does exist, check if amount is out of bounds.
-        - IF amount < 0, throw exception.
-        - IF amount >= 0, use a loop with cancelOrder() to cancel all orders
-          within the unit.
-        - Overide credit amount for organisational unit.
+## Public class OrgDatabaseAccess
 
 *Method desc:* Method used by IT admins to create a new organisational unit. 
 The method will check if the organisational unit exists in the systems
@@ -359,5 +383,14 @@ adding it to the database. <br />
         - Using a loop, check if asset type exists in the system already.
         - IF the asset type exists, throw exception.
         - IF the asset type does not exist, add the new asset to the database.
+
+
+**Public int viewAssetQuantity(String queriedAsset)** [See Public interface OrgUnit]
+
+**void modifyAsset(orgUnit, asset, amount)** [See Public interface OrgUnit]
+
+**void modifyCredits(orgUnit, amount)** [See Public interface OrgUnit]
+
+**Public int viewAvailableCredits()** [See Public interface OrgUnit]
 
 
