@@ -1,7 +1,6 @@
-package ClientSideTests;
+package ClientSide;
 
 // class imports
-import ClientSide.TradingAppData;
 import common.*;
 import common.Exceptions.*;
 // JUnit imports

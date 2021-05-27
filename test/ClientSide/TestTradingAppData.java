@@ -1,4 +1,4 @@
-package ClientSideTests;
+package ClientSide;
 
 public class TestTradingAppData {
 }

@@ -1,6 +1,5 @@
-package ClientSideTests;
+package ClientSide;
 
-import ClientSide.*;
 import common.Exceptions.*;
 import common.Asset;
 import common.OrgUnit;

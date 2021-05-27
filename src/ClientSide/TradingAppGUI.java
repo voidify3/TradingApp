@@ -15,9 +15,10 @@ import java.io.File;
 import java.io.IOException;
 
 /***
- * @authors Johnny Madigan & Scott Peachey
+ * @author Johnny Madigan & Scott Peachey (wrote createAndShowGui, menuBar, resizeImg, loginPanel, shellPanel)
+ * Sophia Walsh Long (all other code is from after the fork; above methods have also been somewhat refactored)
  */
-public class Gui {
+public class TradingAppGUI {
 
     // Logged in user for the session
     public static User user = null;
@@ -85,7 +86,7 @@ public class Gui {
 
         // Boilerplate
         mainFrame.setJMenuBar(c.menuBar);
-        Gui.mainFrame.revalidate();
+        TradingAppGUI.mainFrame.revalidate();
     }
 
     // Resizes images---------------------------------------------------------------------------------------------------

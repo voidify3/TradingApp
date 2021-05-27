@@ -1,7 +1,5 @@
-package ClientSideTests;
+package ClientSide;
 
-import ClientSide.*;
-import common.*;
 import org.junit.jupiter.api.*;
 import static org.junit.jupiter.api.Assertions.*;
 

@@ -24,7 +24,7 @@ public class Main {
         // BOILERPLATE needed when running the GUI to make sure it's thread safe
         javax.swing.SwingUtilities.invokeLater(() -> {
             try {
-                Gui.createAndShowGUI();
+                TradingAppGUI.createAndShowGUI();
             } catch (Throwable ex) {
                 ex.printStackTrace();
             }

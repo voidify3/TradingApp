@@ -1,8 +1,7 @@
-package ClientSideTests;
+package ClientSide;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-import ClientSide.TradingAppData;
 import common.Exceptions.*;
 
 //import org.junit.Test;

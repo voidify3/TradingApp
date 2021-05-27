@@ -1,13 +1,9 @@
-package ServerSideTests;
+package ServerSide;
 
-import common.*;
-import ServerSide.*;
 import org.junit.jupiter.api.*;
 
 import java.io.IOException;
 import java.sql.SQLException;
-
-import static org.junit.jupiter.api.Assertions.*;
 
 public class TestNetworkServer {
     private NetworkServer server;
