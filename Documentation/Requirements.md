@@ -214,11 +214,11 @@ Administrators are to have the ability to:
 - Users to receive a message upon fulfilment of an order.
 - Current orders graph 
 
-![img.png](Images/GUI References/img.png)
+![img.png](../Images/GUI%20References/img.png)
 
 - Historical trades Graph
 
-![img_1.png](Images/GUI References/img_1.png)
+![img_1.png](../Images/GUI%20References/img_1.png)
 
 
 ## Additional Documentation
