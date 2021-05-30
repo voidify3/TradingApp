@@ -2,17 +2,13 @@ package ServerSide;
 
 import javax.swing.*;
 import java.awt.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.io.IOException;
-import java.sql.Date;
-import java.time.LocalDate;
+import java.sql.SQLException;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.time.format.FormatStyle;
-import java.util.Timer;
 import java.util.TimerTask;
 
 
@@ -21,10 +17,10 @@ import java.util.TimerTask;
  */
 public class ServerGUI {
     public final static int FIVE_MINUTES = 300000;
-    static JLabel tradeLabel = new JLabel("Trade reconciliation not yet performed                          ");
+    static JLabel tradeLabel = new JLabel("Trade reconciliation not yet performed                            ");
 
     public static void main(String[] args) {
-        NetworkServer server = new NetworkServer(new JDBCDataSource());
+        NetworkServer server = new NetworkServer();
         SwingUtilities.invokeLater(() -> createAndShowGUI(server));
         try {
             server.start();
@@ -50,8 +46,22 @@ public class ServerGUI {
     }
     private static void createAndShowGUI(NetworkServer server) {
         JDialog dialog = new JDialog();
+        Container mainPanel = dialog.getContentPane();
         dialog.setTitle("Network server for Address Book");
         JButton shutdownButton = new JButton("Shut down server");
+        JButton clearDBButton = new JButton("Drop all database tables");
+        JButton reconcileButton = new JButton("Reconcile trades now");
+        JPanel controlPanel = new JPanel();
+
+        reconcileButton.addActionListener(e -> server.reconcileTrades());
+        clearDBButton.addActionListener(e -> {
+            try {
+                server.resetEverything();
+            } catch (SQLException throwables) {
+                System.out.println("Tables could not be dropped");
+            }
+        });
+
         // This button will simply close the dialog. CLosing the dialog
         // will shut down the server
         shutdownButton.addActionListener(e -> dialog.dispose());
@@ -68,10 +78,14 @@ public class ServerGUI {
         // Create a label to show server info
         JLabel serverLabel = new JLabel("Server running on port " + NetworkServer.getPort());
         // Add the button and labels to the dialog
-        dialog.getContentPane().setLayout(new BorderLayout());
-        dialog.getContentPane().add(shutdownButton, BorderLayout.SOUTH);
-        dialog.getContentPane().add(serverLabel, BorderLayout.NORTH);
-        dialog.getContentPane().add(tradeLabel,BorderLayout.CENTER);
+        mainPanel.setLayout(new BorderLayout());
+        controlPanel.setLayout(new BorderLayout());
+        controlPanel.add(reconcileButton, BorderLayout.CENTER);
+        controlPanel.add(clearDBButton, BorderLayout.WEST);
+        controlPanel.add(shutdownButton, BorderLayout.SOUTH);
+        mainPanel.add(controlPanel, BorderLayout.SOUTH);
+        mainPanel.add(serverLabel, BorderLayout.NORTH);
+        mainPanel.add(tradeLabel,BorderLayout.CENTER);
         dialog.pack();
 
         // Centre the dialog on the screen

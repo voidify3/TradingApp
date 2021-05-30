@@ -6,11 +6,11 @@ import java.io.IOException;
 import java.sql.SQLException;
 
 public class TestNetworkServer {
-    private NetworkServer server;
+    private static NetworkServer server;
     @BeforeAll @Test //beforeAll not beforeEach because update and delete and select tests need some data
     // to exist, so it's simpler to let the insert tests be some of that data
-    private void setupEmpty() throws SQLException, IOException {
-        server = new NetworkServer(new JDBCDataSource());
+    static void setupEmpty() throws SQLException, IOException {
+        server = new NetworkServer();
         server.start();
         server.resetEverything();
     }
@@ -48,11 +48,11 @@ public class TestNetworkServer {
     }
     @Test
     public void successSelect() {
-        //assert returns expected hashtable
+        //assert returns expected arraylist
     }
     @Test
     public void failSelect() {
-        //assert returns empty hashtable
+        //assert returns empty arraylist
     }
     //TODO maybe make multiple of some above tests for different tables??
     @Test

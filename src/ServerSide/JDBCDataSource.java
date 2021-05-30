@@ -5,7 +5,9 @@ import java.sql.*;
 /**
  * Class dealing with the database
  * Structure based on Week 7 Address book exercise
+ * Deprecated- structure was simplified 30/5 by moving all uses to NetworkServer
  */
+@Deprecated
 class JDBCDataSource {
 
     public Connection getConnection() {

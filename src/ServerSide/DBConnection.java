@@ -20,7 +20,7 @@ public class DBConnection {
     /**
      * Constructor intializes the connection.
      */
-    private DBConnection() {
+    private DBConnection(Boolean autoCommit) {
         Properties props = new Properties();
         FileInputStream in = null;
         try {
@@ -37,6 +37,7 @@ public class DBConnection {
             // get a connection
             instance = DriverManager.getConnection(url + "/" + schema, username,
                     password);
+            instance.setAutoCommit(autoCommit);
         } catch (SQLException sqle) {
             System.err.println(sqle);
         } catch (FileNotFoundException fnfe) {
@@ -53,7 +54,7 @@ public class DBConnection {
      */
     public static Connection getInstance() {
         if (instance == null) {
-            new DBConnection();
+            new DBConnection(false);
         }
         return instance;
     }
