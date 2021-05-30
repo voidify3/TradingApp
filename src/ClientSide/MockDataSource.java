@@ -1,10 +1,9 @@
 package ClientSide;
 
-import ServerSide.deprecated.MockDatabase;
+import ServerSide.MockDatabase;
 import common.*;
 
 import java.sql.Timestamp;
-import java.time.LocalDateTime;
 import java.util.ArrayList;
 
 public class MockDataSource implements TradingAppDataSource {

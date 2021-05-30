@@ -1,4 +1,4 @@
-package ServerSide.deprecated;
+package ServerSide;
 
 import common.Exceptions.*;
 import common.*;
@@ -7,6 +7,7 @@ import java.sql.Timestamp;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 
+@Deprecated
 public class MockDatabase {
     //Stub data structures
     private ArrayList<User> allUsers = new ArrayList<>();
