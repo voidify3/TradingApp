@@ -1,6 +1,5 @@
 package ServerSide;
 
-
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -12,7 +11,7 @@ import java.util.Properties;
 /**
  * Entire class borrowed from the Week 7 Address Book Exercise
  */
-class DBConnection {
+public class DBConnection {
     /**
      * The singleton instance of the database connection.
      */
@@ -25,7 +24,7 @@ class DBConnection {
         Properties props = new Properties();
         FileInputStream in = null;
         try {
-            in = new FileInputStream("./db.props"); //TODO: MAKE
+            in = new FileInputStream("src/db.props");
             props.load(in);
             in.close();
 
@@ -48,9 +47,9 @@ class DBConnection {
     }
 
     /**
-     * Provides global access to the singleton instance of the UrlSet.
+     * Provides global access to the singleton instance of the Connection.
      *
-     * @return a handle to the singleton instance of the UrlSet.
+     * @return a handle to the singleton instance of the Connection.
      */
     public static Connection getInstance() {
         if (instance == null) {
