@@ -33,7 +33,7 @@ public class NetworkServer {
         return connection;
     }
 
-    private Connection connection;
+    private final Connection connection;
     static final String CREATE_TABLE_UNIT =
             "CREATE TABLE IF NOT EXISTS " + UNIT.getTableName() +" ("
                     + UNIT.getColumnNames()[0] + " VARCHAR(30) PRIMARY KEY NOT NULL UNIQUE,"
