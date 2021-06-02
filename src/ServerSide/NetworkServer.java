@@ -1,6 +1,7 @@
 package ServerSide;
 
 import common.*;
+import static common.DatabaseTables.*;
 
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -15,6 +16,7 @@ import java.util.HashMap;
 import java.util.Timer;
 import java.util.TimerTask;
 import java.util.concurrent.atomic.AtomicBoolean;
+
 
 /**
  * @author Sophia Walsh Long
@@ -33,31 +35,35 @@ public class NetworkServer {
 
     private Connection connection;
     static final String CREATE_TABLE_UNIT =
-            "CREATE TABLE IF NOT EXISTS orgunit ("
-                    + "name VARCHAR(30) PRIMARY KEY NOT NULL UNIQUE,"
-                    + "credits INTEGER" + ");\n";
+            "CREATE TABLE IF NOT EXISTS " + UNIT.getTableName() +" ("
+                    + UNIT.getColumnNames()[0] + " VARCHAR(30) PRIMARY KEY NOT NULL UNIQUE,"
+                    + UNIT.getColumnNames()[1] + " INTEGER" + ");";
     static final String CREATE_TABLE_ASSET =
-            "CREATE TABLE IF NOT EXISTS asset ("
-                    + "idx INTEGER PRIMARY KEY /*!40101 AUTO_INCREMENT */ NOT NULL UNIQUE," // from https://stackoverflow.com/a/41028314
-                    + "description VARCHAR(60)" + ");\n";
+            "CREATE TABLE IF NOT EXISTS " + ASSET.getTableName() +" ("
+                    + ASSET.getColumnNames()[0] + " INTEGER PRIMARY KEY /*!40101 AUTO_INCREMENT */ NOT NULL UNIQUE," // from https://stackoverflow.com/a/41028314
+                    + ASSET.getColumnNames()[1] + " VARCHAR(60)" + ");";
     static final String CREATE_TABLE_USER =
             "CREATE TABLE IF NOT EXISTS user ("
-                    + "name VARCHAR(30) PRIMARY KEY NOT NULL UNIQUE,"
-                    + "passhash VARCHAR(128) NOT NULL,"
-                    + "salt VARCHAR(41) NOT NULL,"
-                    + "orgunit VARCHAR(30),"
-                    + "CONSTRAINT fk_user_orgunit FOREIGN KEY (orgunit) REFERENCES orgunit (name)"
-                    + "ON DELETE SET NULL ON UPDATE CASCADE" + ");\n";
+                    + USER.getColumnNames()[0] + " VARCHAR(30) PRIMARY KEY NOT NULL UNIQUE,"
+                    + USER.getColumnNames()[1] + " VARCHAR(128) NOT NULL,"
+                    + USER.getColumnNames()[2] + " VARCHAR(41) NOT NULL,"
+                    + USER.getColumnNames()[3] + " VARCHAR(30),"
+                    + "CONSTRAINT fk_user_orgunit FOREIGN KEY (" + USER.getColumnNames()[3]
+                    + ") REFERENCES " + UNIT.getTableName() + " (" + UNIT.getColumnNames()[0]
+                    + ") ON DELETE SET NULL ON UPDATE CASCADE" + ");";
     static final String CREATE_TABLE_INV =
-            "CREATE TABLE IF NOT EXISTS inventories ("
-                    + "orgunit VARCHAR(30) NOT NULL,"
-                    + "asset INTEGER NOT NULL,"
-                    + "quantity INTEGER NOT NULL,"
-                    + "CONSTRAINT fk_inv_orgunit FOREIGN KEY (orgunit) REFERENCES orgunit (name)"
-                    + "ON DELETE CASCADE ON UPDATE CASCADE,"
-                    + "CONSTRAINT fk_inv_asset FOREIGN KEY (asset) REFERENCES asset (idx)"
-                    + "ON DELETE CASCADE ON UPDATE CASCADE,"
-                    + "PRIMARY KEY(orgunit, asset)" + ");\n";
+            "CREATE TABLE IF NOT EXISTS " + INV.getTableName() + " ("
+                    + INV.getColumnNames()[0] + " VARCHAR(30) NOT NULL,"
+                    + INV.getColumnNames()[1] + " INTEGER NOT NULL,"
+                    + INV.getColumnNames()[2] + " INTEGER NOT NULL,"
+                    + "CONSTRAINT fk_inventories_orgunit FOREIGN KEY (" + INV.getColumnNames()[0]
+                    + ") REFERENCES " + UNIT.getTableName() + " (" + UNIT.getColumnNames()[0]
+                    + ") ON DELETE CASCADE ON UPDATE CASCADE,"
+                    + "CONSTRAINT fk_inventories_asset FOREIGN KEY (" + INV.getColumnNames()[1]
+                    + ") REFERENCES " + ASSET.getTableName() + " (" + ASSET.getColumnNames()[0]
+                    + ") ON DELETE CASCADE ON UPDATE CASCADE,"
+                    + "PRIMARY KEY(" + INV.getColumnNames()[0] + INV.getColumnNames()[1] + ")"
+                    + ");";
     static final String CREATE_TABLE_SELL =
             "CREATE TABLE IF NOT EXISTS sellorder ("
                     + "idx INTEGER PRIMARY KEY /*!40101 AUTO_INCREMENT */ NOT NULL UNIQUE," // from https://stackoverflow.com/a/41028314
@@ -70,7 +76,7 @@ public class NetworkServer {
                     + "CONSTRAINT fk_sell_user FOREIGN KEY (user) REFERENCES user (name)"
                     + "ON DELETE RESTRICT ON UPDATE CASCADE,"
                     + "CONSTRAINT fk_sell_asset FOREIGN KEY (asset) REFERENCES asset (idx)"
-                    + "ON DELETE CASCADE ON UPDATE CASCADE" + ");\n";
+                    + "ON DELETE CASCADE ON UPDATE CASCADE" + ");";
     static final String CREATE_TABLE_BUY =
             "CREATE TABLE IF NOT EXISTS buyorder ("
                     + "idx INTEGER PRIMARY KEY /*!40101 AUTO_INCREMENT */ NOT NULL UNIQUE," // from https://stackoverflow.com/a/41028314

@@ -7,6 +7,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.TreeMap;
 
+import static common.DatabaseTables.*;
 import static java.lang.String.valueOf;
 
 //Please ignore all the hideous ArrayList downcasts, I promise it's fine, server-side logic handles it so that
@@ -15,28 +16,6 @@ import static java.lang.String.valueOf;
 public class NetworkDataSource implements TradingAppDataSource {
     private static final String HOSTNAME = "127.0.0.1";
     private static final int PORT = 10000;
-    public static final String SELECT = "Select";
-    public static final String UPDATE = "Update";
-    public static final String INSERT = "Insert";
-    public static final String DELETE = "Delete";
-    //TODO: use an enum to store table and column names
-    public static final String USER = "user";
-    public static final String UNIT = "orgunits";
-    public static final String ASSET = "asset";
-    public static final String INV = "inventories";
-    public static final String BUY = "buyorder";
-    public static final String SELL = "sellorder";
-    //temporary data source for keyColumnName
-    public static final TreeMap<String, String> keys;
-    static {
-        TreeMap<String,String> temp = new TreeMap<>();
-        temp.put(USER, "Username");
-        temp.put(UNIT, "OrgUnitName");
-        temp.put(ASSET, "AssetID");
-        temp.put(SELL, "OrderID");
-        temp.put(BUY, "OrderID");
-        keys = (TreeMap<String, String>) Collections.unmodifiableMap(temp);
-    } //initialise it
 
 
     public NetworkDataSource() {
@@ -70,51 +49,51 @@ public class NetworkDataSource implements TradingAppDataSource {
      * @param info DataPacket object describing request
      * @return Number of rows affected by query
      */
-    private int requestNonselect(String keyword, DataPacket info) {
+    private int requestNonselect(ProtocolKeywords keyword, DataPacket info) {
         return 0;
     }
 
 
 
     //--------------QUERY TYPE HELPERS-----------------
-    private ArrayList<DataObject> select(String table, String filter) {
+    private ArrayList<DataObject> select(DatabaseTables table, String filter) {
         return requestSelect(new DataPacket(table, filter, null, null));
     }
-    private int update(String table, DataObject data) {
-        return requestNonselect(UPDATE, new DataPacket(table, null, data, null));
+    private int update(DatabaseTables table, DataObject data) {
+        return requestNonselect(ProtocolKeywords.UPDATE, new DataPacket(table, null, data, null));
     }
-    private int insert(String table, DataObject data) {
-        return requestNonselect(INSERT, new DataPacket(table, null, data, false));
+    private int insert(DatabaseTables table, DataObject data) {
+        return requestNonselect(ProtocolKeywords.INSERT, new DataPacket(table, null, data, false));
     }
-    private int insertUpdateOnDupKey(String table, DataObject data) {
-        return requestNonselect(INSERT, new DataPacket(table, null, data, true));
+    private int insertUpdateOnDupKey(DatabaseTables table, DataObject data) {
+        return requestNonselect(ProtocolKeywords.INSERT, new DataPacket(table, null, data, true));
     }
-    private int delete(String table, String filter) {
-        return requestNonselect(DELETE, new DataPacket(table, filter, null, null));
+    private int delete(DatabaseTables table, String filter) {
+        return requestNonselect(ProtocolKeywords.DELETE, new DataPacket(table, filter, null, null));
     }
 
 
     //------------------SPECIAL CASE QUERY HELPERS---------
-    private ArrayList<DataObject> selectByValue(String table, String column, String value) {
+    private ArrayList<DataObject> selectByValue(DatabaseTables table, String column, String value) {
         return select(table, filterEquals(column, sqlFriendlyString(value)));
     }
-    private ArrayList<DataObject> selectByValue(String table, String column, int value) {
+    private ArrayList<DataObject> selectByValue(DatabaseTables table, String column, int value) {
         return select(table, filterEquals(column, valueOf(value)));
     }
 
-    private DataObject selectByKey(String table, String keyValue) {
+    private DataObject selectByKey(DatabaseTables table, String keyValue) {
         ArrayList<DataObject> results = selectByValue(table, keyColumnName(table), keyValue);
         return results.get(0);
     }
-    private DataObject selectByKey(String table, int keyValue) {
+    private DataObject selectByKey(DatabaseTables table, int keyValue) {
         ArrayList<DataObject> results = selectByValue(table, keyColumnName(table), keyValue);
         return results.get(0); //there should only be 1 result, so return it
     }
 
-    private int deleteByKey(String table, String keyValue) {
+    private int deleteByKey(DatabaseTables table, String keyValue) {
         return delete(table, filterEquals(keyColumnName(table), sqlFriendlyString(keyValue)));
     }
-    private int deleteByKey(String table, int keyValue) {
+    private int deleteByKey(DatabaseTables table, int keyValue) {
         return delete(table, filterEquals(keyColumnName(table), valueOf(keyValue)));
     }
 
@@ -139,8 +118,8 @@ public class NetworkDataSource implements TradingAppDataSource {
 
     //--------------------FILTER-FORMING HELPERS--------
 
-    private String keyColumnName(String table) {
-        return keys.get(table);
+    private String keyColumnName(DatabaseTables table) {
+        return table.getColumnNames()[0];
     }
     private String filterEquals(String column, String value) {
         return column + "=" + value;
@@ -172,7 +151,7 @@ public class NetworkDataSource implements TradingAppDataSource {
      */
     @Override
     public ArrayList<User> allUsers() {
-        return (ArrayList) select(USER, "");
+        return (ArrayList) select(DatabaseTables.USER, "");
     }
 
     /**
@@ -181,7 +160,7 @@ public class NetworkDataSource implements TradingAppDataSource {
      */
     @Override
     public ArrayList<OrgUnit> allOrgUnits() {
-        return (ArrayList)select(UNIT, "");
+        return (ArrayList) select(UNIT, "");
     }
 
     /**
