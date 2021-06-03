@@ -7,8 +7,11 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.DataOutput;
 import java.io.IOException;
+import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
+import java.net.ServerSocket;
 import java.net.Socket;
+import java.net.SocketTimeoutException;
 import java.sql.*;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -34,65 +37,73 @@ public class NetworkServer {
     }
 
     private final Connection connection;
+    //Create Table scripts for all tables, using table and column names from the enum
+    // week 7 address book exercise used as reference for syntax; "from stackoverflow" comment is from that
     static final String CREATE_TABLE_UNIT =
-            "CREATE TABLE IF NOT EXISTS " + UNIT.getTableName() +" ("
-                    + UNIT.getColumnNames()[0] + " VARCHAR(30) PRIMARY KEY NOT NULL UNIQUE,"
-                    + UNIT.getColumnNames()[1] + " INTEGER" + ");";
+            "CREATE TABLE IF NOT EXISTS " + UNIT.getTableName() + " ("
+                    + UNIT.getColumnNames()[0] + " VARCHAR(30) PRIMARY KEY NOT NULL UNIQUE," //name
+                    + UNIT.getColumnNames()[1] + " INTEGER" + ");"; //credits
     static final String CREATE_TABLE_ASSET =
-            "CREATE TABLE IF NOT EXISTS " + ASSET.getTableName() +" ("
-                    + ASSET.getColumnNames()[0] + " INTEGER PRIMARY KEY /*!40101 AUTO_INCREMENT */ NOT NULL UNIQUE," // from https://stackoverflow.com/a/41028314
-                    + ASSET.getColumnNames()[1] + " VARCHAR(60)" + ");";
+            "CREATE TABLE IF NOT EXISTS " + ASSET.getTableName() + " ("
+                    + ASSET.getColumnNames()[0] + " INTEGER "
+                    + "PRIMARY KEY /*!40101 AUTO_INCREMENT */ NOT NULL UNIQUE," //from https://stackoverflow.com/a/41028314
+                    + ASSET.getColumnNames()[1] + " VARCHAR(60)" + ");"; //description
     static final String CREATE_TABLE_USER =
-            "CREATE TABLE IF NOT EXISTS user ("
-                    + USER.getColumnNames()[0] + " VARCHAR(30) PRIMARY KEY NOT NULL UNIQUE,"
-                    + USER.getColumnNames()[1] + " VARCHAR(128) NOT NULL,"
-                    + USER.getColumnNames()[2] + " VARCHAR(41) NOT NULL,"
-                    + USER.getColumnNames()[3] + " VARCHAR(30),"
+            "CREATE TABLE IF NOT EXISTS " + USER.getTableName() + " ("
+                    + USER.getColumnNames()[0] + " VARCHAR(30) PRIMARY KEY NOT NULL UNIQUE," //name
+                    + USER.getColumnNames()[1] + " VARCHAR(128) NOT NULL," //hashed password
+                    + USER.getColumnNames()[2] + " VARCHAR(41) NOT NULL," //salt string
+                    + USER.getColumnNames()[3] + " VARCHAR(30)," //orgunit
                     + "CONSTRAINT fk_user_orgunit FOREIGN KEY (" + USER.getColumnNames()[3]
                     + ") REFERENCES " + UNIT.getTableName() + " (" + UNIT.getColumnNames()[0]
                     + ") ON DELETE SET NULL ON UPDATE CASCADE" + ");";
     static final String CREATE_TABLE_INV =
             "CREATE TABLE IF NOT EXISTS " + INV.getTableName() + " ("
-                    + INV.getColumnNames()[0] + " VARCHAR(30) NOT NULL,"
-                    + INV.getColumnNames()[1] + " INTEGER NOT NULL,"
-                    + INV.getColumnNames()[2] + " INTEGER NOT NULL,"
+                    + INV.getColumnNames()[0] + " VARCHAR(30) NOT NULL," //orgunit
+                    + INV.getColumnNames()[1] + " INTEGER NOT NULL," //asset
+                    + INV.getColumnNames()[2] + " INTEGER NOT NULL," //quantity
                     + "CONSTRAINT fk_inventories_orgunit FOREIGN KEY (" + INV.getColumnNames()[0]
                     + ") REFERENCES " + UNIT.getTableName() + " (" + UNIT.getColumnNames()[0]
                     + ") ON DELETE CASCADE ON UPDATE CASCADE,"
                     + "CONSTRAINT fk_inventories_asset FOREIGN KEY (" + INV.getColumnNames()[1]
                     + ") REFERENCES " + ASSET.getTableName() + " (" + ASSET.getColumnNames()[0]
                     + ") ON DELETE CASCADE ON UPDATE CASCADE,"
-                    + "PRIMARY KEY(" + INV.getColumnNames()[0] + INV.getColumnNames()[1] + ")"
+                    + "PRIMARY KEY(" + INV.getColumnNames()[0] + "," + INV.getColumnNames()[1] + ")"
                     + ");";
     static final String CREATE_TABLE_SELL =
-            "CREATE TABLE IF NOT EXISTS sellorder ("
-                    + "idx INTEGER PRIMARY KEY /*!40101 AUTO_INCREMENT */ NOT NULL UNIQUE," // from https://stackoverflow.com/a/41028314
-                    + "user VARCHAR(30) NOT NULL,"
-                    + "asset INTEGER NOT NULL,"
-                    + "quantity INTEGER NOT NULL,"
-                    + "price INTEGER NOT NULL,"
-                    + "datePlaced DATETIME NOT NULL,"
-                    + "dateResolved DATETIME,"
-                    + "CONSTRAINT fk_sell_user FOREIGN KEY (user) REFERENCES user (name)"
-                    + "ON DELETE RESTRICT ON UPDATE CASCADE,"
-                    + "CONSTRAINT fk_sell_asset FOREIGN KEY (asset) REFERENCES asset (idx)"
-                    + "ON DELETE CASCADE ON UPDATE CASCADE" + ");";
+            "CREATE TABLE IF NOT EXISTS " + SELL.getTableName() + " ("
+                    + SELL.getColumnNames()[0] + " INTEGER PRIMARY KEY /*!40101 AUTO_INCREMENT */ NOT NULL UNIQUE,"
+                    + SELL.getColumnNames()[1] + " VARCHAR(30) NOT NULL," //user
+                    + SELL.getColumnNames()[2] + " INTEGER NOT NULL," //asset
+                    + SELL.getColumnNames()[3] + " INTEGER NOT NULL," //quantity
+                    + SELL.getColumnNames()[4] + " INTEGER NOT NULL," //price
+                    + SELL.getColumnNames()[5] + " DATETIME NOT NULL," //datePlaced
+                    + SELL.getColumnNames()[6] + " DATETIME," //dateResolved
+                    + "CONSTRAINT fk_sell_user FOREIGN KEY (" + SELL.getColumnNames()[1]
+                    + ") REFERENCES " + USER.getTableName() + " (" + USER.getColumnNames()[0]
+                    + ") ON DELETE RESTRICT ON UPDATE CASCADE,"
+                    + "CONSTRAINT fk_sell_asset FOREIGN KEY (" + SELL.getColumnNames()[2]
+                    + ") REFERENCES " + ASSET.getTableName() + " (" + ASSET.getColumnNames()[0]
+                    + ") ON DELETE CASCADE ON UPDATE CASCADE" + ");";
     static final String CREATE_TABLE_BUY =
-            "CREATE TABLE IF NOT EXISTS buyorder ("
-                    + "idx INTEGER PRIMARY KEY /*!40101 AUTO_INCREMENT */ NOT NULL UNIQUE," // from https://stackoverflow.com/a/41028314
-                    + "user VARCHAR(30) NOT NULL,"
-                    + "asset INTEGER NOT NULL,"
-                    + "quantity INTEGER NOT NULL,"
-                    + "price INTEGER NOT NULL,"
-                    + "datePlaced DATETIME NOT NULL,"
-                    + "dateResolved DATETIME,"
-                    + "boughtFrom INTEGER,"
-                    + "CONSTRAINT fk_buy_user FOREIGN KEY (user) REFERENCES user (name)"
-                    + "ON DELETE RESTRICT ON UPDATE CASCADE,"
-                    + "CONSTRAINT fk_buy_asset FOREIGN KEY (asset) REFERENCES asset (idx)"
-                    + "ON DELETE CASCADE ON UPDATE CASCADE,"
-                    + "CONSTRAINT fk_buy_sell FOREIGN KEY (boughtFrom) REFERENCES sellorder (idx)"
-                    + "ON DELETE RESTRICT ON UPDATE CASCADE" + ");";
+            "CREATE TABLE IF NOT EXISTS " + BUY.getTableName() + " ("
+                    + BUY.getColumnNames()[0] + " INTEGER PRIMARY KEY /*!40101 AUTO_INCREMENT */ NOT NULL UNIQUE,"
+                    + BUY.getColumnNames()[1] + " VARCHAR(30) NOT NULL," //user
+                    + BUY.getColumnNames()[2] + " INTEGER NOT NULL," //asset
+                    + BUY.getColumnNames()[3] + " INTEGER NOT NULL," //quantity
+                    + BUY.getColumnNames()[4] + " INTEGER NOT NULL," //price
+                    + BUY.getColumnNames()[5] + " DATETIME NOT NULL," //datePlaced
+                    + BUY.getColumnNames()[6] + " DATETIME," //dateResolved
+                    + BUY.getColumnNames()[7] + " INTEGER," //boughtFrom
+                    + "CONSTRAINT fk_buy_user FOREIGN KEY (" + BUY.getColumnNames()[1]
+                    + ") REFERENCES " + USER.getTableName() + " (" + USER.getColumnNames()[0]
+                    + ") ON DELETE RESTRICT ON UPDATE CASCADE,"
+                    + "CONSTRAINT fk_buy_asset FOREIGN KEY (" + BUY.getColumnNames()[2]
+                    + ") REFERENCES " + ASSET.getTableName() + " (" + ASSET.getColumnNames()[0]
+                    + ") ON DELETE CASCADE ON UPDATE CASCADE,"
+                    + "CONSTRAINT fk_buy_sell FOREIGN KEY (" + BUY.getColumnNames()[7]
+                    + ") REFERENCES " + SELL.getTableName() + " (" + SELL.getColumnNames()[0]
+                    + ") ON DELETE RESTRICT ON UPDATE CASCADE" + ");";
     /*
         static final String CREATE_TABLES = CREATE_TABLE_UNIT + CREATE_TABLE_ASSET + CREATE_TABLE_USER +
                 CREATE_TABLE_INV + CREATE_TABLE_SELL + CREATE_TABLE_BUY;
@@ -193,6 +204,20 @@ public class NetworkServer {
      * @param socket The socket used to communicate with the currently connected client
      */
     private void handleConnection(Socket socket) throws IOException, ClassNotFoundException {
+        try (ObjectInputStream objectInputStream = new ObjectInputStream(socket.getInputStream()))
+        {
+            ProtocolKeywords command = (ProtocolKeywords) objectInputStream.readObject();
+            DataPacket info =  (DataPacket) objectInputStream.readObject();
+
+            try (ObjectOutputStream objectOutputStream = new ObjectOutputStream(socket.getOutputStream());)
+            {
+                handleRequest(command, info, objectOutputStream);
+            }
+
+        }
+    }
+
+    private void handleRequest(ProtocolKeywords keyword, DataPacket info, ObjectOutputStream out) {
 
     }
 
@@ -207,10 +232,37 @@ public class NetworkServer {
     }
 
     /**
-     * Starts the server running on the default port
+     * Starts the server running on the default port, code borrowed from week 7 exercise
      */
     public void start() throws IOException {
+        try (ServerSocket serverSocket = new ServerSocket(PORT)) {
+            serverSocket.setSoTimeout(SOCKET_TIMEOUT);
+            for (;;) {
+                if (!running.get()) {
+                    // The server is no longer running
+                    break;
+                }
+                try {
+                    Socket socket = serverSocket.accept();
+                    handleConnection(socket);
+                } catch (SocketTimeoutException ignored) {
+                    // Do nothing. A timeout is normal- we just want the socket to
+                    // occasionally timeout so we can check if the server is still running
+                } catch (Exception e) {
+                    // We will report other exceptions by printing the stack trace, but we
+                    // will not shut down the server. A exception can happen due to a
+                    // client malfunction (or malicious client)
+                    e.printStackTrace();
+                }
+            }
+        } catch (IOException e) {
+            // If we get an error starting up, show an error dialog then exit
+            e.printStackTrace();
+            System.exit(1);
+        }
 
+        // Close down the server
+        System.exit(0);
     }
 
     /**
@@ -324,7 +376,8 @@ public class NetworkServer {
      * @param keyword Query keyword
      * @param info Info packet
      */
-    void simulateRequest(String keyword, DataPacket info) {
+    void simulateRequest(ProtocolKeywords keyword, DataPacket info, ObjectOutputStream o) throws IOException {
+        handleRequest(keyword, info, o);
 
     }
 

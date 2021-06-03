@@ -1,26 +1,44 @@
 package ServerSide;
 
+import static common.ProtocolKeywords.*;
+import static common.DatabaseTables.*;
+import common.*;
 import org.junit.jupiter.api.*;
+import static org.junit.jupiter.api.Assertions.*;
 
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.io.ObjectOutputStream;
 import java.sql.SQLException;
 
 public class TestNetworkServer {
     private static NetworkServer server;
+    ByteArrayOutputStream outputStream;
     @BeforeAll @Test //beforeAll not beforeEach because update and delete and select tests need some data
     // to exist, so it's simpler to let the insert tests be some of that data
-    static void setupEmpty() throws SQLException, IOException {
+    static void setup() throws SQLException, IOException {
         server = new NetworkServer();
         server.start();
-        server.resetEverything();
+    }
+    @BeforeEach
+    void setOutputStream() {
+        outputStream = new ByteArrayOutputStream();
     }
     @Test
-    public void successInsert() {
-        //assert returns 1
+    public void successInsert() throws IOException {
+        server.simulateRequest(ProtocolKeywords.INSERT,
+                new DataPacket(UNIT, null, new OrgUnit("Devs"), false),
+                new ObjectOutputStream(System.out));
+        //byte[] b = outputStream.toByteArray();
+        //should give 1
     }
     @Test
-    public void failInsert() {
-        //assert returns 0
+    public void failInsert() throws IOException {
+        server.simulateRequest(ProtocolKeywords.INSERT,
+                new DataPacket(UNIT, null, new OrgUnit("Devs"), false),
+                new ObjectOutputStream(System.out));
+        //byte[] b = outputStream.toByteArray();
+        //should give 0
     }
     @Test
     public void oneRowInsertUOD() {
@@ -57,6 +75,7 @@ public class TestNetworkServer {
     //TODO maybe make multiple of some above tests for different tables??
     @Test
     public void tradeRecNoMatches() {
+
         //no sellorder buyorder pairs with the same asset exist
         //reconcile and run a select query
         //assert that select queries for resolved sellorders and buyorders both return empty

@@ -1,9 +1,11 @@
 package common;
 
+import java.io.Serializable;
+
 /**
  * This type is used to serialise a query request to the server
  */
-public class DataPacket {
+public class DataPacket implements Serializable {
     public DatabaseTables table;
     public String filter; //the WHERE clause of a SQL query, not including the WHERE keyword
     public DataObject object;
