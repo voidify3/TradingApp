@@ -50,6 +50,10 @@ public class User extends DataObject {
         // NewUser() method separately as this constructor will also be used when
         // returning user objects from the DB (by re-creating them with the data)
     }
+    public User(String username, String password, boolean adminAccess, String orgunit) throws IllegalString {
+        this(username, password, adminAccess);
+        this.setUnit(orgunit);
+    }
 
     // GETTERS & SETTERS------------------------------------------------------------------------------------------------
     /***

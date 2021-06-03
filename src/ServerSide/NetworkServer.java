@@ -217,8 +217,21 @@ public class NetworkServer {
         }
     }
 
-    private void handleRequest(ProtocolKeywords keyword, DataPacket info, ObjectOutputStream out) {
+    private void handleRequest(ProtocolKeywords keyword, DataPacket info, ObjectOutputStream out) throws IOException {
+        if (keyword == ProtocolKeywords.SELECT) {
+            out.writeObject(handleSelect(info));
+        }
+        else {
+            out.writeObject(handleNonselect(keyword,info));
+        }
+    }
 
+    private ArrayList<DataObject> handleSelect(DataPacket info) {
+        return null;
+    }
+
+    private int handleNonselect(ProtocolKeywords keyword, DataPacket info) {
+        return 0;
     }
 
 
@@ -379,6 +392,14 @@ public class NetworkServer {
     void simulateRequest(ProtocolKeywords keyword, DataPacket info, ObjectOutputStream o) throws IOException {
         handleRequest(keyword, info, o);
 
+    }
+
+    ArrayList<DataObject> simulateSelect(DataPacket info) {
+        return handleSelect(info);
+    }
+
+    int simulateNonselect(ProtocolKeywords keyword, DataPacket info) {
+        return handleNonselect(keyword, info);
     }
 
     /**

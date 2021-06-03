@@ -190,7 +190,7 @@ public class TradingAppData {
 
     public void deleteAsset(int id) throws DoesNotExist, ConstraintException {
         int i = dataSource.deleteAsset(id);
-        if (i==0)  throw new DoesNotExist("User '%s' not found", id);
+        if (i==0)  throw new DoesNotExist("Asset '%s' not found", id);
         else if (i==-1) throw new ConstraintException("Asset '%s' could not be safely deleted."
                 + "Delete any resolved buy orders for the asset and try again", id);
     }
@@ -243,9 +243,11 @@ public class TradingAppData {
             dataSource.insertBuyOrder(s);
         }
     }
-
-    public void addUser(User u) throws AlreadyExists {
-        if (dataSource.insertUser(u)==0) throw new AlreadyExists("User '%s' already exists. Please try a different username.", u.getUsername());
+    //TODO:properly set up lookaheads for FKs
+    public void addUser(User u) throws AlreadyExists, DoesNotExist {
+        int result = dataSource.insertUser(u);
+        if (result==0) throw new AlreadyExists("User '%s' already exists. Please try a different username.", u.getUsername());
+        else if (result ==-1) throw new DoesNotExist("Org unit %s does not exist");
     }
     public void addUnit(OrgUnit u) throws AlreadyExists {
         if (dataSource.insertUnit(u)==0) throw new AlreadyExists("Unit '%s' already exists. Please try a different unit name.", u.getName());
@@ -253,13 +255,16 @@ public class TradingAppData {
     public void addAsset(Asset a) throws AlreadyExists {
         if (dataSource.insertAsset(a) == 0) throw new AlreadyExists("Asset '%i' already exists.", a.getId());
     }
-
-    public void setInventory(InventoryRecord i) {
-        dataSource.insertOrUpdateInventory(i); //there is no fail case
+    public void setInventory(InventoryRecord i) throws DoesNotExist {
+        if (dataSource.insertOrUpdateInventory(i)==-1) {
+            throw new DoesNotExist("Unit %s and/or asset %i not found.");
+        }
     }
     //UPDATE METHODS--------------------------------------------------------------------
     public void updateUser(User u) throws DoesNotExist {
-        if (dataSource.updateUser(u) == 0) throw new DoesNotExist("User '%s' not found.", u.getUsername());
+        int result = dataSource.updateUser(u);
+        if (result == 0) throw new DoesNotExist("User '%s' not found.", u.getUsername());
+        else if (result == -1) throw new DoesNotExist("Unit %s not found.", u.getUnit());
     }
     public void updateUnit(OrgUnit u) throws DoesNotExist {
         if (dataSource.updateUnit(u) == 0) throw new DoesNotExist("Unit '%s' not found.", u.getName());
@@ -268,10 +273,14 @@ public class TradingAppData {
         if (dataSource.updateAsset(a) == 0) throw new DoesNotExist("Asset '%i' not found.", a.getId());
     }
     public void updateBuyOrder(BuyOrder o) throws DoesNotExist {
-        if (dataSource.updateBuyOrder(o) == 0) throw new DoesNotExist("Buy order '%i' not found.", o.id);
+        int result = dataSource.updateBuyOrder(o);
+        if (result == 0) throw new DoesNotExist("Buy order '%i' not found.", o.id);
+        else if (result==-1) throw new DoesNotExist("User and/or asset not found.");
     }
     public void updateSellOrder(SellOrder o) throws DoesNotExist {
-        if (dataSource.updateSellOrder(o) == 0) throw new DoesNotExist("Sell order '%i' not found.", o.id);
+        int result = dataSource.updateSellOrder(o);
+        if (result == 0) throw new DoesNotExist("Sell order '%i' not found.", o.id);
+        else if (result==-1) throw new DoesNotExist("User and/or asset not found.");
     }
 
 
@@ -627,7 +636,7 @@ public class TradingAppData {
     }
     //iff loggedIn is an admin, create new user as specified and add to DB
     public boolean createUserIfAdmin(String username, String password, boolean adminAccess, User loggedin)
-            throws NotAuthorised, IllegalString, AlreadyExists {
+            throws NotAuthorised, IllegalString, AlreadyExists, DoesNotExist {
         failIfNotAdmin("create a new user", loggedin);
         User newUser = new User(username, password, adminAccess);
         addUser(newUser);
@@ -686,7 +695,7 @@ public class TradingAppData {
 
     //iff loggedIn is an admin, add or update an inventory record such that one exists matching the specifications
     //(these two operations were different in Interactions, but they share a query so I've merged them)
-    public boolean setInventoryQtyIfAdmin(String unit, int asset, int qty, User loggedin) throws NotAuthorised, InvalidAmount {
+    public boolean setInventoryQtyIfAdmin(String unit, int asset, int qty, User loggedin) throws NotAuthorised, InvalidAmount, DoesNotExist {
         failIfNotAdmin("set an asset's quantity", loggedin);
         if (qty < 0) throw new InvalidAmount("Cannot set quantity of asset to %i% as this is less than 0", qty);
         setInventory(new InventoryRecord(unit, asset, qty));
@@ -694,7 +703,7 @@ public class TradingAppData {
     }
     //iff loggedIn is an admin, adjust the quantity of an inventory record according to the specifications
     //(`change` can be negative; invalid amount is checked in called methods)
-    public boolean adjustInventoryQtyIfAdmin(String unit, int asset, int change, User loggedin) throws NotAuthorised, InvalidAmount {
+    public boolean adjustInventoryQtyIfAdmin(String unit, int asset, int change, User loggedin) throws NotAuthorised, InvalidAmount, DoesNotExist {
         int currentqty = getInv(unit, asset).getQuantity();
         setInventoryQtyIfAdmin(unit, asset, currentqty + change, loggedin);
         return true;

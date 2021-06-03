@@ -24,7 +24,8 @@ public class DBConnection {
         Properties props = new Properties();
         FileInputStream in = null;
         try {
-            in = new FileInputStream("src/db.props");
+            System.out.println(System.getProperty("user.dir"));
+            in = new FileInputStream("../src/db.props");
             props.load(in);
             in.close();
 
