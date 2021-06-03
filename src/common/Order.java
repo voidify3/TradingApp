@@ -1,20 +1,19 @@
 package common;
 
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 /**
  * @author Alistair Ridge
  */
 public class Order extends DataObject implements Comparable<Order> {
-    public int id = 0;
+    private int id = 0;
     public static int nextId = 0;
-    public String user;
-    public int asset;
-    public LocalDateTime datePlaced;
-    public LocalDateTime dateResolved;
-    public int qty;
-    public int price;
+    private String user;
+    private int asset;
+    private LocalDateTime datePlaced;
+    private LocalDateTime dateResolved;
+    private int qty;
+    private int price;
 
     /**
      * This constructor sets the trade ID of the order and adds the trade specific information to the object.
@@ -25,33 +24,33 @@ public class Order extends DataObject implements Comparable<Order> {
      */
     public Order(User user, Asset asset, int qty, int price) {
         // Increment the trade ID every time a new order is created so that all orders have a unique ID.
-        this.id = nextId;
+        this.setId(nextId);
         nextId++;
 
         // Set the time that the order was created.
-        this.datePlaced = LocalDateTime.now();
-        this.dateResolved = null;
+        this.setDatePlaced(LocalDateTime.now());
+        this.setDateResolved(null);
 
         // Update trade specific data
-        this.user = user.getUsername();
-        this.asset = asset.getId();
-        this.qty = qty;
-        this.price = price;
+        this.setUser(user.getUsername());
+        this.setAsset(asset.getId());
+        this.setQty(qty);
+        this.setPrice(price);
     }
     public Order(String user, int asset, int qty, int price) {
         // Increment the trade ID every time a new order is created so that all orders have a unique ID.
-        this.id = nextId;
+        this.setId(nextId);
         nextId++;
 
         // Set the time that the order was created.
-        this.datePlaced = LocalDateTime.now();
-        this.dateResolved = null;
+        this.setDatePlaced(LocalDateTime.now());
+        this.setDateResolved(null);
 
         // Update trade specific data
-        this.user = user;
-        this.asset = asset;
-        this.qty = qty;
-        this.price = price;
+        this.setUser(user);
+        this.setAsset(asset);
+        this.setQty(qty);
+        this.setPrice(price);
     }
 
     /**
@@ -66,35 +65,83 @@ public class Order extends DataObject implements Comparable<Order> {
      */
     public Order(int id, String user, int asset, int qty, int price, LocalDateTime placed, LocalDateTime resolved) {
         // Increment the trade ID every time a new order is created so that all orders have a unique ID.
-        this.id = id;
+        this.setId(id);
 
         // Set the time that the order was created.
-        this.datePlaced = placed;
-        this.dateResolved = resolved;
+        this.setDatePlaced(placed);
+        this.setDateResolved(resolved);
 
         // Update trade specific data
-        this.user = user;
-        this.asset = asset;
-        this.qty = qty;
-        this.price = price;
+        this.setUser(user);
+        this.setAsset(asset);
+        this.setQty(qty);
+        this.setPrice(price);
     }
 
 
     // Helper Functions ------------------------------------------------------------------------------------------------
 
-    public String getUsername() {
-        return this.user;
-    }
-
-    public int getAssetID() {
-        return this.asset;
-    }
-
     @Override
     public int compareTo(Order o) {
-        if (this.dateResolved == null | o.dateResolved == null) {
-            return this.datePlaced.compareTo(o.datePlaced);
+        if (this.getDateResolved() == null | o.getDateResolved() == null) {
+            return this.getDatePlaced().compareTo(o.getDatePlaced());
         }
-        else return this.dateResolved.compareTo(o.dateResolved);
+        else return this.getDateResolved().compareTo(o.getDateResolved());
+    }
+
+    public int getQty() {
+        return qty;
+    }
+
+    public void setQty(int qty) {
+        this.qty = qty;
+    }
+
+    public int getPrice() {
+        return price;
+    }
+
+    public void setPrice(int price) {
+        this.price = price;
+    }
+
+    public int getId() {
+        return id;
+    }
+
+    public void setId(int id) {
+        this.id = id;
+    }
+
+    public String getUser() {
+        return user;
+    }
+
+    public void setUser(String user) {
+        this.user = user;
+    }
+
+    public int getAsset() {
+        return asset;
+    }
+
+    public void setAsset(int asset) {
+        this.asset = asset;
+    }
+
+    public LocalDateTime getDatePlaced() {
+        return datePlaced;
+    }
+
+    public void setDatePlaced(LocalDateTime datePlaced) {
+        this.datePlaced = datePlaced;
+    }
+
+    public LocalDateTime getDateResolved() {
+        return dateResolved;
+    }
+
+    public void setDateResolved(LocalDateTime dateResolved) {
+        this.dateResolved = dateResolved;
     }
 }

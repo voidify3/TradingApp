@@ -57,20 +57,20 @@ public class TestOrders {
     public void TestOrdersSetup() {
         assertAll(
                 // Test that the parent class has been setup correctly
-                () -> assertEquals("johndoe", testOrder.user),
-                () -> assertEquals(ABC.getId(), testOrder.asset),
-                () -> assertEquals(5, testOrder.qty),
-                () -> assertEquals(10, testOrder.price),
+                () -> assertEquals("johndoe", testOrder.getUser()),
+                () -> assertEquals(ABC.getId(), testOrder.getAsset()),
+                () -> assertEquals(5, testOrder.getQty()),
+                () -> assertEquals(10, testOrder.getPrice()),
                 // Test that the Buy Order class has been setup correctly
-                () -> assertEquals("johndoe", testBuyOrder.user),
-                () -> assertEquals(ABC.getId(), testBuyOrder.asset),
-                () -> assertEquals(20, testBuyOrder.qty),
-                () -> assertEquals(13, testBuyOrder.price),
+                () -> assertEquals("johndoe", testBuyOrder.getUser()),
+                () -> assertEquals(ABC.getId(), testBuyOrder.getAsset()),
+                () -> assertEquals(20, testBuyOrder.getQty()),
+                () -> assertEquals(13, testBuyOrder.getPrice()),
                 // Test that the Sell Order class has been setup correctly
-                () -> assertEquals("johndoe", testSellOrder.user),
-                () -> assertEquals(ABC.getId(), testSellOrder.asset),
-                () -> assertEquals(6, testSellOrder.qty),
-                () -> assertEquals(47, testSellOrder.price));
+                () -> assertEquals("johndoe", testSellOrder.getUser()),
+                () -> assertEquals(ABC.getId(), testSellOrder.getAsset()),
+                () -> assertEquals(6, testSellOrder.getQty()),
+                () -> assertEquals(47, testSellOrder.getPrice()));
     }
 
     /**
@@ -114,13 +114,13 @@ public class TestOrders {
      */
     @Test
     public void TestDeleteBuy() throws DoesNotExist {
-        i.cancelBuyOrder(testBuyOrder.id);
-        assertThrows(DoesNotExist.class, ()-> i.getBuyByKey(testBuyOrder.id));
+        i.cancelBuyOrder(testBuyOrder.getId());
+        assertThrows(DoesNotExist.class, ()-> i.getBuyByKey(testBuyOrder.getId()));
     }
     @Test
     public void TestDeleteSell() throws DoesNotExist, ConstraintException {
-        i.cancelSellOrder(testSellOrder.id);
-        assertThrows(DoesNotExist.class, ()-> i.getSellByKey(testSellOrder.id));
+        i.cancelSellOrder(testSellOrder.getId());
+        assertThrows(DoesNotExist.class, ()-> i.getSellByKey(testSellOrder.getId()));
     }
 }
 

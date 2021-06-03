@@ -227,7 +227,7 @@ public class NetworkServer {
     }
 
     private ArrayList<DataObject> handleSelect(DataPacket info) {
-        return null;
+        return new ArrayList<>();
     }
 
     private int handleNonselect(ProtocolKeywords keyword, DataPacket info) {
@@ -384,20 +384,21 @@ public class NetworkServer {
     }
 
     /**
-     * Wrapper to simulate a request sent over the connection, exists for test/debug purposes.
-     * Should use the same algorithm as a real one
-     * @param keyword Query keyword
-     * @param info Info packet
+     * Non-private wrapper for testing SELECT queries
+     * @param info DataPacket of query
+     * @return ArrayList of results
      */
-    void simulateRequest(ProtocolKeywords keyword, DataPacket info, ObjectOutputStream o) throws IOException {
-        handleRequest(keyword, info, o);
-
-    }
-
     ArrayList<DataObject> simulateSelect(DataPacket info) {
         return handleSelect(info);
     }
 
+    /**
+     * Non-private wrapper for testing INSERT, UPDATE, DELETE queries
+     * @param keyword Query type
+     * @param info DataPacket of query
+     * @return Query status number (1 for "success", 0 for "failure due to existence/nonexistence of matching record",
+     * -1 for "failure due to constraints", 2 for "INSERT ON DUPLICATE KEY UPDATE query didn't insert but updated"
+     */
     int simulateNonselect(ProtocolKeywords keyword, DataPacket info) {
         return handleNonselect(keyword, info);
     }

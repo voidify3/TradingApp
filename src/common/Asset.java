@@ -21,7 +21,7 @@ public class Asset extends DataObject {
     private final int id;
     private final String description;
 
-    // CONSTRUCTOR------------------------------------------------------------------------------------------------------
+    // CONSTRUCTORS------------------------------------------------------------------------------------------------------
     /***
      * Asset Constructor
      * @param assetID the asset's unique ID
@@ -32,6 +32,11 @@ public class Asset extends DataObject {
         this.id = assetID;
 
         // Store the asset description locally
+        this.description = description;
+    }
+
+    public Asset(String description) {
+        this.id=0;
         this.description = description;
     }
 

@@ -303,7 +303,7 @@ public class TradingAppGUI {
                 ArrayList<BuyOrder> assetPriceHistory = TradingAppGUI.this.data.getResolvedBuysByAsset(assetID);
                 Optional<BuyOrder> mostRecentSale = assetPriceHistory.stream().max(BuyOrder::compareTo);
                 AtomicInteger recentPrice = new AtomicInteger();
-                mostRecentSale.ifPresent(buyOrder -> recentPrice.set(buyOrder.price));
+                mostRecentSale.ifPresent(buyOrder -> recentPrice.set(buyOrder.getPrice()));
                 //recentPrice now contains the most recent price of the asset, or 0 if the asset has never been sold
                 String[] dataNew = new String[]{ asset.getIdString(), asset.getDescription(),
                         String.valueOf(inventoryRecord.getQuantity()), "$" + recentPrice.get()};

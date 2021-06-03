@@ -1,6 +1,5 @@
 package ServerSide;
 
-import common.Exceptions.*;
 import common.*;
 
 import java.sql.Timestamp;
@@ -74,7 +73,7 @@ public class MockDatabase {
 
     public int addSellOrder(SellOrder order) {
         for (SellOrder current : sellOrders) {
-            if (current.id == order.id) {
+            if (current.getId() == order.getId()) {
                 return 0;
             }
         }
@@ -84,7 +83,7 @@ public class MockDatabase {
 
     public int addBuyOrder(BuyOrder order) {
         for (BuyOrder current : buyOrders) {
-            if (current.id == order.id) {
+            if (current.getId() == order.getId()) {
                 return 0;
             }
         }
@@ -135,7 +134,7 @@ public class MockDatabase {
     }
     public int replaceSellOrder(SellOrder s) {
         for (int i = 0; i < sellOrders.size(); i++) {
-            if (sellOrders.get(i).id == s.id) {
+            if (sellOrders.get(i).getId() == s.getId()) {
                 sellOrders.set(i, s);
                 return 1;
             }
@@ -144,7 +143,7 @@ public class MockDatabase {
     }
     public int replaceBuyOrder(BuyOrder b) {
         for (int i = 0; i < buyOrders.size(); i++) {
-            if (buyOrders.get(i).id == b.id) {
+            if (buyOrders.get(i).getId() == b.getId()) {
                 buyOrders.set(i, b);
                 return 1;
             }
@@ -190,10 +189,10 @@ public class MockDatabase {
         // doing any of that if any of the SellOrders are restricted from deletion
         ArrayList<SellOrder> sells = sellOrdersByAsset(asset, null);
         for (SellOrder s : sells) {
-            if (!customersOf(s.id).isEmpty()) return -1;
+            if (!customersOf(s.getId()).isEmpty()) return -1;
         }
-        for (SellOrder s: sells) cancelSellOrder(s.id);
-        for (BuyOrder b : buyOrdersByAsset(asset, null)) cancelBuyOrder(b.id);
+        for (SellOrder s: sells) cancelSellOrder(s.getId());
+        for (BuyOrder b : buyOrdersByAsset(asset, null)) cancelBuyOrder(b.getId());
         for (InventoryRecord i : assetInventory(asset)) deleteInv(i.getUnitName(), i.getAssetID());
 
         //loop needed as a safety check
@@ -236,8 +235,8 @@ public class MockDatabase {
     public ArrayList<SellOrder> sellOrdersByUser(String username, Boolean resolved) {
         ArrayList<SellOrder> output = new ArrayList<>();
         for (SellOrder s : sellOrders) {
-            if ((resolved == null ||  (resolved == (s.dateResolved != null)))  //resolved matches the truth value of `s.dateResolved != null`
-                    &&  (s.getUsername() == username)) {
+            if ((resolved == null ||  (resolved == (s.getDateResolved() != null)))  //resolved matches the truth value of `s.dateResolved != null`
+                    &&  (s.getUser() == username)) {
                 output.add(s);
             }
         }
@@ -247,8 +246,8 @@ public class MockDatabase {
     public ArrayList<SellOrder> sellOrdersByAsset(int assetID, Boolean resolved) {
         ArrayList<SellOrder> output = new ArrayList<>();
         for (SellOrder s : sellOrders) {
-            if ((resolved == null ||  (resolved == (s.dateResolved != null)))  //resolved matches the truth value of `s.dateResolved != null`
-                    &&  (s.getAssetID() == assetID)) {
+            if ((resolved == null ||  (resolved == (s.getDateResolved() != null)))  //resolved matches the truth value of `s.dateResolved != null`
+                    &&  (s.getAsset() == assetID)) {
                 output.add(s);
             }
         }
@@ -257,8 +256,8 @@ public class MockDatabase {
     public ArrayList<SellOrder> sellOrdersPlacedBetween(Timestamp start, Timestamp end, Boolean resolved) {
         ArrayList<SellOrder> output = new ArrayList<>();
         for (SellOrder s : sellOrders) {
-            if ((resolved == null ||  (resolved == (s.dateResolved != null)))  //resolved matches the truth value of `s.dateResolved != null`
-                    &&  isBetween(s.datePlaced, start.toLocalDateTime(), end.toLocalDateTime())) {
+            if ((resolved == null ||  (resolved == (s.getDateResolved() != null)))  //resolved matches the truth value of `s.dateResolved != null`
+                    &&  isBetween(s.getDatePlaced(), start.toLocalDateTime(), end.toLocalDateTime())) {
                 output.add(s);
             }
         }
@@ -267,7 +266,7 @@ public class MockDatabase {
     public ArrayList<SellOrder> sellOrdersResolvedBetween(Timestamp start, Timestamp end) {
         ArrayList<SellOrder> output = new ArrayList<>();
         for (SellOrder s : sellOrders) {
-            if (isBetween(s.dateResolved, start.toLocalDateTime(), end.toLocalDateTime())) {
+            if (isBetween(s.getDateResolved(), start.toLocalDateTime(), end.toLocalDateTime())) {
                 output.add(s);
             }
         }
@@ -277,8 +276,8 @@ public class MockDatabase {
     public ArrayList<BuyOrder> buyOrdersByUser(String username, Boolean resolved) {
         ArrayList<BuyOrder> output = new ArrayList<>();
         for (BuyOrder s : buyOrders) {
-            if ((resolved == null ||  (resolved == (s.dateResolved != null)))  //resolved matches the truth value of `s.dateResolved != null`
-                    &&  (s.getUsername() == username)) {
+            if ((resolved == null ||  (resolved == (s.getDateResolved() != null)))  //resolved matches the truth value of `s.dateResolved != null`
+                    &&  (s.getUser() == username)) {
                 output.add(s);
             }
         }
@@ -288,8 +287,8 @@ public class MockDatabase {
     public ArrayList<BuyOrder> buyOrdersByAsset(int assetID, Boolean resolved) {
         ArrayList<BuyOrder> output = new ArrayList<>();
         for (BuyOrder s : buyOrders) {
-            if ((resolved == null ||  (resolved == (s.dateResolved != null)))  //resolved matches the truth value of `s.dateResolved != null`
-                    &&  (s.getAssetID() == assetID)) {
+            if ((resolved == null ||  (resolved == (s.getDateResolved() != null)))  //resolved matches the truth value of `s.dateResolved != null`
+                    &&  (s.getAsset() == assetID)) {
                 output.add(s);
             }
         }
@@ -299,8 +298,8 @@ public class MockDatabase {
     public ArrayList<BuyOrder> buyOrdersByAssetResolvedBetween(int assetID, Timestamp start, Timestamp end) {
         ArrayList<BuyOrder> output = new ArrayList<>();
         for (BuyOrder s : buyOrders) {
-            if (isBetween(s.dateResolved, start.toLocalDateTime(), end.toLocalDateTime())
-                    &&  (s.getAssetID() == assetID)) {
+            if (isBetween(s.getDateResolved(), start.toLocalDateTime(), end.toLocalDateTime())
+                    &&  (s.getAsset() == assetID)) {
                 output.add(s);
             }
         }
@@ -310,8 +309,8 @@ public class MockDatabase {
     public ArrayList<BuyOrder> buyOrdersPlacedBetween(Timestamp start, Timestamp end, Boolean resolved) {
         ArrayList<BuyOrder> output = new ArrayList<>();
         for (BuyOrder s : buyOrders) {
-            if ((resolved == null ||  (resolved == (s.dateResolved != null))) //resolved matches the truth value of `s.dateResolved != null`
-                    &&  isBetween(s.datePlaced, start.toLocalDateTime(), end.toLocalDateTime())) {
+            if ((resolved == null ||  (resolved == (s.getDateResolved() != null))) //resolved matches the truth value of `s.dateResolved != null`
+                    &&  isBetween(s.getDatePlaced(), start.toLocalDateTime(), end.toLocalDateTime())) {
                 output.add(s);
             }
         }
@@ -321,7 +320,7 @@ public class MockDatabase {
     public ArrayList<BuyOrder> buyOrdersResolvedBetween(Timestamp start, Timestamp end) {
         ArrayList<BuyOrder> output = new ArrayList<>();
         for (BuyOrder s : buyOrders) {
-            if (isBetween(s.dateResolved, start.toLocalDateTime(), end.toLocalDateTime())) {
+            if (isBetween(s.getDateResolved(), start.toLocalDateTime(), end.toLocalDateTime())) {
                 output.add(s);
             }
         }
@@ -409,7 +408,7 @@ public class MockDatabase {
 
     public SellOrder getSell(int ID) {
         for (SellOrder o : sellOrders) {
-            if (o.id == ID) {
+            if (o.getId() == ID) {
                 return o;
             }
         }
@@ -418,7 +417,7 @@ public class MockDatabase {
 
     public BuyOrder getBuy(int ID) {
         for (BuyOrder o : buyOrders) {
-            if (o.id == ID) {
+            if (o.getId() == ID) {
                 return o;
             }
         }

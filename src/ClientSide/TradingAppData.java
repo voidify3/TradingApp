@@ -32,7 +32,7 @@ public class TradingAppData {
 
     public void addHistoricalPrice(int assetID, String userResponsible, int price, LocalDateTime dateTime) {
         SellOrder sell = new SellOrder(Order.nextId++, userResponsible, assetID, 0, price, dateTime, dateTime);
-        BuyOrder buy = new BuyOrder(Order.nextId++, userResponsible, assetID, 0, price, dateTime, dateTime, sell.id);
+        BuyOrder buy = new BuyOrder(Order.nextId++, userResponsible, assetID, 0, price, dateTime, dateTime, sell.getId());
         dataSource.insertSellOrder(sell);
         dataSource.insertBuyOrder(buy);
     }
@@ -222,23 +222,23 @@ public class TradingAppData {
     public void placeSellOrder(SellOrder s) throws OrderException, DoesNotExist {
         //OrgUnit unitInQuestion = dataSource.unitByKey(dataSource.userByKey(s.getUsername()).getUnit());
         InventoryRecord inventoryRecord = getInv(
-                getUserByKey(s.getUsername()).getUnit(), s.asset);
-        if (inventoryRecord.getQuantity() < s.qty) {
+                getUserByKey(s.getUser()).getUnit(), s.getAsset());
+        if (inventoryRecord.getQuantity() < s.getQty()) {
             throw new OrderException("Insufficient quantity of asset");
         }
         else {
-            inventoryRecord.setQuantity(inventoryRecord.getQuantity() - s.qty);
+            inventoryRecord.setQuantity(inventoryRecord.getQuantity() - s.getQty());
             dataSource.insertOrUpdateInventory(inventoryRecord);
             dataSource.insertSellOrder(s);
         }
     }
     public void placeBuyOrder(BuyOrder s) throws OrderException, InvalidAmount {
-        OrgUnit unitInQuestion = dataSource.unitByKey(dataSource.userByKey(s.getUsername()).getUnit());
-        if (unitInQuestion.getCredits() < s.qty * s.price) {
+        OrgUnit unitInQuestion = dataSource.unitByKey(dataSource.userByKey(s.getUser()).getUnit());
+        if (unitInQuestion.getCredits() < s.getQty() * s.getPrice()) {
             throw new OrderException("Insufficient credits");
         }
         else {
-            unitInQuestion.adjustBalance(- s.qty);
+            unitInQuestion.adjustBalance(-s.getQty());
             dataSource.updateUnit(unitInQuestion);
             dataSource.insertBuyOrder(s);
         }
@@ -274,12 +274,12 @@ public class TradingAppData {
     }
     public void updateBuyOrder(BuyOrder o) throws DoesNotExist {
         int result = dataSource.updateBuyOrder(o);
-        if (result == 0) throw new DoesNotExist("Buy order '%i' not found.", o.id);
+        if (result == 0) throw new DoesNotExist("Buy order '%i' not found.", o.getId());
         else if (result==-1) throw new DoesNotExist("User and/or asset not found.");
     }
     public void updateSellOrder(SellOrder o) throws DoesNotExist {
         int result = dataSource.updateSellOrder(o);
-        if (result == 0) throw new DoesNotExist("Sell order '%i' not found.", o.id);
+        if (result == 0) throw new DoesNotExist("Sell order '%i' not found.", o.getId());
         else if (result==-1) throw new DoesNotExist("User and/or asset not found.");
     }
 
@@ -326,7 +326,7 @@ public class TradingAppData {
         LocalDate today = LocalDate.now();
         try{
             //explanation of this logic: get the date of the earliest resolved BuyOrder for the asset
-        earliestDate = (getResolvedBuysByAsset(asset.getId()).stream().min(BuyOrder::compareTo).orElseThrow().dateResolved).toLocalDate();}
+        earliestDate = (getResolvedBuysByAsset(asset.getId()).stream().min(BuyOrder::compareTo).orElseThrow().getDateResolved()).toLocalDate();}
         catch (NoSuchElementException e) {
             return 0;
         }
@@ -344,7 +344,7 @@ public class TradingAppData {
         ArrayList<BuyOrder> transactions = dataSource.buyOrdersByAssetResolvedBetween(asset.getId(),
                 Timestamp.valueOf(startDate.atStartOfDay()), Timestamp.valueOf(endDate.atTime(23,59,59)));
         for (BuyOrder b : transactions) {
-            sum += b.price;
+            sum += b.getPrice();
             count++;
         }
         if (count == 0) return 0;
@@ -361,9 +361,9 @@ public class TradingAppData {
     public TreeMap<LocalDate, Integer> getHistoricalPrices(Asset a, Intervals timeInterval) throws InvalidDate, DoesNotExist {
         ArrayList<BuyOrder> priceHistory = getResolvedBuysByAsset(a.getId());
         Optional<BuyOrder> earliest = priceHistory.stream().min(BuyOrder::compareTo);
-        LocalDateTime earliestDate = earliest.get().dateResolved;
+        LocalDateTime earliestDate = earliest.get().getDateResolved();
         Optional<BuyOrder> latest = priceHistory.stream().max(BuyOrder::compareTo);
-        LocalDateTime latestDate = latest.get().dateResolved;
+        LocalDateTime latestDate = latest.get().getDateResolved();
         // Create new TreeMap for the averages
         TreeMap<LocalDate, Integer> averages = new TreeMap<>();
 
