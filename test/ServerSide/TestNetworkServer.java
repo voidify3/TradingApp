@@ -126,7 +126,7 @@ public class TestNetworkServer {
     @Test @Order(10)
     public void successSelectBlankFilter() {
         ArrayList<DataObject> results = server.simulateSelect(
-                new DataPacket(UNIT, "", null, null));
+                new DataPacket(UNIT, "", null, null)); //will be sortd on compareto
         assertAll(
                 ()->assertNotEquals(null, results),
                 ()->assertEquals(1, results.size()),
@@ -181,10 +181,10 @@ public class TestNetworkServer {
     }
     @Test @Order(lastSelect+2)
     public void tradeRecTrivialCase() {
-        int oldCredits = 0; /* ((OrgUnit) server.simulateSelect(new DataPacket(UNIT,
-                String.format(NAME_EQUALS, TEST_ORG_1), null, null)).get(0)).getCredits();
-                */
-        int oldStock = 0;
+//        int oldCredits = 0; /* ((OrgUnit) server.simulateSelect(new DataPacket(UNIT,
+//                String.format(NAME_EQUALS, TEST_ORG_1), null, null)).get(0)).getCredits();
+//                */
+//        int oldStock = 0;
         server.simulateNonselect(INSERT,
                 new DataPacket(SELL, null,
                         new SellOrder(TEST_USER, 3, 10, 5), false));
@@ -244,15 +244,24 @@ public class TestNetworkServer {
                 ()->assertEquals(TEST_USER, ((BuyOrder)resolvedBuys.get(0)).getUser()),
                 ()->assertEquals(((SellOrder) resolvedSells.get(0)).getId(), ((BuyOrder)resolvedBuys.get(0)).boughtFrom),
                 ()->assertEquals(((SellOrder) resolvedSells.get(0)).getDateResolved(),
-                        ((BuyOrder) resolvedBuys.get(0)).getDateResolved())
+                        ((BuyOrder) resolvedBuys.get(0)).getDateResolved()),
+                ()->assertEquals(60, ((OrgUnit) server.simulateSelect(new DataPacket(UNIT,
+                        String.format(NAME_EQUALS, TEST_ORG_1), null, null)).get(0)).getCredits()),
+                ()->assertEquals(60, ((OrgUnit) server.simulateSelect(new DataPacket(UNIT,
+                        String.format(NAME_EQUALS, TEST_ORG_2), null, null)).get(0)).getCredits()),
+                ()->assertEquals(10, ((InventoryRecord)server.simulateSelect(
+                        new DataPacket(INV, String.format(INV_KEY_EQUALS, TEST_ORG_1, 3),
+                                null, null)).get(0)).getQuantity())
         );
         //assert that the former pair are both unresolved and the latter pair are both resolved
+        //and that the transaction went through including the refund of the difference to the buyer
     }
     @Test @Order(lastSelect+4)
     public void tradeRecQtyDifference() {
         //delete the resolved orders
         server.simulateNonselect(DELETE, new DataPacket(BUY, DATE_RESOLVED_IS_NOT_NULL, null, null));
         server.simulateNonselect(DELETE, new DataPacket(SELL, DATE_RESOLVED_IS_NOT_NULL, null, null));
+        //update the too-expensive sell to now be a higher ty and same price
         SellOrder s = (SellOrder)(server.simulateSelect(
                 new DataPacket(SELL, "", null, null)).get(0));
         s.setQty(11);
@@ -260,10 +269,10 @@ public class TestNetworkServer {
         server.simulateNonselect(UPDATE, new DataPacket(SELL, null, s, null));
         server.simulateNonselect(INSERT,
                 new DataPacket(SELL, null,
-                        new SellOrder(TEST_USER_2, 3, 10, 5), false));
+                        new SellOrder(TEST_USER_2, 3, 15, 5), false));
         server.simulateNonselect(INSERT,
                 new DataPacket(BUY, null,
-                        new BuyOrder(TEST_USER, 3, 11, 5), false));
+                        new BuyOrder(TEST_USER, 3, 16, 5), false));
         //now there's 2 pairs equal price: sellQty=buyQty+1 for asset 2 and sellQty=buyQty-1 for asset 3
         server.reconcileTrades();
         //get unresolved orders
@@ -279,22 +288,55 @@ public class TestNetworkServer {
                 ()->assertEquals(TEST_USER_2, ((BuyOrder)resolvedBuys.get(0)).getUser()),
                 ()->assertEquals(1, ((SellOrder) sellsFor2.get(0)).getQty()),
                 ()->assertEquals(((SellOrder) sellsFor2.get(0)).getId(), ((BuyOrder)resolvedBuys.get(0)).boughtFrom),
-                ()-> assertNull(((SellOrder) sellsFor2.get(0)).getDateResolved())
+                ()-> assertNull(((SellOrder) sellsFor2.get(0)).getDateResolved()),
+                ()->assertEquals(100, ((OrgUnit) server.simulateSelect(new DataPacket(UNIT,
+                        String.format(NAME_EQUALS, TEST_ORG_1), null, null)).get(0)).getCredits()),
+                ()->assertEquals(20, ((InventoryRecord)server.simulateSelect(
+                        new DataPacket(INV, String.format(INV_KEY_EQUALS, TEST_ORG_2, 2),
+                                null, null)).get(0)).getQuantity())
         );
         //assert that the former buy order is the only resolved one, and former sell order has new qty 1
-        //and that the quantities have been adjusted
+        //and that the transaction went through
     }
     @Test @Order(lastSelect+5)
     public void tradeRecMultiMatch() {
         server.simulateNonselect(DELETE, new DataPacket(BUY, DATE_RESOLVED_IS_NOT_NULL, null, null));
         server.simulateNonselect(DELETE, new DataPacket(SELL, DATE_RESOLVED_IS_NOT_NULL, null, null));
+        //edit the sell order that was left with qty 1 to fit the bill of sell 1
         ArrayList<DataObject> sells = server.simulateSelect(
-                new DataPacket(SELL, "", null, null));
+                new DataPacket(SELL, "asset = 2", null, null));
         SellOrder s = (SellOrder)(sells.get(0));
-        s.setQty(11);
-        s.setPrice(4);
-        //now an asset has these sells from oldest to newest: 1) qty 10, 2) qty 15
+        s.setAsset(3);
+        s.setQty(10);
+        server.simulateNonselect(UPDATE, new DataPacket(SELL, null, s, null));
+        BuyOrder b = (BuyOrder) server.simulateSelect(
+                new DataPacket(BUY, "", null, null)).get(0);
+        b.setQty(3);
+        server.simulateNonselect(UPDATE, new DataPacket(BUY, null, b, null));
+        server.simulateNonselect(UPDATE, new DataPacket(BUY, null, b, null));
+
+        //now asset 3 has these sells from oldest to newest: 1) qty 10, 2) qty 15
         //and these buys from oldest to newest (price immaterial): 1) qty 3, 2) qty 8, 3) qty 7, 4) qty 8
+
+
+        ArrayList resolvedSells = server.simulateSelect(
+                new DataPacket(SELL, DATE_RESOLVED_IS_NOT_NULL, null, null));
+        ArrayList resolvedBuys = server.simulateSelect(
+                new DataPacket(BUY, DATE_RESOLVED_IS_NOT_NULL, null, null));
+        ArrayList unresolvedBuys = server.simulateSelect(
+                new DataPacket(BUY, "dateResolved IS NULL", null, null));
+        assertAll(
+                ()->assertEquals(3, resolvedBuys.size()),
+                ()->assertEquals(1, unresolvedBuys.size()),
+                ()->assertEquals(1, resolvedSells.size()),
+                ()->assertTrue(resolvedBuys.get(0) instanceof BuyOrder),
+                ()->assertTrue(resolvedSells.get(0) instanceof SellOrder),
+                ()->assertEquals(TEST_USER, ((SellOrder)resolvedSells.get(0)).getUser()),
+                ()->assertEquals(8, ((BuyOrder)unresolvedBuys.get(0)).getQty())
+                //assert two of the resolved buys were resolved to the resolved sell
+                //assert transactions processed correctly
+        );
+
         //reconcile and run a select query
         //assert: sell 2 & buy 4 remain unresolved, buys 1&3 bought from sell 1, buy 2 bought from sell 2
     }

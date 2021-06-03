@@ -4,7 +4,7 @@ import common.Exceptions.*;
 import java.util.HashMap;
 import java.util.Set;
 
-public class OrgUnit extends DataObject {
+public class OrgUnit extends DataObject implements Comparable<OrgUnit> {
 
     private String orgName;
     private Integer orgCredits;
@@ -86,6 +86,10 @@ public class OrgUnit extends DataObject {
     }
 
 
+    @Override
+    public int compareTo(OrgUnit o) {
+        return this.orgName.compareTo(o.getName());
+    }
 }
 
 
