@@ -2,10 +2,8 @@ package ServerSide;
 
 import common.*;
 import static common.DatabaseTables.*;
+import static common.ProtocolKeywords.*;
 
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-import java.io.DataOutput;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
@@ -14,10 +12,7 @@ import java.net.Socket;
 import java.net.SocketTimeoutException;
 import java.sql.*;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Timer;
-import java.util.TimerTask;
+import java.util.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 
@@ -54,6 +49,7 @@ public class NetworkServer {
                     + USER.getColumnNames()[1] + " VARCHAR(128) NOT NULL," //hashed password
                     + USER.getColumnNames()[2] + " VARCHAR(41) NOT NULL," //salt string
                     + USER.getColumnNames()[3] + " VARCHAR(30)," //orgunit
+                    + USER.getColumnNames()[4] + " BOOLEAN," //adminAccess
                     + "CONSTRAINT fk_user_orgunit FOREIGN KEY (" + USER.getColumnNames()[3]
                     + ") REFERENCES " + UNIT.getTableName() + " (" + UNIT.getColumnNames()[0]
                     + ") ON DELETE SET NULL ON UPDATE CASCADE" + ");";
@@ -145,6 +141,10 @@ public class NetworkServer {
                     "VALUES (?, ?, ?)" +
                     "ON DUPLICATE KEY UPDATE " +
                     "orgunit=values(orgunit), asset=values(asset), quantity=quantity + values(quantity);";
+    private static final String GENERIC_SELECT = "SELECT * FROM %s WHERE %s;";
+    private static final String GENERIC_DELETE = "DELETE FROM %s WHERE %s;";
+    private static final String GENERIC_INSERT = "INSERT INTO %s (%s) VALUES (%s);";
+    private static final String GENERIC_UPDATE = "UPDATE %s SET %s WHERE %s=?;";
 
     private PreparedStatement getAssets;
     private PreparedStatement getSellsReconciliation;
@@ -213,11 +213,14 @@ public class NetworkServer {
             {
                 handleRequest(command, info, objectOutputStream);
             }
+            catch (SQLException e) {
+                e.printStackTrace();
+            }
 
         }
     }
 
-    private void handleRequest(ProtocolKeywords keyword, DataPacket info, ObjectOutputStream out) throws IOException {
+    private void handleRequest(ProtocolKeywords keyword, DataPacket info, ObjectOutputStream out) throws IOException, SQLException {
         if (keyword == ProtocolKeywords.SELECT) {
             out.writeObject(handleSelect(info));
         }
@@ -226,12 +229,146 @@ public class NetworkServer {
         }
     }
 
-    private ArrayList<DataObject> handleSelect(DataPacket info) {
-        return new ArrayList<>();
+    private ArrayList<DataObject> handleSelect(DataPacket info) throws SQLException {
+        ArrayList results = new ArrayList<>();
+        String queryString = String.format(GENERIC_SELECT, info.table.getTableName(), info.filter);
+        ResultSet queryResults = executeSelectQuery(connection.prepareStatement(queryString));
+        switch(info.table) {
+            case UNIT -> results = populateUnits(queryResults);
+            case ASSET -> results = populateAssets(queryResults);
+            case INV -> results = populateInv(queryResults);
+            case USER -> results = populateUsers(queryResults);
+            case BUY -> results = populateBuys(queryResults);
+            case SELL -> results = populateSells(queryResults);
+        }
+        return results;
+    }
+    private ArrayList<OrgUnit> populateUnits(ResultSet r) throws SQLException {
+        ArrayList<OrgUnit> output = new ArrayList<>();
+        while (r.next()) {
+            output.add(new OrgUnit(r.getString(1), r.getInt(2)));
+        }
+        return output;
+    }
+    private ArrayList<Asset> populateAssets(ResultSet r) throws SQLException {
+        ArrayList<Asset> output = new ArrayList<>();
+        while (r.next()) {
+            output.add(new Asset(r.getInt(1), r.getString(2)));
+        }
+        return output;
+    }
+    private ArrayList<InventoryRecord> populateInv(ResultSet r) throws SQLException {
+        ArrayList<InventoryRecord> output = new ArrayList<>();
+        while (r.next()) {
+            output.add(new InventoryRecord(r.getString(1), r.getInt(2), r.getInt(3)));
+        }
+        return output;
+    }
+    private ArrayList<User> populateUsers(ResultSet r) throws SQLException {
+        ArrayList<User> output = new ArrayList<>();
+        while (r.next()) {
+            output.add(new User(r.getString(1), r.getString(2),
+                    r.getString(3), r.getString(4), r.getBoolean(5)));
+        }
+        return output;
+    }
+    private ArrayList<BuyOrder> populateBuys(ResultSet r) throws SQLException {
+        ArrayList<BuyOrder> output = new ArrayList<>();
+        while (r.next()) {
+            output.add(new BuyOrder(r.getInt(1), r.getString(2), r.getInt(3),
+                    r.getInt(4), r.getInt(5), r.getTimestamp(6).toLocalDateTime(),
+                    r.getTimestamp(7).toLocalDateTime(), r.getInt(8)));
+        }
+        return output;
+    }
+    private ArrayList<SellOrder> populateSells(ResultSet r) throws SQLException {
+        ArrayList<SellOrder> output = new ArrayList<>();
+        while (r.next()) {
+            output.add(new SellOrder(r.getInt(1), r.getString(2), r.getInt(3),
+                    r.getInt(4), r.getInt(5), r.getTimestamp(6).toLocalDateTime(),
+                    r.getTimestamp(7).toLocalDateTime()));
+        }
+        return output;
     }
 
-    private int handleNonselect(ProtocolKeywords keyword, DataPacket info) {
-        return 0;
+    private int handleNonselect(ProtocolKeywords keyword, DataPacket info) throws SQLException {
+        PreparedStatement statement;
+        boolean whereNeeded = false;
+        if (keyword == DELETE) {
+            return executeModificationQuery(
+                    connection.prepareStatement(String.format(GENERIC_DELETE, info.table.getTableName(), info.filter)));
+        } else if (keyword == INSERT) {
+            if (info.table == INV && info.insertTypeFlag) {
+                statement = connection.prepareStatement(INSERT_OR_UPDATE_INV);
+            }
+            else statement = connection.prepareStatement(
+                    String.format(GENERIC_INSERT, info.table.getTableName(), info.table.colNamesForInsert(),
+                            info.table.valuesForInsert()));
+        }
+        else /*if (keyword == UPDATE)*/ {
+            statement = connection.prepareStatement(
+                    String.format(GENERIC_UPDATE, info.table.getTableName(),
+                            info.table.templateForUpdate(), info.table.getColumnNames()[0]));
+            ParameterMetaData p = statement.getParameterMetaData();
+            whereNeeded = true;
+        }
+
+        switch (info.table) {
+            case UNIT -> {
+                OrgUnit x = (OrgUnit) info.object;
+                statement.setString(1, x.getName());
+                statement.setInt(2,x.getCredits());
+                if (whereNeeded) statement.setString(3, x.getName());
+            }
+            case ASSET -> {
+                Asset x = (Asset) info.object;
+                statement.setString(1, x.getDescription());
+                if (whereNeeded) statement.setInt(2, x.getId());
+            }
+            case USER -> {
+                User x = (User) info.object;
+                statement.setString(1, x.getUsername());
+                statement.setString(2,x.getPassword());
+                statement.setString(3,x.getSalt());
+                statement.setString(4, x.getUnit());
+                statement.setBoolean(5, x.getAdminAccess());
+                if (whereNeeded) statement.setString(6, x.getUsername());
+            }
+            case INV -> {
+                InventoryRecord x = (InventoryRecord) info.object;
+                statement.setString(1,x.getUnitName());
+                statement.setInt(2,x.getAssetID());
+                statement.setInt(3,x.getQuantity());
+                //this case should never happen
+            }
+            case SELL -> {
+                SellOrder x = (SellOrder) info.object;
+                statement.setString(1,x.getUser());
+                statement.setInt(2,x.getAsset());
+                statement.setInt(3,x.getQty());
+                statement.setInt(4,x.getPrice());
+                statement.setTimestamp(5, Timestamp.valueOf(x.getDatePlaced()));
+                statement.setTimestamp(6,Timestamp.valueOf(x.getDateResolved()));
+                if (whereNeeded) statement.setInt(7,x.getId());
+            }
+            case BUY -> {
+                BuyOrder x = (BuyOrder) info.object;
+                statement.setString(1,x.getUser());
+                statement.setInt(2,x.getAsset());
+                statement.setInt(3,x.getQty());
+                statement.setInt(4,x.getPrice());
+                statement.setTimestamp(5, Timestamp.valueOf(x.getDatePlaced()));
+                statement.setTimestamp(6,Timestamp.valueOf(x.getDateResolved()));
+                statement.setInt(7,x.getBoughtFrom());
+                if (whereNeeded) statement.setInt(8,x.getId());
+            }
+        }
+        try {
+            return executeModificationQuery(statement);
+        }
+        catch (SQLIntegrityConstraintViolationException i) {
+            return -1;
+        }
     }
 
 
@@ -388,7 +525,7 @@ public class NetworkServer {
      * @param info DataPacket of query
      * @return ArrayList of results
      */
-    ArrayList<DataObject> simulateSelect(DataPacket info) {
+    ArrayList<DataObject> simulateSelect(DataPacket info) throws SQLException {
         return handleSelect(info);
     }
 
@@ -399,7 +536,7 @@ public class NetworkServer {
      * @return Query status number (1 for "success", 0 for "failure due to existence/nonexistence of matching record",
      * -1 for "failure due to constraints", 2 for "INSERT ON DUPLICATE KEY UPDATE query didn't insert but updated"
      */
-    int simulateNonselect(ProtocolKeywords keyword, DataPacket info) {
+    int simulateNonselect(ProtocolKeywords keyword, DataPacket info) throws SQLException {
         return handleNonselect(keyword, info);
     }
 

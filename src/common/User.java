@@ -55,6 +55,22 @@ public class User extends DataObject {
         this.setUnit(orgunit);
     }
 
+    /**
+     * Constructor for server-side use when retrieving users from the database
+     * @param username  Username
+     * @param passhash Pre-hashed password
+     * @param salt Preexisting salt string
+     * @param orgunit Org unit
+     * @param adminAccess Admin access value
+     */
+    public User(String username, String passhash, String salt, String orgunit, boolean adminAccess) {
+        this.name = username;
+        this.salt = salt;
+        this.password = passhash;
+        this.unit = orgunit;
+        this.adminAccess = adminAccess;
+    }
+
     // GETTERS & SETTERS------------------------------------------------------------------------------------------------
     /***
      * Getter for the username.
