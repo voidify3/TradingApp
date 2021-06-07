@@ -1,10 +1,12 @@
 package common;
 
 
+import java.io.Serializable;
+
 /**
  * Class to hold the composite key of an InventoryObject
  */
-public class InventoryKey {
+public class InventoryKey implements Serializable {
     public String unit;
     public int asset;
 

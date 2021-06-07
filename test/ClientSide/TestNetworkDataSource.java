@@ -3,20 +3,21 @@ package ClientSide;
 import common.*;
 import org.junit.jupiter.api.*;
 
-import static common.DatabaseTables.ASSET;
-import static common.ProtocolKeywords.INSERT;
+import java.time.LocalDateTime;
+
 import static org.junit.jupiter.api.Assertions.*;
 
+//INSTRUCTIONS TO RUN: run ServerGui then run this
 public class TestNetworkDataSource {
-    NetworkDataSource n;
+    static NetworkDataSource n;
     public static final String TEST_USER = "testUser";
     public static final String TEST_USER_2 = "testUserTwo";
     public static final String TEST_ORG_1 = "Devs";
     public static final String TEST_ORG_2 = "Marketing";
     public static final String TEST_ASSET = "test";
     public static final String TEST_ASSET_2 = "test2";
-    @BeforeEach
-    public void setupAndSuccessInserts() {
+    @BeforeAll @Test
+    static void setupAndSuccessInserts() {
         n = new NetworkDataSource();
 
         long ping = n.ping();
@@ -25,16 +26,17 @@ public class TestNetworkDataSource {
         n.debugDeleteEverything();
         n.recreate();
         assertAll(
-                ()->assertEquals(1, n.insertUnit(new OrgUnit(TEST_ORG_1)))
-//                ()->assertEquals(1, n.insertUser(new User(TEST_USER,
-//                        "password", false, TEST_ORG_1))),
-//                ()->assertEquals(1, n.insertAsset(new Asset(TEST_ASSET))),
-//                ()->assertEquals(1, n.insertSellOrder(new SellOrder(TEST_USER, 1, 10, 5))),
-//                ()->assertEquals(1, n.insertBuyOrder(new BuyOrder(TEST_USER, 1, 10, 5)))
+                ()->assertEquals(1, n.insertUnit(new OrgUnit(TEST_ORG_1))),
+
+                ()->assertEquals(1, n.insertUser(new User(TEST_USER,
+                        "password", false, TEST_ORG_1))),
+                ()->assertEquals(1, n.insertAsset(new Asset(TEST_ASSET))),
+                ()->assertEquals(1, n.insertSellOrder(new SellOrder(TEST_USER, 1, 10, 5))),
+                ()->assertEquals(1, n.insertBuyOrder(new BuyOrder(TEST_USER, 1, 10, 5)))
         );
     }
-    @AfterEach
-    public void done() {
+    @AfterAll
+    static void done() {
         n.debugDeleteEverything();
     }
 
@@ -85,45 +87,147 @@ public class TestNetworkDataSource {
     }
     @Test
     void successUpdates() {
+        assertAll(
+                ()->assertEquals(1, n.updateUnit(new OrgUnit(TEST_ORG_1, 20))),
+
+                ()->assertEquals(1, n.updateUser(new User(TEST_USER,
+                        "password", true, TEST_ORG_1))),
+                ()->assertEquals(1, n.updateAsset(new Asset(1, TEST_ASSET_2))),
+                ()->assertEquals(1, n.updateSellOrder(new SellOrder(1, TEST_USER, 1, 10, 5,
+                        LocalDateTime.of(2021, 1, 5, 0, 0), null))),
+                ()->assertEquals(1, n.updateBuyOrder(new BuyOrder(1, TEST_USER, 1, 10, 5,
+                        LocalDateTime.of(2021, 1, 5, 0, 0), null, null)))
+        );
     }
     @Test
     void failUpdates() {
+        assertAll(
+                ()->assertEquals(0, n.updateUnit(new OrgUnit(TEST_ORG_2, 20))),
+                ()->assertEquals(0, n.updateUser(new User(TEST_USER_2,
+                        "password", true, TEST_ORG_1))),
+                ()->assertEquals(0, n.updateAsset(new Asset(2, TEST_ASSET))),
+                ()->assertEquals(0, n.updateSellOrder(new SellOrder(2, TEST_USER, 1, 10, 5,
+                        LocalDateTime.of(2021, 1, 5, 0, 0), null))),
+                ()->assertEquals(0, n.updateBuyOrder(new BuyOrder(2, TEST_USER, 1, 10, 5,
+                        LocalDateTime.of(2021, 1, 5, 0, 0), null, null)))
+        );
     }
     @Test
     void constrainedUpdates() {
-
+        assertAll(
+                ()->assertEquals(-1, n.updateUser(new User(TEST_USER,
+                        "password", false, TEST_ORG_2))),
+                ()->assertEquals(-1, n.updateSellOrder(new SellOrder(1, TEST_USER_2, 1, 10, 5,
+                        LocalDateTime.of(2021, 1, 5, 0, 0), null))),
+                ()->assertEquals(-1, n.updateSellOrder(new SellOrder(1, TEST_USER, 2, 10, 5,
+                        LocalDateTime.of(2021, 1, 5, 0, 0), null))),
+                ()->assertEquals(-1, n.updateBuyOrder(new BuyOrder(1, TEST_USER_2, 1, 10, 5,
+                        LocalDateTime.of(2021, 1, 5, 0, 0), null, null))),
+                ()->assertEquals(-1, n.updateBuyOrder(new BuyOrder(1, TEST_USER, 2, 10, 5,
+                        LocalDateTime.of(2021, 1, 5, 0, 0), null, null))),
+                ()->assertEquals(-1, n.updateBuyOrder(new BuyOrder(1, TEST_USER, 1, 10, 5,
+                        LocalDateTime.of(2021, 1, 5, 0, 0),
+                        LocalDateTime.of(2021, 1, 6, 0, 0), 2)))
+        );
     }
     @Test
     void successDelByKeys() {
-
+        assertAll(
+                ()->assertEquals(1, n.deleteSellOrder(1)),
+                ()->assertEquals(1, n.deleteBuyOrder(1)),
+                ()->assertEquals(1, n.deleteAsset(1)),
+                ()->assertEquals(1, n.deleteUser(TEST_USER)),
+                ()->assertEquals(1, n.deleteUnit(TEST_ORG_1))
+        );
+        n.debugDeleteEverything();
+        n.recreate();
+        assertAll(
+                ()->assertEquals(1, n.insertUnit(new OrgUnit(TEST_ORG_1))),
+                ()->assertEquals(1, n.insertUser(new User(TEST_USER,
+                        "password", false, TEST_ORG_1))),
+                ()->assertEquals(1, n.insertAsset(new Asset(TEST_ASSET))),
+                ()->assertEquals(1, n.insertSellOrder(new SellOrder(TEST_USER, 1, 10, 5))),
+                ()->assertEquals(1, n.insertBuyOrder(new BuyOrder(TEST_USER, 1, 10, 5)))
+        );
     }
     @Test
     void failDelByKeys() {
-
+        assertAll(
+                ()->assertEquals(0, n.deleteUnit(TEST_ORG_2)),
+                ()->assertEquals(0, n.deleteUser(TEST_USER_2)),
+                ()->assertEquals(0, n.deleteAsset(2)),
+                ()->assertEquals(0, n.deleteSellOrder(2)),
+                ()->assertEquals(0, n.deleteBuyOrder(2))
+        );
     }
     @Test
     void constrainedDelByKeys() {
-
+        n.updateBuyOrder(new BuyOrder(1, TEST_USER, 1, 10, 5,
+                LocalDateTime.of(2021, 1, 5, 0, 0),
+                LocalDateTime.of(2021, 6, 5, 0, 0), 1));
+        assertAll(
+                ()->assertEquals(-1, n.deleteUnit(TEST_ORG_1)),
+                ()->assertEquals(-1, n.deleteUser(TEST_USER)),
+                ()->assertEquals(-1, n.deleteAsset(1)),
+                ()->assertEquals(-1, n.deleteSellOrder(1))
+        );
+        n.updateBuyOrder(new BuyOrder(1, TEST_USER, 1, 10, 5,
+                LocalDateTime.of(2021, 1, 5, 0, 0), null, null));
     }
     @Test
     void successDelInv() {
-
+        n.insertOrUpdateInventory(new InventoryRecord(TEST_ORG_1, 1, 5));
+        assertEquals(1, n.deleteInventoryRecord(TEST_ORG_1, 1));
     }
     @Test
     void failDelInv() {
-
+        assertEquals(0, n.deleteInventoryRecord(TEST_ORG_2, 1));
     }
     @Test
     void selectEmptyTables() {
-
+        assertAll(
+                ()->assertEquals(1, n.deleteSellOrder(1)),
+                ()->assertEquals(1, n.deleteBuyOrder(1)),
+                ()->assertEquals(1, n.deleteAsset(1)),
+                ()->assertEquals(1, n.deleteUser(TEST_USER)),
+                ()->assertEquals(1, n.deleteUnit(TEST_ORG_1))
+        );
+        assertAll(
+                ()->assertTrue(n.allOrgUnits().isEmpty()),
+                ()->assertTrue(n.allUsers().isEmpty()),
+                ()->assertTrue(n.allAssets().isEmpty()),
+                ()->assertTrue(n.inventoryList().isEmpty())
+//                ()->assertTrue(n.bu().isEmpty()),
+//                ()->assertTrue(n.s().isEmpty())
+        );
+        n.debugDeleteEverything();
+        n.recreate();
+        assertAll(
+                ()->assertEquals(1, n.insertUnit(new OrgUnit(TEST_ORG_1))),
+                ()->assertEquals(1, n.insertUser(new User(TEST_USER,
+                        "password", false, TEST_ORG_1))),
+                ()->assertEquals(1, n.insertAsset(new Asset(TEST_ASSET))),
+                ()->assertEquals(1, n.insertSellOrder(new SellOrder(TEST_USER, 1, 10, 5))),
+                ()->assertEquals(1, n.insertBuyOrder(new BuyOrder(TEST_USER, 1, 10, 5)))
+        );
     }
     @Test
     void selectNonEmptyTables() {
-
+        assertAll(
+                ()->assertFalse(n.allOrgUnits().isEmpty()),
+                ()->assertFalse(n.allUsers().isEmpty()),
+                ()->assertFalse(n.allAssets().isEmpty()),
+                ()->assertFalse(n.inventoryList().isEmpty())
+        );
     }
     @Test
     void nonexistentSellOrderQueries() {
-
+        assertAll(
+                ()->assertTrue(n.sellOrdersByAsset(1, true).isEmpty()),
+                ()->assertTrue(n.sellOrdersByUser(TEST_USER, true).isEmpty())
+                //placed between
+                //resolved between
+        );
     }
     @Test
     void successSellOrderQueries() {
@@ -139,26 +243,54 @@ public class TestNetworkDataSource {
     }
     @Test
     void successSelectOneInv() {
-
+        n.insertOrUpdateInventory(new InventoryRecord(TEST_ORG_1, 1, 5));
+        assertEquals(5, n.inventoryRecordByKeys(TEST_ORG_1, 1).getQuantity());
     }
     @Test
     void failSelectOneInv() {
-
+        assertNull(n.inventoryRecordByKeys(TEST_ORG_1, 2));
     }
     @Test
     void successSelectByValue() {
-
+        n.updateBuyOrder(new BuyOrder(1, TEST_USER, 1, 10, 5,
+                LocalDateTime.of(2021, 1, 5, 0, 0),
+                LocalDateTime.of(2021, 6, 5, 0, 0), 1));
+        assertAll(
+                ()->assertFalse(n.usersByUnit(TEST_ORG_1).isEmpty()),
+                ()->assertFalse(n.inventoriesByUnit(TEST_ORG_1).isEmpty()),
+                ()->assertFalse(n.inventoriesByAsset(1).isEmpty()),
+                ()->assertFalse(n.buyOrdersByBoughtFrom(1).isEmpty())
+        );
+        n.updateBuyOrder(new BuyOrder(1, TEST_USER, 1, 10, 5,
+                LocalDateTime.of(2021, 1, 5, 0, 0), null, null));
     }
     @Test
     void failSelectByValue() {
-
+        assertAll(
+                ()->assertTrue(n.usersByUnit(TEST_ORG_2).isEmpty()),
+                ()->assertTrue(n.inventoriesByUnit(TEST_ORG_2).isEmpty()),
+                ()->assertTrue(n.inventoriesByAsset(1).isEmpty()),
+                ()->assertTrue(n.buyOrdersByBoughtFrom(2).isEmpty())
+        );
     }
     @Test
     void successSelectByKey() {
-
+        assertAll(
+                ()->assertNotNull(n.unitByKey(TEST_ORG_1)),
+                ()->assertNotNull(n.userByKey(TEST_USER)),
+                ()->assertNotNull(n.assetByKey(1)),
+                ()->assertNotNull(n.sellOrderByKey(1)),
+                ()->assertNotNull(n.buyOrderByKey(1))
+        );
     }
     @Test
     void failSelectByKey() {
-
+        assertAll(
+                ()->assertNull(n.unitByKey(TEST_ORG_2)),
+                ()->assertNull(n.userByKey(TEST_USER)),
+                ()->assertNull(n.assetByKey(2)),
+                ()->assertNull(n.sellOrderByKey(2)),
+                ()->assertNull(n.buyOrderByKey(2))
+        );
     }
 }
