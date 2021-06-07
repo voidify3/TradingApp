@@ -200,16 +200,22 @@ public class TradingAppData {
         else if (i==-1) throw new ConstraintException("User '%s' could not be safely deleted."
                 + "Delete all buy and sell orders placed by the user and try again", name);
     }
-    public void deleteUnit(String name) throws DoesNotExist {
-        if (dataSource.deleteUnit(name) == 0) throw new DoesNotExist("Unit '%s' not found", name);
+    public void deleteUnit(String name) throws DoesNotExist, ConstraintException {
+        int i = dataSource.deleteUnit(name);
+        if (i == 0) throw new DoesNotExist("Unit '%s' not found", name);
+        else if (i==-1) throw new ConstraintException("Unit '%s' could not be safely deleted."
+                + "Delete all buy and sell orders placed by members of the unit and try again", name);
+
     }
     public void cancelSellOrder(int id) throws ConstraintException, DoesNotExist {
+        //TODO: return the remaining assets
         int i = dataSource.deleteSellOrder(id);
         if (i==0)  throw new DoesNotExist("Sell order '%i' not found", id);
         else if (i==-1) throw new ConstraintException("Sell order '%i' could not be safely deleted."
                 + "Delete any buy orders which have been reconciled with the order and try again", id);
     }
     public void cancelBuyOrder(int id) throws DoesNotExist {
+        //TODO: return the remaining credits
         if (dataSource.deleteBuyOrder(id)  == 0) throw new DoesNotExist("Buy order '%s' not found", id);
     }
     public void deleteInventoryRecord(String unit, int asset) throws DoesNotExist {
@@ -247,7 +253,7 @@ public class TradingAppData {
     public void addUser(User u) throws AlreadyExists, DoesNotExist {
         int result = dataSource.insertUser(u);
         if (result==0) throw new AlreadyExists("User '%s' already exists. Please try a different username.", u.getUsername());
-        else if (result ==-1) throw new DoesNotExist("Org unit %s does not exist");
+        else if (result ==-1) throw new DoesNotExist("Could not create user- org unit %s does not exist");
     }
     public void addUnit(OrgUnit u) throws AlreadyExists {
         if (dataSource.insertUnit(u)==0) throw new AlreadyExists("Unit '%s' already exists. Please try a different unit name.", u.getName());

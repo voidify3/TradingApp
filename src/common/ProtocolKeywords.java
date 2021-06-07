@@ -4,5 +4,6 @@ public enum ProtocolKeywords {
     SELECT(),
     INSERT(),
     UPDATE(),
-    DELETE()
+    DELETE(),
+    PING()
 }

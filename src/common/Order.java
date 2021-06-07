@@ -83,8 +83,9 @@ public class Order extends DataObject implements Comparable<Order> {
 
     @Override
     public int compareTo(Order o) {
-        if (this.getDateResolved() == null | o.getDateResolved() == null) {
-            return this.getDatePlaced().compareTo(o.getDatePlaced());
+        if (this.dateResolved == null || o.getDateResolved() == null
+                || this.dateResolved.compareTo(o.getDateResolved()) == 0) {
+            return Integer.compare(this.id, o.getId());
         }
         else return this.getDateResolved().compareTo(o.getDateResolved());
     }

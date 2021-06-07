@@ -2,12 +2,18 @@ package ClientSide;
 
 import common.*;
 
+import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
+import java.net.Socket;
 import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.TreeMap;
 
 import static common.DatabaseTables.*;
+import static common.ProtocolKeywords.*;
 import static java.lang.String.valueOf;
 
 //Please ignore all the hideous ArrayList downcasts, I promise it's fine, server-side logic handles it so that
@@ -29,6 +35,7 @@ public class NetworkDataSource implements TradingAppDataSource {
     @Override
     public Boolean ping() {
         return false;
+
     }
     //-------------ATOMIC QUERY EXECUTORS--------------
     //These methods are the ones that actually communicate with the server
@@ -39,8 +46,29 @@ public class NetworkDataSource implements TradingAppDataSource {
      * @return ArrayList of query results
      */
     private ArrayList<DataObject> requestSelect(DataPacket info) {
-        //use SELECT here
-        return null;
+        try {
+            Socket socket = new Socket(HOSTNAME, PORT);
+
+            try (
+                    ObjectOutputStream objectOutputStream =
+                            new ObjectOutputStream(socket.getOutputStream());
+            ) {
+                objectOutputStream.writeObject(SELECT);
+                objectOutputStream.writeObject(info);
+                objectOutputStream.flush();
+
+                try (
+                        ObjectInputStream objectInputStream =
+                                new ObjectInputStream(socket.getInputStream());
+                ) {
+                    return (ArrayList<DataObject>) objectInputStream.readObject();
+                }
+            }
+        } catch (IOException | ClassNotFoundException e) {
+            e.printStackTrace();
+            return new ArrayList<>();
+            //TODO: do something better to signal the server is down
+        }
     }
 
     /**
@@ -50,7 +78,29 @@ public class NetworkDataSource implements TradingAppDataSource {
      * @return Number of rows affected by query
      */
     private int requestNonselect(ProtocolKeywords keyword, DataPacket info) {
-        return 0;
+        try {
+            Socket socket = new Socket(HOSTNAME, PORT);
+
+            try (
+                    ObjectOutputStream objectOutputStream =
+                            new ObjectOutputStream(socket.getOutputStream());
+            ) {
+                objectOutputStream.writeObject(keyword);
+                objectOutputStream.writeObject(info);
+                objectOutputStream.flush();
+
+                try (
+                        ObjectInputStream objectInputStream =
+                                new ObjectInputStream(socket.getInputStream());
+                ) {
+                    return (int) objectInputStream.readObject();
+                }
+            }
+        } catch (IOException | ClassNotFoundException e) {
+            e.printStackTrace();
+            return 0;
+            //TODO: do something better to signal the server is down
+        }
     }
 
 

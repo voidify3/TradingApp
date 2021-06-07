@@ -60,43 +60,47 @@ public interface TradingAppDataSource {
 
     /**
      *
-     * @param i
-     * @return 1 if insert succeeded, 2 if insert failed but update succeeded
+     * @param i inventoryrecord object to send
+     * @return 1 if insert succeeded, 2 if insert failed but update succeeded,
+     * -1 if query failed due to nonexistence of unit or asset
      */
     int insertOrUpdateInventory(InventoryRecord i);
 
     /**
      *
-     * @param u
-     * @return 1 if insert succeeded, 0 if insert failed
+     * @param u user object to send
+     * @return 1 if insert succeeded, 0 if insert failed due to duplicate key,
+     * -1 if insert failed due to nonexistence of unit
      */
     int insertUser(User u);
 
     /**
      *
-     * @param u
+     * @param u orgunit object to send
      * @return 1 if insert succeeded, 0 if insert failed
      */
     int insertUnit(OrgUnit u);
 
     /**
      *
-     * @param a
+     * @param a asset object to send
      * @return 1 if insert succeeded, 0 if insert failed
      */
     int insertAsset(Asset a);
 
     /**
      *
-     * @param s
-     * @return 1 if insert succeeded, 0 if insert failed
+     * @param s sellorder object to send
+     * @return 1 if insert succeeded, 0 if insert failed due to duplicate key (should never happen though),
+     * -1 if insert failed due to nonexistence of asset or user
      */
     int insertSellOrder(SellOrder s);
 
     /**
      *
-     * @param b
-     * @return 1 if insert succeeded, 0 if insert failed
+     * @param b buyorder object to send
+     * @return 1 if insert succeeded, 0 if insert failed (should never happen though),
+     * -1 if insert failed due to nonexistence of asset or user
      */
     int insertBuyOrder(BuyOrder b);
 
@@ -104,36 +108,39 @@ public interface TradingAppDataSource {
 
     /**
      *
-     * @param u
-     * @return 1 if update succeeded, 0 if update failed
+     * @param u user object to send
+     * @return 1 if update succeeded, 0 if update failed due to nonexistent key,
+     * -1 if update failed due to nonexistence of unit
      */
     int updateUser(User u);
 
     /**
      *
-     * @param u
-     * @return 1 if update succeeded, 0 if update failed
+     * @param u orgunit object to send
+     * @return 1 if update succeeded, 0 if update failed due to nonexistent key
      */
     int updateUnit(OrgUnit u);
 
     /**
      *
-     * @param a
-     * @return 1 if update succeeded, 0 if update failed
+     * @param a asset object to send
+     * @return 1 if update succeeded, 0 if update failed due to nonexistent key
      */
     int updateAsset(Asset a);
 
     /**
      *
-     * @param s
-     * @return 1 if update succeeded, 0 if update failed
+     * @param s sellorder object to send
+     * @return 1 if update succeeded, 0 if update failed due to nonexistent key,
+     * -1 if update failed due to nonexistence of asset or user
      */
     int updateSellOrder(SellOrder s);
 
     /**
      *
-     * @param b
-     * @return 1 if update succeeded, 0 if update failed
+     * @param b buyorder object to send
+     * @return 1 if update succeeded, 0 if update failed due to nonexistent key,
+     *  -1 if update failed due to nonexistence of asset or user or BoughtFrom sell order
      */
     int updateBuyOrder(BuyOrder b);
 
@@ -151,37 +158,42 @@ public interface TradingAppDataSource {
     /**
      *
      * @param key username to delete
-     * @return 1 if deletion succeeded, 0 if deletion failed, -1 if deletion was prevented by constraints
+     * @return 1 if deletion succeeded, 0 if deletion failed due to nonexistent key,
+     * -1 if deletion was prevented by constraints
      * (i.e. if buy orders or sell orders placed by the user exist)
      */
     int deleteUser(String key);
 
     /**
      *
-     * @param key
-     * @return 1 if deletion succeeded, 0 if deletion failed
+     * @param key name to delete
+     * @return 1 if deletion succeeded, 0 if deletion failed due to nonexistent key,
+     * -1 if deletion was prevented by constraints
+     * (i.e. if any members of the unit have buy orders or sell orders)
      */
     int deleteUnit(String key);
 
     /**
      *
-     * @param key
-     * @return 1 if deletion succeeded, 0 if deletion failed, -1 if deletion was prevented by constraints
+     * @param key asset ID to delete
+     * @return 1 if deletion succeeded, 0 if deletion failed due to nonexistent key,
+     * -1 if deletion was prevented by constraints
      * (i.e. if the deletion of any SellOrders for this asset was prevented by constraints)
      */
     int deleteAsset(int key);
 
     /**
      *
-     * @param key
-     * @return 1 if deletion succeeded, 0 if deletion failed
+     * @param key order ID to delete
+     * @return 1 if deletion succeeded, 0 if deletion failed due to nonexistent key
      */
     int deleteBuyOrder(int key);
 
     /**
      *
-     * @param key
-     * @return 1 if deletion succeeded, 0 if deletion failed, -1 if deletion was prevented by constraints
+     * @param key order ID to delete
+     * @return 1 if deletion succeeded, 0 if deletion failed due to nonexistent key,
+     * -1 if deletion was prevented by constraints
      * (i.e. if any BuyOrders reference this SellOrder as BoughtFrom)
      */
     int deleteSellOrder(int key);

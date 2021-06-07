@@ -108,26 +108,28 @@ public class NetworkServer {
 
     private static final String GET_ASSETS = "SELECT * FROM asset;";
     private static final String RECONCILIATION_GET_SELLS =
-            "SELECT sellorder.*, user.orgunit FROM sellorder" +
-                    "LEFT JOIN user ON sellorder.user = user.name" +
-                    "WHERE dateResolved IS NULL AND asset=? and user.orgunit IS NOT NULL" +
-                    "ORDER BY datePlaced;";
+            "SELECT sellorder.*, user.orgunit FROM sellorder " +
+                    "LEFT JOIN user ON sellorder.user = user.name " +
+                    "WHERE dateResolved IS NULL AND asset=? " +
+                    "AND user.orgunit IS NOT NULL " +
+                    "ORDER BY datePlaced, idx;";
     private static final String RECONCILIATION_GET_BUYS =
-            "SELECT buyorder.*, user.orgunit FROM buyorder" +
-                    "LEFT JOIN user ON buyorder.user = user.name" +
-                    "WHERE dateResolved IS NULL AND asset=? and user.orgunit IS NOT NULL" +
-                    "ORDER BY datePlaced;";
+            "SELECT buyorder.*, user.orgunit FROM buyorder " +
+                    "LEFT JOIN user ON buyorder.user = user.name " +
+                    "WHERE dateResolved IS NULL AND asset=? " +
+                    "AND user.orgunit IS NOT NULL " +
+                    "ORDER BY datePlaced, idx;";
     private static final String RECONCILIATION_RESOLVE_BUY =
-            "UPDATE buyorder" +
-                    "SET price=?, dateResolved=?, boughtFrom=?" +
+            "UPDATE buyorder " +
+                    "SET price=?, dateResolved=?, boughtFrom=? " +
                     "WHERE idx=?;";
     private static final String RECONCILIATION_RESOLVE_SELL =
-            "UPDATE sellorder" +
-                    "SET quantity=?, dateResolved=?" +
+            "UPDATE sellorder " +
+                    "SET quantity=?, dateResolved=? " +
                     "WHERE idx=?;";
     private static final String RECONCILIATION_ADJUST_BALANCE =
-            "UPDATE orgunit" +
-                    "SET credits=credits+?" +
+            "UPDATE orgunit " +
+                    "SET credits=credits+? " +
                     "WHERE name=?;";
 
     //TODO: prepared statements for each valid query type
@@ -141,7 +143,7 @@ public class NetworkServer {
                     "VALUES (?, ?, ?)" +
                     "ON DUPLICATE KEY UPDATE " +
                     "orgunit=values(orgunit), asset=values(asset), quantity=quantity + values(quantity);";
-    private static final String GENERIC_SELECT = "SELECT * FROM %s WHERE %s;";
+    private static final String GENERIC_SELECT = "SELECT * FROM %s WHERE %s ORDER BY %s, %s;";
     private static final String GENERIC_DELETE = "DELETE FROM %s WHERE %s;";
     private static final String GENERIC_INSERT = "INSERT INTO %s (%s) VALUES (%s);";
     private static final String GENERIC_UPDATE = "UPDATE %s SET %s WHERE %s=?;";
@@ -206,8 +208,9 @@ public class NetworkServer {
     private void handleConnection(Socket socket) throws IOException, ClassNotFoundException {
         try (ObjectInputStream objectInputStream = new ObjectInputStream(socket.getInputStream()))
         {
+            DataPacket info = null;
             ProtocolKeywords command = (ProtocolKeywords) objectInputStream.readObject();
-            DataPacket info =  (DataPacket) objectInputStream.readObject();
+            if (command != PING) info = (DataPacket) objectInputStream.readObject();
 
             try (ObjectOutputStream objectOutputStream = new ObjectOutputStream(socket.getOutputStream());)
             {
@@ -221,17 +224,15 @@ public class NetworkServer {
     }
 
     private void handleRequest(ProtocolKeywords keyword, DataPacket info, ObjectOutputStream out) throws IOException, SQLException {
-        if (keyword == ProtocolKeywords.SELECT) {
-            out.writeObject(handleSelect(info));
-        }
-        else {
-            out.writeObject(handleNonselect(keyword,info));
-        }
+        if (keyword == PING) out.writeObject(1);
+        else if (keyword == ProtocolKeywords.SELECT) out.writeObject(handleSelect(info));
+        else out.writeObject(handleNonselect(keyword, info));
     }
 
     private ArrayList<DataObject> handleSelect(DataPacket info) throws SQLException {
         ArrayList results = new ArrayList<>();
-        String queryString = String.format(GENERIC_SELECT, info.table.getTableName(), info.filter);
+        String queryString = String.format(GENERIC_SELECT, info.table.getTableName(), info.filter,
+                info.table.getColumnNames()[0], info.table.getColumnNames()[1]);
         ResultSet queryResults = executeSelectQuery(connection.prepareStatement(queryString));
         switch(info.table) {
             case UNIT -> results = populateUnits(queryResults);
@@ -275,102 +276,156 @@ public class NetworkServer {
     private ArrayList<BuyOrder> populateBuys(ResultSet r) throws SQLException {
         ArrayList<BuyOrder> output = new ArrayList<>();
         while (r.next()) {
+            LocalDateTime resolved;
+            Timestamp re = r.getTimestamp(7);
+            if (r.wasNull()) resolved = null;
+            else resolved = re.toLocalDateTime();
             output.add(new BuyOrder(r.getInt(1), r.getString(2), r.getInt(3),
                     r.getInt(4), r.getInt(5), r.getTimestamp(6).toLocalDateTime(),
-                    r.getTimestamp(7).toLocalDateTime(), r.getInt(8)));
+                    resolved, r.getInt(8)));
         }
         return output;
     }
     private ArrayList<SellOrder> populateSells(ResultSet r) throws SQLException {
         ArrayList<SellOrder> output = new ArrayList<>();
         while (r.next()) {
+            LocalDateTime resolved;
+            Timestamp re = r.getTimestamp(7);
+            if (r.wasNull()) resolved = null;
+            else resolved = re.toLocalDateTime();
             output.add(new SellOrder(r.getInt(1), r.getString(2), r.getInt(3),
                     r.getInt(4), r.getInt(5), r.getTimestamp(6).toLocalDateTime(),
-                    r.getTimestamp(7).toLocalDateTime()));
+                    resolved));
         }
         return output;
     }
 
     private int handleNonselect(ProtocolKeywords keyword, DataPacket info) throws SQLException {
         PreparedStatement statement;
-        boolean whereNeeded = false;
+        boolean isUpdate = false;
         if (keyword == DELETE) {
-            return executeModificationQuery(
-                    connection.prepareStatement(String.format(GENERIC_DELETE, info.table.getTableName(), info.filter)));
-        } else if (keyword == INSERT) {
-            if (info.table == INV && info.insertTypeFlag) {
-                statement = connection.prepareStatement(INSERT_OR_UPDATE_INV);
+            statement = connection.prepareStatement(String.format(GENERIC_DELETE, info.table.getTableName(), info.filter));
+            if (info.table == UNIT) {
+                //here, we need to use an indirect check to avoid situations where a user with null unit
+                // has active orders. so attempt and then roll back a USER delete on all members of would-be-deleted units
+                // and if an exception was thrown some users have buy/sell orders so cancel the whole deletion
+                try {
+                    String query = String.format(GENERIC_DELETE, USER.getTableName(), USER.getColumnNames()[3] +
+                            " IN (" + String.format(GENERIC_SELECT, UNIT.getTableName(), info.filter, UNIT.getColumnNames()[0], UNIT.getColumnNames()[1])
+                            .replace(";", "") + ")").replace("*", UNIT.getColumnNames()[0]);
+                    //System.out.println(query);
+                    int deletability = connection.prepareStatement(query).executeUpdate();
+                    connection.rollback();
+                }
+                catch (SQLIntegrityConstraintViolationException e) {
+                    return -1;
+                }
             }
-            else statement = connection.prepareStatement(
+/*
+            int result = executeModificationQuery(statement);
+            if (result > 0) return result;
+            else {
+                //If no rows were affected, either the filter matched no records or the deletion was prevented
+                //by a foreign key constraint. We want 0 for the former and -1 for the latter. Running a select
+                //query on the same filter allows us to make this distinction
+                if (executeSelectQuery(connection.prepareStatement(
+                        String.format(GENERIC_SELECT, info.table.getTableName(), info.filter,
+                        info.table.getColumnNames()[0], info.table.getColumnNames()[1]))).next()) return -1;
+                else return 0;
+            }
+*/
+        }
+        else {
+            if (keyword == INSERT) {
+                if (info.table == INV && info.insertTypeFlag) {
+                    statement = connection.prepareStatement(INSERT_OR_UPDATE_INV);
+                }
+                else statement = connection.prepareStatement(
                     String.format(GENERIC_INSERT, info.table.getTableName(), info.table.colNamesForInsert(),
                             info.table.valuesForInsert()));
-        }
-        else /*if (keyword == UPDATE)*/ {
-            statement = connection.prepareStatement(
-                    String.format(GENERIC_UPDATE, info.table.getTableName(),
-                            info.table.templateForUpdate(), info.table.getColumnNames()[0]));
-            ParameterMetaData p = statement.getParameterMetaData();
-            whereNeeded = true;
-        }
+            }
+            else /*if (keyword == UPDATE)*/ {
+                statement = connection.prepareStatement(
+                        String.format(GENERIC_UPDATE, info.table.getTableName(),
+                                info.table.templateForUpdate(), info.table.getColumnNames()[0]));
+                ParameterMetaData p = statement.getParameterMetaData();
+                isUpdate = true;
+            }
 
-        switch (info.table) {
-            case UNIT -> {
-                OrgUnit x = (OrgUnit) info.object;
-                statement.setString(1, x.getName());
-                statement.setInt(2,x.getCredits());
-                if (whereNeeded) statement.setString(3, x.getName());
-            }
-            case ASSET -> {
-                Asset x = (Asset) info.object;
-                statement.setString(1, x.getDescription());
-                if (whereNeeded) statement.setInt(2, x.getId());
-            }
-            case USER -> {
-                User x = (User) info.object;
-                statement.setString(1, x.getUsername());
-                statement.setString(2,x.getPassword());
-                statement.setString(3,x.getSalt());
-                statement.setString(4, x.getUnit());
-                statement.setBoolean(5, x.getAdminAccess());
-                if (whereNeeded) statement.setString(6, x.getUsername());
-            }
-            case INV -> {
-                InventoryRecord x = (InventoryRecord) info.object;
-                statement.setString(1,x.getUnitName());
-                statement.setInt(2,x.getAssetID());
-                statement.setInt(3,x.getQuantity());
-                //this case should never happen
-            }
-            case SELL -> {
-                SellOrder x = (SellOrder) info.object;
-                statement.setString(1,x.getUser());
-                statement.setInt(2,x.getAsset());
-                statement.setInt(3,x.getQty());
-                statement.setInt(4,x.getPrice());
-                statement.setTimestamp(5, Timestamp.valueOf(x.getDatePlaced()));
-                statement.setTimestamp(6,Timestamp.valueOf(x.getDateResolved()));
-                if (whereNeeded) statement.setInt(7,x.getId());
-            }
-            case BUY -> {
-                BuyOrder x = (BuyOrder) info.object;
-                statement.setString(1,x.getUser());
-                statement.setInt(2,x.getAsset());
-                statement.setInt(3,x.getQty());
-                statement.setInt(4,x.getPrice());
-                statement.setTimestamp(5, Timestamp.valueOf(x.getDatePlaced()));
-                statement.setTimestamp(6,Timestamp.valueOf(x.getDateResolved()));
-                statement.setInt(7,x.getBoughtFrom());
-                if (whereNeeded) statement.setInt(8,x.getId());
+            switch (info.table) {
+                case UNIT -> {
+                    OrgUnit x = (OrgUnit) info.object;
+                    statement.setString(1, x.getName());
+                    statement.setInt(2,x.getCredits());
+                    if (isUpdate) statement.setString(3, x.getName());
+                }
+                case ASSET -> {
+                    Asset x = (Asset) info.object;
+                    statement.setString(1, x.getDescription());
+                    if (isUpdate) statement.setInt(2, x.getId());
+                }
+                case USER -> {
+                    User x = (User) info.object;
+                    statement.setString(1, x.getUsername());
+                    statement.setString(2,x.getPassword());
+                    statement.setString(3,x.getSalt());
+                    String unit = x.getUnit();
+                    if (unit != null) statement.setString(4, unit);
+                    else statement.setNull(4, Types.VARCHAR);
+                    statement.setBoolean(5, x.getAdminAccess());
+                    if (isUpdate) statement.setString(6, x.getUsername());
+                }
+                case INV -> {
+                    InventoryRecord x = (InventoryRecord) info.object;
+                    statement.setString(1,x.getUnitName());
+                    statement.setInt(2,x.getAssetID());
+                    statement.setInt(3,x.getQuantity());
+                    //this case should never happen
+                }
+                case SELL -> {
+                    SellOrder x = (SellOrder) info.object;
+                    statement.setString(1,x.getUser());
+                    statement.setInt(2,x.getAsset());
+                    statement.setInt(3,x.getQty());
+                    statement.setInt(4,x.getPrice());
+                    LocalDateTime datePlaced = x.getDatePlaced();
+                    statement.setTimestamp(5, Timestamp.valueOf(datePlaced));
+                    LocalDateTime dateResolved = x.getDateResolved();
+                    if (dateResolved != null) statement.setTimestamp(6, Timestamp.valueOf(dateResolved));
+                    else statement.setNull(6, Types.TIMESTAMP);
+                    if (isUpdate) statement.setInt(7,x.getId());
+                }
+                case BUY -> {
+                    BuyOrder x = (BuyOrder) info.object;
+                    statement.setString(1,x.getUser());
+                    statement.setInt(2,x.getAsset());
+                    statement.setInt(3,x.getQty());
+                    statement.setInt(4,x.getPrice());
+                    LocalDateTime datePlaced = x.getDatePlaced();
+                    statement.setTimestamp(5, Timestamp.valueOf(datePlaced));
+                    LocalDateTime dateResolved = x.getDateResolved();
+                    if (dateResolved != null) statement.setTimestamp(6, Timestamp.valueOf(dateResolved));
+                    else statement.setNull(6, Types.TIMESTAMP);
+                    Integer boughtFrom = x.getBoughtFrom();
+                    if (boughtFrom != null) statement.setInt(7, boughtFrom);
+                    else statement.setNull(7,Types.INTEGER);
+                    if (isUpdate) statement.setInt(8,x.getId());
+                }
             }
         }
         try {
             return executeModificationQuery(statement);
         }
         catch (SQLIntegrityConstraintViolationException i) {
-            return -1;
+            //if this exception was thrown, either this is an insert query that hit a duplicate key (we want 0)
+            //or the query was stopped by a FK constraint (for all types of this we want -1)
+            String message = i.getMessage();
+            //System.err.println(message);
+            if (message.contains("Duplicate")) return 0;
+            else return -1;
+            //yes this is a bodge but it distinguishes between the possible cases perfectly as far as i can tell
         }
     }
-
 
     /**
      * Returns the port the server is configured to use
@@ -440,8 +495,6 @@ public class NetworkServer {
         int returnval = statement.executeUpdate();
         connection.commit();
         return returnval;
-        //TODO: make sure a failed INSERT returns 0 instead of exceptioning
-        // This can be done at the statement level by having "on duplicate key update id=id"
     }
 
     public void reconcileTrades() {
@@ -469,16 +522,20 @@ public class NetworkServer {
                         int buyQty = buys.getInt(4);
                         int buyPrice = buys.getInt(5);
                         String buyUnit = buys.getString(9);
+                        System.out.printf("Comparing sell order %d (%d, $%d) and buy order %d (%d, $%d)...",
+                                sellID, sellQty, sellPrice, buyID, buyQty, buyPrice);
                         if (buyQty <= sellQty && buyPrice >= sellPrice) {
-                            System.out.printf("Resolving sell order %d and buy order %d...", sellID, buyID);
+                            //System.out.printf("Resolving sell order %d and buy order %d...", sellID, buyID);
                             int newSellQty = sellQty - buyQty;
-                            int priceDiff = buyPrice - sellPrice;
+                            int refundAmount = (buyPrice - sellPrice)*buyQty;
                             int totalPrice = buyQty * sellPrice;
                             resolveBuy.setInt(1, sellPrice);
                             resolveBuy.setTimestamp(2, now);
                             resolveBuy.setInt(3, sellID);
                             resolveBuy.setInt(4, buyID);
                             resolveBuy.execute();
+
+                            sellQty = newSellQty;
 
                             resolveSell.setInt(1,newSellQty);
                             if (newSellQty == 0) resolveSell.setTimestamp(2,now);
@@ -489,8 +546,8 @@ public class NetworkServer {
                             adjustBalance.setInt(1, totalPrice);
                             adjustBalance.setString(2, sellUnit);
                             adjustBalance.addBatch();
-                            if (priceDiff < 0){ //refund the difference if needed
-                                adjustBalance.setInt(1, priceDiff);
+                            if (refundAmount > 0){ //refund the difference if needed
+                                adjustBalance.setInt(1, refundAmount);
                                 adjustBalance.setString(2, buyUnit);
                                 adjustBalance.addBatch();
                             }
@@ -502,8 +559,11 @@ public class NetworkServer {
                             insertAdjustInv.execute();
                             connection.commit();
                             ignoredBuys.add(buyID);
-                            System.out.println(" Done!");
+                            System.out.println(" Resolved!");
                             resolutionCount++;
+                        }
+                        else {
+                            System.out.println(" Failed to resolve.");
                         }
                     }
                 }

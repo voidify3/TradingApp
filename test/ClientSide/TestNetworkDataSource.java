@@ -5,10 +5,9 @@ import static org.junit.jupiter.api.Assertions.*;
 
 public class TestNetworkDataSource {
     NetworkDataSource n;
-    @BeforeAll @Test
+    @BeforeEach @Test
     public void setup() {
         n = new NetworkDataSource();
-        n.debugDeleteEverything();
     }
     //TODO: these tests:
     // * Success and fail tests for insertOrUpdateInventory
@@ -16,8 +15,7 @@ public class TestNetworkDataSource {
     // * Ditto for update-calling methods
     // * Ditto for deleteByKey-calling methods
     // * Success and fail tests for deleteInventoryRecord
-    // * All select-entire-table methods in one test; the tables are empty right now so this is the fail case
-    // Insert some records into all tables at this specific point between tests
+    // * All select-entire-table methods in one test with empty tables
     // * Select-entire-table success test
     // * Test calling all multi-param selection SellOrder methods with values that will succeed
     // * Ditto but fail
@@ -25,7 +23,7 @@ public class TestNetworkDataSource {
     // * Success and fail tests for inventoryRecordByKeys
     // * Success and fail tests blanketing all selectByValue-calling methods
     // * Success and fail tests blanketing all selectByKey-calling methods
-    @AfterAll
+    @AfterEach
     public void done() {
         n.debugDeleteEverything();
     }
