@@ -6,7 +6,7 @@ import java.sql.Timestamp;
 import java.util.ArrayList;
 
 public interface TradingAppDataSource {
-    Boolean ping();
+    long ping();
 
     ArrayList<User> allUsers();
 

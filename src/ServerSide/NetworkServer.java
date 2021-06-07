@@ -12,6 +12,7 @@ import java.net.Socket;
 import java.net.SocketTimeoutException;
 import java.sql.*;
 import java.time.LocalDateTime;
+import java.time.format.DateTimeParseException;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 
@@ -176,15 +177,7 @@ public class NetworkServer {
         tradeReconciliation = new Timer();
         connection = DBConnection.getInstance();
         try {
-            Statement st = connection.createStatement();
-            st.addBatch(CREATE_TABLE_UNIT);
-            st.addBatch(CREATE_TABLE_ASSET);
-            st.addBatch(CREATE_TABLE_USER);
-            st.addBatch(CREATE_TABLE_INV);
-            st.addBatch(CREATE_TABLE_SELL);
-            st.addBatch(CREATE_TABLE_BUY);
-            st.executeBatch();
-            connection.commit();
+            setupTables();
             //INITIALISATION OF PREPARED STATEMENTS
             getAssets = connection.prepareStatement(GET_ASSETS);
             insertUpdateInv = connection.prepareStatement(INSERT_OR_UPDATE_INV);
@@ -194,10 +187,21 @@ public class NetworkServer {
             resolveBuy = connection.prepareStatement(RECONCILIATION_RESOLVE_BUY);
             resolveSell = connection.prepareStatement(RECONCILIATION_RESOLVE_SELL);
             adjustBalance = connection.prepareStatement(RECONCILIATION_ADJUST_BALANCE);
-            //TODO: the rest
         } catch (SQLException ex) {
             ex.printStackTrace();
         }
+    }
+
+    private void setupTables() throws SQLException {
+        Statement st = connection.createStatement();
+        st.addBatch(CREATE_TABLE_UNIT);
+        st.addBatch(CREATE_TABLE_ASSET);
+        st.addBatch(CREATE_TABLE_USER);
+        st.addBatch(CREATE_TABLE_INV);
+        st.addBatch(CREATE_TABLE_SELL);
+        st.addBatch(CREATE_TABLE_BUY);
+        st.executeBatch();
+        connection.commit();
     }
 
 
@@ -208,13 +212,26 @@ public class NetworkServer {
     private void handleConnection(Socket socket) throws IOException, ClassNotFoundException {
         try (ObjectInputStream objectInputStream = new ObjectInputStream(socket.getInputStream()))
         {
-            DataPacket info = null;
             ProtocolKeywords command = (ProtocolKeywords) objectInputStream.readObject();
-            if (command != PING) info = (DataPacket) objectInputStream.readObject();
+            Object part2 = objectInputStream.readObject();
 
             try (ObjectOutputStream objectOutputStream = new ObjectOutputStream(socket.getOutputStream());)
             {
-                handleRequest(command, info, objectOutputStream);
+                if (command == SPECIAL) {
+                    String s = (String) part2;
+                    if (s == DROP_PASSWORD) {
+                        resetEverything();
+                        objectOutputStream.writeObject("DONE");
+                    }
+                    else if (s == RECREATE_PASSWORD) {
+                        setupTables();
+                        objectOutputStream.writeObject("DONE");
+                    }
+                    else {
+                        objectOutputStream.writeObject("PING");
+                    }
+                }
+                else handleRequest(command, (DataPacket)part2, objectOutputStream);
             }
             catch (SQLException e) {
                 e.printStackTrace();
@@ -224,8 +241,7 @@ public class NetworkServer {
     }
 
     private void handleRequest(ProtocolKeywords keyword, DataPacket info, ObjectOutputStream out) throws IOException, SQLException {
-        if (keyword == PING) out.writeObject(1);
-        else if (keyword == ProtocolKeywords.SELECT) out.writeObject(handleSelect(info));
+        if (keyword == ProtocolKeywords.SELECT) out.writeObject(handleSelect(info));
         else out.writeObject(handleNonselect(keyword, info));
     }
 

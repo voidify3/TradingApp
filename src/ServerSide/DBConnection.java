@@ -16,6 +16,9 @@ public class DBConnection {
      * The singleton instance of the database connection.
      */
     private static Connection instance = null;
+    private Boolean IS_TESTING = false;
+    private final String TEST_PREFIX = "../";
+    private final String NON_TEST_PREFIX = "";
 
     /**
      * Constructor intializes the connection.
@@ -25,7 +28,7 @@ public class DBConnection {
         FileInputStream in = null;
         try {
             System.out.println(System.getProperty("user.dir"));
-            in = new FileInputStream("../src/db.props");
+            in = new FileInputStream((IS_TESTING?TEST_PREFIX:NON_TEST_PREFIX) + "src/db.props");
             props.load(in);
             in.close();
 

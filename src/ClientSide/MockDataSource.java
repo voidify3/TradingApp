@@ -16,8 +16,8 @@ public class MockDataSource implements TradingAppDataSource {
 
 
     @Override
-    public Boolean ping() {
-        return null;
+    public long ping() {
+        return 0;
     }
 
     @Override

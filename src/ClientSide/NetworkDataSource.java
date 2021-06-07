@@ -7,10 +7,9 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.net.Socket;
 import java.sql.Timestamp;
+import java.time.LocalDateTime;
+import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.TreeMap;
 
 import static common.DatabaseTables.*;
 import static common.ProtocolKeywords.*;
@@ -22,6 +21,7 @@ import static java.lang.String.valueOf;
 public class NetworkDataSource implements TradingAppDataSource {
     private static final String HOSTNAME = "127.0.0.1";
     private static final int PORT = 10000;
+    public static final String BLANK_FILTER = "1=1";
 
 
     public NetworkDataSource() {
@@ -30,12 +30,14 @@ public class NetworkDataSource implements TradingAppDataSource {
 
     /**
      *
-     * @return Whether the ping succeeded
+     * @return Ping time in milliseconds
      */
     @Override
-    public Boolean ping() {
-        return false;
-
+    public long ping() {
+        LocalDateTime start = LocalDateTime.now();
+        requestSpecial("PING");
+        LocalDateTime end = LocalDateTime.now();
+        return ChronoUnit.NANOS.between(start,end) + 1;
     }
     //-------------ATOMIC QUERY EXECUTORS--------------
     //These methods are the ones that actually communicate with the server
@@ -80,7 +82,6 @@ public class NetworkDataSource implements TradingAppDataSource {
     private int requestNonselect(ProtocolKeywords keyword, DataPacket info) {
         try {
             Socket socket = new Socket(HOSTNAME, PORT);
-
             try (
                     ObjectOutputStream objectOutputStream =
                             new ObjectOutputStream(socket.getOutputStream());
@@ -93,7 +94,8 @@ public class NetworkDataSource implements TradingAppDataSource {
                         ObjectInputStream objectInputStream =
                                 new ObjectInputStream(socket.getInputStream());
                 ) {
-                    return (int) objectInputStream.readObject();
+                    Object o = objectInputStream.readObject();
+                    return (int) o;
                 }
             }
         } catch (IOException | ClassNotFoundException e) {
@@ -103,6 +105,30 @@ public class NetworkDataSource implements TradingAppDataSource {
         }
     }
 
+    private String requestSpecial(String info) {
+        try {
+            Socket socket = new Socket(HOSTNAME, PORT);
+
+            try (
+                    ObjectOutputStream objectOutputStream =
+                            new ObjectOutputStream(socket.getOutputStream());
+            ) {
+                objectOutputStream.writeObject(SPECIAL);
+                objectOutputStream.writeObject(info);
+                objectOutputStream.flush();
+
+                try (
+                        ObjectInputStream objectInputStream =
+                                new ObjectInputStream(socket.getInputStream());
+                ) {
+                    return (String) objectInputStream.readObject();
+                }
+            }
+        } catch (IOException | ClassNotFoundException e) {
+            e.printStackTrace();
+            return null;
+        }
+    }
 
 
     //--------------QUERY TYPE HELPERS-----------------
@@ -201,7 +227,7 @@ public class NetworkDataSource implements TradingAppDataSource {
      */
     @Override
     public ArrayList<User> allUsers() {
-        return (ArrayList) select(DatabaseTables.USER, "");
+        return (ArrayList) select(DatabaseTables.USER, BLANK_FILTER);
     }
 
     /**
@@ -210,7 +236,7 @@ public class NetworkDataSource implements TradingAppDataSource {
      */
     @Override
     public ArrayList<OrgUnit> allOrgUnits() {
-        return (ArrayList) select(UNIT, "");
+        return (ArrayList) select(UNIT, BLANK_FILTER);
     }
 
     /**
@@ -219,7 +245,7 @@ public class NetworkDataSource implements TradingAppDataSource {
      */
     @Override
     public ArrayList<Asset> allAssets() {
-        return (ArrayList) select(ASSET, "");
+        return (ArrayList) select(ASSET, BLANK_FILTER);
     }
 
     /**
@@ -228,7 +254,7 @@ public class NetworkDataSource implements TradingAppDataSource {
      */
     @Override
     public ArrayList<InventoryRecord> inventoryList() {
-        return  (ArrayList) select(INV, "");
+        return  (ArrayList) select(INV, BLANK_FILTER);
     }
 
     /**
@@ -459,7 +485,12 @@ public class NetworkDataSource implements TradingAppDataSource {
     //---DELETE---
     @Override
     public int debugDeleteEverything() {
-        return 0;
+        requestSpecial(DROP_PASSWORD);
+        return 1;
+    }
+
+    public void recreate() {
+        requestSpecial(RECREATE_PASSWORD);
     }
 
     /**

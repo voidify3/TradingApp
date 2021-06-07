@@ -5,5 +5,7 @@ public enum ProtocolKeywords {
     INSERT(),
     UPDATE(),
     DELETE(),
-    PING()
+    SPECIAL();
+    public static final String DROP_PASSWORD = "CLEAR";
+    public static final String RECREATE_PASSWORD = "RECREATE";
 }
