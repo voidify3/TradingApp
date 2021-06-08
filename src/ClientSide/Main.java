@@ -20,11 +20,17 @@ public class Main {
         //Date & time formatter
         DateTimeFormatter dmy = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm:ss");
         LocalDateTime now = LocalDateTime.now();
+        TradingAppDataSource t;
+        if (args.length == 1 && args[0].equals("MOCK")) {
+            t = new MockDataSource();
+        } else {
+            t = new NetworkDataSource();
+        }
 
         // BOILERPLATE needed when running the GUI to make sure it's thread safe
         javax.swing.SwingUtilities.invokeLater(() -> {
             try {
-                TradingAppGUI gui = new TradingAppGUI(new TradingAppData(new MockDataSource()));
+                TradingAppGUI gui = new TradingAppGUI(new TradingAppData(t));
             } catch (Throwable ex) {
                 ex.printStackTrace();
             }
