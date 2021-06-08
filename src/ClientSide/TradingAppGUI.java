@@ -92,10 +92,9 @@ public class TradingAppGUI {
 
     public TradingAppGUI(TradingAppData data) throws InvalidPrice, InvalidDate, IOException, DoesNotExist, AlreadyExists, IllegalString, InvalidAmount, OrderException {
         this.data = data;
-        createAndShowGUI();
     }
 
-    private void createAndShowGUI() throws IllegalString, AlreadyExists, IOException, DoesNotExist, InvalidPrice, InvalidDate, InvalidAmount, OrderException {
+    void createAndShowGUI() throws IllegalString, AlreadyExists, IOException, DoesNotExist, InvalidPrice, InvalidDate, InvalidAmount, OrderException {
         mainFrame.setPreferredSize(new Dimension(WIDTH, HEIGHT));
         mainFrame.setResizable(false);
         mainFrame.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
@@ -249,7 +248,6 @@ public class TradingAppGUI {
 
         homeButton.setToolTipText("Go to the home screen");
         searchButton.setToolTipText("Go to the search screen");
-        welcomeLabel.setText(String.format("Welcome back %s", user.getUsername()));
         welcomeLabel.setText(String.format("Welcome back %s!", user.getUsername()));
         orgUnitLabel.setText(user.getUnit().toUpperCase());
 
