@@ -193,7 +193,7 @@ public class NetworkServer {
         }
     }
 
-    private void setupTables() throws SQLException {
+    void setupTables() throws SQLException {
         Statement st = connection.createStatement();
         st.addBatch(CREATE_TABLE_UNIT);
         st.addBatch(CREATE_TABLE_ASSET);
@@ -203,6 +203,7 @@ public class NetworkServer {
         st.addBatch(CREATE_TABLE_BUY);
         st.executeBatch();
         connection.commit();
+        System.out.println("Create table script executed");
     }
 
 
@@ -308,10 +309,10 @@ public class NetworkServer {
         boolean isUpdate = false;
         if (keyword == SPECIAL) {
             String s = info.filter;
-            if (s == DROP_PASSWORD) {
+            if (s.equals(DROP_PASSWORD)) {
                 return resetEverything();
             }
-            else if (s == RECREATE_PASSWORD) {
+            else if (s.equals(RECREATE_PASSWORD)) {
                 setupTables();
                 return 6;
             }
