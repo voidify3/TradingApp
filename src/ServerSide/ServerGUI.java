@@ -19,9 +19,13 @@ public class ServerGUI {
     public final static int FIVE_MINUTES = 300000;
     static JLabel tradeLabel = new JLabel("Trade reconciliation not yet performed                            ");
 
-    public static void main(String[] args) {
+    public static void main(String[] args) throws SQLException {
         NetworkServer server = new NetworkServer();
         SwingUtilities.invokeLater(() -> createAndShowGUI(server));
+        if (args.length == 1 && args[0].equals("RESET")) {
+            server.resetEverything();
+            server.setupTables();
+        }
         try {
             server.start();
             server.tradeReconciliation.schedule(new TimerTask() {
