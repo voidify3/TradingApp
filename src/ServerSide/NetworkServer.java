@@ -12,7 +12,6 @@ import java.net.Socket;
 import java.net.SocketTimeoutException;
 import java.sql.*;
 import java.time.LocalDateTime;
-import java.time.format.DateTimeParseException;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 
@@ -36,76 +35,80 @@ public class NetworkServer {
     //Create Table scripts for all tables, using table and column names from the enum
     // week 7 address book exercise used as reference for syntax; "from stackoverflow" comment is from that
     static final String CREATE_TABLE_UNIT =
-            "CREATE TABLE IF NOT EXISTS " + UNIT.getTableName() + " ("
-                    + UNIT.getColumnNames()[0] + " VARCHAR(30) PRIMARY KEY NOT NULL UNIQUE," //name
-                    + UNIT.getColumnNames()[1] + " INTEGER" + ");"; //credits
+            "CREATE TABLE IF NOT EXISTS " + UNIT.getName() + " ("
+                    + UNIT.getColumns()[0] + " VARCHAR(30) PRIMARY KEY NOT NULL UNIQUE," //name
+                    + UNIT.getColumns()[1] + " INTEGER" + ");"; //credits
     static final String CREATE_TABLE_ASSET =
-            "CREATE TABLE IF NOT EXISTS " + ASSET.getTableName() + " ("
-                    + ASSET.getColumnNames()[0] + " INTEGER "
+            "CREATE TABLE IF NOT EXISTS " + ASSET.getName() + " ("
+                    + ASSET.getColumns()[0] + " INTEGER "
                     + "PRIMARY KEY /*!40101 AUTO_INCREMENT */ NOT NULL UNIQUE," //from https://stackoverflow.com/a/41028314
-                    + ASSET.getColumnNames()[1] + " VARCHAR(60)" + ");"; //description
+                    + ASSET.getColumns()[1] + " VARCHAR(60)" + ");"; //description
     static final String CREATE_TABLE_USER =
-            "CREATE TABLE IF NOT EXISTS " + USER.getTableName() + " ("
-                    + USER.getColumnNames()[0] + " VARCHAR(30) PRIMARY KEY NOT NULL UNIQUE," //name
-                    + USER.getColumnNames()[1] + " VARCHAR(128) NOT NULL," //hashed password
-                    + USER.getColumnNames()[2] + " VARCHAR(41) NOT NULL," //salt string
-                    + USER.getColumnNames()[3] + " VARCHAR(30)," //orgunit
-                    + USER.getColumnNames()[4] + " BOOLEAN," //adminAccess
-                    + "CONSTRAINT fk_user_orgunit FOREIGN KEY (" + USER.getColumnNames()[3]
-                    + ") REFERENCES " + UNIT.getTableName() + " (" + UNIT.getColumnNames()[0]
+            "CREATE TABLE IF NOT EXISTS " + USER.getName() + " ("
+                    + USER.getColumns()[0] + " VARCHAR(30) PRIMARY KEY NOT NULL UNIQUE," //name
+                    + USER.getColumns()[1] + " VARCHAR(128) NOT NULL," //hashed password
+                    + USER.getColumns()[2] + " VARCHAR(41) NOT NULL," //salt string
+                    + USER.getColumns()[3] + " VARCHAR(30)," //orgunit
+                    + USER.getColumns()[4] + " BOOLEAN," //adminAccess
+                    + "CONSTRAINT fk_user_orgunit FOREIGN KEY (" + USER.getColumns()[3]
+                    + ") REFERENCES " + UNIT.getName() + " (" + UNIT.getColumns()[0]
                     + ") ON DELETE SET NULL ON UPDATE CASCADE" + ");";
     static final String CREATE_TABLE_INV =
-            "CREATE TABLE IF NOT EXISTS " + INV.getTableName() + " ("
-                    + INV.getColumnNames()[0] + " VARCHAR(30) NOT NULL," //orgunit
-                    + INV.getColumnNames()[1] + " INTEGER NOT NULL," //asset
-                    + INV.getColumnNames()[2] + " INTEGER NOT NULL," //quantity
-                    + "CONSTRAINT fk_inventories_orgunit FOREIGN KEY (" + INV.getColumnNames()[0]
-                    + ") REFERENCES " + UNIT.getTableName() + " (" + UNIT.getColumnNames()[0]
+            "CREATE TABLE IF NOT EXISTS " + INV.getName() + " ("
+                    + INV.getColumns()[0] + " VARCHAR(30) NOT NULL," //orgunit
+                    + INV.getColumns()[1] + " INTEGER NOT NULL," //asset
+                    + INV.getColumns()[2] + " INTEGER NOT NULL," //quantity
+                    + "CONSTRAINT fk_inventories_orgunit FOREIGN KEY (" + INV.getColumns()[0]
+                    + ") REFERENCES " + UNIT.getName() + " (" + UNIT.getColumns()[0]
                     + ") ON DELETE CASCADE ON UPDATE CASCADE,"
-                    + "CONSTRAINT fk_inventories_asset FOREIGN KEY (" + INV.getColumnNames()[1]
-                    + ") REFERENCES " + ASSET.getTableName() + " (" + ASSET.getColumnNames()[0]
+                    + "CONSTRAINT fk_inventories_asset FOREIGN KEY (" + INV.getColumns()[1]
+                    + ") REFERENCES " + ASSET.getName() + " (" + ASSET.getColumns()[0]
                     + ") ON DELETE CASCADE ON UPDATE CASCADE,"
-                    + "PRIMARY KEY(" + INV.getColumnNames()[0] + "," + INV.getColumnNames()[1] + ")"
+                    + "PRIMARY KEY(" + INV.getColumns()[0] + "," + INV.getColumns()[1] + ")"
                     + ");";
     static final String CREATE_TABLE_SELL =
-            "CREATE TABLE IF NOT EXISTS " + SELL.getTableName() + " ("
-                    + SELL.getColumnNames()[0] + " INTEGER PRIMARY KEY /*!40101 AUTO_INCREMENT */ NOT NULL UNIQUE,"
-                    + SELL.getColumnNames()[1] + " VARCHAR(30) NOT NULL," //user
-                    + SELL.getColumnNames()[2] + " INTEGER NOT NULL," //asset
-                    + SELL.getColumnNames()[3] + " INTEGER NOT NULL," //quantity
-                    + SELL.getColumnNames()[4] + " INTEGER NOT NULL," //price
-                    + SELL.getColumnNames()[5] + " DATETIME NOT NULL," //datePlaced
-                    + SELL.getColumnNames()[6] + " DATETIME," //dateResolved
-                    + "CONSTRAINT fk_sell_user FOREIGN KEY (" + SELL.getColumnNames()[1]
-                    + ") REFERENCES " + USER.getTableName() + " (" + USER.getColumnNames()[0]
+            "CREATE TABLE IF NOT EXISTS " + SELL.getName() + " ("
+                    + SELL.getColumns()[0] + " INTEGER PRIMARY KEY /*!40101 AUTO_INCREMENT */ NOT NULL UNIQUE,"
+                    + SELL.getColumns()[1] + " VARCHAR(30) NOT NULL," //user
+                    + SELL.getColumns()[2] + " INTEGER NOT NULL," //asset
+                    + SELL.getColumns()[3] + " INTEGER NOT NULL," //quantity
+                    + SELL.getColumns()[4] + " INTEGER NOT NULL," //price
+                    + SELL.getColumns()[5] + " DATETIME NOT NULL," //datePlaced
+                    + SELL.getColumns()[6] + " DATETIME," //dateResolved
+                    + "CONSTRAINT fk_sell_user FOREIGN KEY (" + SELL.getColumns()[1]
+                    + ") REFERENCES " + USER.getName() + " (" + USER.getColumns()[0]
                     + ") ON DELETE RESTRICT ON UPDATE CASCADE,"
-                    + "CONSTRAINT fk_sell_asset FOREIGN KEY (" + SELL.getColumnNames()[2]
-                    + ") REFERENCES " + ASSET.getTableName() + " (" + ASSET.getColumnNames()[0]
+                    + "CONSTRAINT fk_sell_asset FOREIGN KEY (" + SELL.getColumns()[2]
+                    + ") REFERENCES " + ASSET.getName() + " (" + ASSET.getColumns()[0]
                     + ") ON DELETE CASCADE ON UPDATE CASCADE" + ");";
     static final String CREATE_TABLE_BUY =
-            "CREATE TABLE IF NOT EXISTS " + BUY.getTableName() + " ("
-                    + BUY.getColumnNames()[0] + " INTEGER PRIMARY KEY /*!40101 AUTO_INCREMENT */ NOT NULL UNIQUE,"
-                    + BUY.getColumnNames()[1] + " VARCHAR(30) NOT NULL," //user
-                    + BUY.getColumnNames()[2] + " INTEGER NOT NULL," //asset
-                    + BUY.getColumnNames()[3] + " INTEGER NOT NULL," //quantity
-                    + BUY.getColumnNames()[4] + " INTEGER NOT NULL," //price
-                    + BUY.getColumnNames()[5] + " DATETIME NOT NULL," //datePlaced
-                    + BUY.getColumnNames()[6] + " DATETIME," //dateResolved
-                    + BUY.getColumnNames()[7] + " INTEGER," //boughtFrom
-                    + "CONSTRAINT fk_buy_user FOREIGN KEY (" + BUY.getColumnNames()[1]
-                    + ") REFERENCES " + USER.getTableName() + " (" + USER.getColumnNames()[0]
+            "CREATE TABLE IF NOT EXISTS " + BUY.getName() + " ("
+                    + BUY.getColumns()[0] + " INTEGER PRIMARY KEY /*!40101 AUTO_INCREMENT */ NOT NULL UNIQUE,"
+                    + BUY.getColumns()[1] + " VARCHAR(30) NOT NULL," //user
+                    + BUY.getColumns()[2] + " INTEGER NOT NULL," //asset
+                    + BUY.getColumns()[3] + " INTEGER NOT NULL," //quantity
+                    + BUY.getColumns()[4] + " INTEGER NOT NULL," //price
+                    + BUY.getColumns()[5] + " DATETIME NOT NULL," //datePlaced
+                    + BUY.getColumns()[6] + " DATETIME," //dateResolved
+                    + BUY.getColumns()[7] + " INTEGER," //boughtFrom
+                    + "CONSTRAINT fk_buy_user FOREIGN KEY (" + BUY.getColumns()[1]
+                    + ") REFERENCES " + USER.getName() + " (" + USER.getColumns()[0]
                     + ") ON DELETE RESTRICT ON UPDATE CASCADE,"
-                    + "CONSTRAINT fk_buy_asset FOREIGN KEY (" + BUY.getColumnNames()[2]
-                    + ") REFERENCES " + ASSET.getTableName() + " (" + ASSET.getColumnNames()[0]
+                    + "CONSTRAINT fk_buy_asset FOREIGN KEY (" + BUY.getColumns()[2]
+                    + ") REFERENCES " + ASSET.getName() + " (" + ASSET.getColumns()[0]
                     + ") ON DELETE CASCADE ON UPDATE CASCADE,"
-                    + "CONSTRAINT fk_buy_sell FOREIGN KEY (" + BUY.getColumnNames()[7]
-                    + ") REFERENCES " + SELL.getTableName() + " (" + SELL.getColumnNames()[0]
+                    + "CONSTRAINT fk_buy_sell FOREIGN KEY (" + BUY.getColumns()[7]
+                    + ") REFERENCES " + SELL.getName() + " (" + SELL.getColumns()[0]
                     + ") ON DELETE RESTRICT ON UPDATE CASCADE" + ");";
     /*
         static final String CREATE_TABLES = CREATE_TABLE_UNIT + CREATE_TABLE_ASSET + CREATE_TABLE_USER +
                 CREATE_TABLE_INV + CREATE_TABLE_SELL + CREATE_TABLE_BUY;
     */
-    static final String[] CLEAR_DATA = {"DROP TABLE buyorder;", "DROP TABLE sellorder;", "DROP TABLE inventories;", "DROP TABLE asset;", "DROP TABLE user;", "DROP TABLE orgunit;"};
+    static final String TOTAL_RECORDS_WRAPPER = "SELECT %s AS SUM;";
+    static final String TOTAL_RECORDS_INNER = "(SELECT COUNT(*) FROM %s)";
+    static final String[] CLEAR_DATA = {"DROP TABLE " + BUY.getName() + ";", "DROP TABLE " + SELL.getName()
+            + ";", "DROP TABLE " + INV.getName() + ";", "DROP TABLE " + ASSET.getName() + ";",
+            "DROP TABLE " + USER.getName() + ";", "DROP TABLE " + UNIT.getName() + ";"};
 
     private static final String GET_ASSETS = "SELECT * FROM asset;";
     private static final String RECONCILIATION_GET_SELLS =
@@ -133,17 +136,14 @@ public class NetworkServer {
                     "SET credits=credits+? " +
                     "WHERE name=?;";
 
-    //TODO: prepared statements for each valid query type
     private static final String INSERT_OR_UPDATE_INV =
             "INSERT INTO inventories (orgunit, asset, quantity)" +
                     "VALUES (?, ?, ?)" +
-                    "ON DUPLICATE KEY UPDATE " +
-                    "orgunit=values(orgunit), asset=values(asset), quantity=values(quantity);";
+                    "ON DUPLICATE KEY UPDATE quantity=values(quantity);";
     private static final String INSERT_OR_ADJUST_INV =
             "INSERT INTO inventories (orgunit, asset, quantity)" +
                     "VALUES (?, ?, ?)" +
-                    "ON DUPLICATE KEY UPDATE " +
-                    "orgunit=values(orgunit), asset=values(asset), quantity=quantity + values(quantity);";
+                    "ON DUPLICATE KEY UPDATE quantity=quantity + values(quantity);";
     private static final String GENERIC_SELECT = "SELECT * FROM %s WHERE %s ORDER BY %s, %s;";
     private static final String GENERIC_DELETE = "DELETE FROM %s WHERE %s;";
     private static final String GENERIC_INSERT = "INSERT INTO %s (%s) VALUES (%s);";
@@ -187,6 +187,7 @@ public class NetworkServer {
             resolveBuy = connection.prepareStatement(RECONCILIATION_RESOLVE_BUY);
             resolveSell = connection.prepareStatement(RECONCILIATION_RESOLVE_SELL);
             adjustBalance = connection.prepareStatement(RECONCILIATION_ADJUST_BALANCE);
+
         } catch (SQLException ex) {
             ex.printStackTrace();
         }
@@ -213,25 +214,11 @@ public class NetworkServer {
         try (ObjectInputStream objectInputStream = new ObjectInputStream(socket.getInputStream()))
         {
             ProtocolKeywords command = (ProtocolKeywords) objectInputStream.readObject();
-            Object part2 = objectInputStream.readObject();
+            DataPacket info = (DataPacket)objectInputStream.readObject();
 
             try (ObjectOutputStream objectOutputStream = new ObjectOutputStream(socket.getOutputStream());)
             {
-                if (command == SPECIAL) {
-                    String s = (String) part2;
-                    if (s == DROP_PASSWORD) {
-                        resetEverything();
-                        objectOutputStream.writeObject("DONE");
-                    }
-                    else if (s == RECREATE_PASSWORD) {
-                        setupTables();
-                        objectOutputStream.writeObject("DONE");
-                    }
-                    else {
-                        objectOutputStream.writeObject("PING");
-                    }
-                }
-                else handleRequest(command, (DataPacket)part2, objectOutputStream);
+                handleRequest(command, info, objectOutputStream);
             }
             catch (SQLException e) {
                 e.printStackTrace();
@@ -247,8 +234,8 @@ public class NetworkServer {
 
     private ArrayList<DataObject> handleSelect(DataPacket info) throws SQLException {
         ArrayList results = new ArrayList<>();
-        String queryString = String.format(GENERIC_SELECT, info.table.getTableName(), info.filter,
-                info.table.getColumnNames()[0], info.table.getColumnNames()[1]);
+        String queryString = String.format(GENERIC_SELECT, info.table.getName(), info.filter,
+                info.table.getColumns()[0], info.table.getColumns()[1]);
         ResultSet queryResults = executeSelectQuery(connection.prepareStatement(queryString));
         switch(info.table) {
             case UNIT -> results = populateUnits(queryResults);
@@ -319,37 +306,37 @@ public class NetworkServer {
     private int handleNonselect(ProtocolKeywords keyword, DataPacket info) throws SQLException {
         PreparedStatement statement;
         boolean isUpdate = false;
-        if (keyword == DELETE) {
-            statement = connection.prepareStatement(String.format(GENERIC_DELETE, info.table.getTableName(), info.filter));
+        if (keyword == SPECIAL) {
+            String s = info.filter;
+            if (s == DROP_PASSWORD) {
+                return resetEverything();
+            }
+            else if (s == RECREATE_PASSWORD) {
+                setupTables();
+                return 6;
+            }
+            else {
+                return 0;
+            }
+        }
+        else if (keyword == DELETE) {
+            statement = connection.prepareStatement(String.format(GENERIC_DELETE, info.table.getName(), info.filter));
             if (info.table == UNIT) {
                 //here, we need to use an indirect check to avoid situations where a user with null unit
                 // has active orders. so attempt and then roll back a USER delete on all members of would-be-deleted units
                 // and if an exception was thrown some users have buy/sell orders so cancel the whole deletion
                 try {
-                    String query = String.format(GENERIC_DELETE, USER.getTableName(), USER.getColumnNames()[3] +
-                            " IN (" + String.format(GENERIC_SELECT, UNIT.getTableName(), info.filter, UNIT.getColumnNames()[0], UNIT.getColumnNames()[1])
-                            .replace(";", "") + ")").replace("*", UNIT.getColumnNames()[0]);
+                    String query = String.format(GENERIC_DELETE, USER.getName(), USER.getColumns()[3] +
+                            " IN (" + String.format(GENERIC_SELECT, UNIT.getName(), info.filter, UNIT.getColumns()[0], UNIT.getColumns()[1])
+                            .replace(";", "") + ")").replace("*", UNIT.getColumns()[0]);
                     //System.out.println(query);
-                    int deletability = connection.prepareStatement(query).executeUpdate();
+                    connection.prepareStatement(query).executeUpdate();
                     connection.rollback();
                 }
                 catch (SQLIntegrityConstraintViolationException e) {
                     return -1;
                 }
             }
-/*
-            int result = executeModificationQuery(statement);
-            if (result > 0) return result;
-            else {
-                //If no rows were affected, either the filter matched no records or the deletion was prevented
-                //by a foreign key constraint. We want 0 for the former and -1 for the latter. Running a select
-                //query on the same filter allows us to make this distinction
-                if (executeSelectQuery(connection.prepareStatement(
-                        String.format(GENERIC_SELECT, info.table.getTableName(), info.filter,
-                        info.table.getColumnNames()[0], info.table.getColumnNames()[1]))).next()) return -1;
-                else return 0;
-            }
-*/
         }
         else {
             if (keyword == INSERT) {
@@ -357,14 +344,13 @@ public class NetworkServer {
                     statement = connection.prepareStatement(INSERT_OR_UPDATE_INV);
                 }
                 else statement = connection.prepareStatement(
-                    String.format(GENERIC_INSERT, info.table.getTableName(), info.table.colNamesForInsert(),
+                    String.format(GENERIC_INSERT, info.table.getName(), info.table.colNamesForInsert(),
                             info.table.valuesForInsert()));
             }
             else /*if (keyword == UPDATE)*/ {
                 statement = connection.prepareStatement(
-                        String.format(GENERIC_UPDATE, info.table.getTableName(),
-                                info.table.templateForUpdate(), info.table.getColumnNames()[0]));
-                ParameterMetaData p = statement.getParameterMetaData();
+                        String.format(GENERIC_UPDATE, info.table.getName(),
+                                info.table.templateForUpdate(), info.table.getColumns()[0]));
                 isUpdate = true;
             }
 
@@ -387,7 +373,18 @@ public class NetworkServer {
                     statement.setString(3,x.getSalt());
                     String unit = x.getUnit();
                     if (unit != null) statement.setString(4, unit);
-                    else statement.setNull(4, Types.VARCHAR);
+                    else {
+                        statement.setNull(4, Types.VARCHAR);
+                        //here, we need to use an indirect check to avoid situations where a user with null unit
+                        // has active orders. Get the number of
+                        if (isUpdate) {
+                            int orderCount = totalRecordCount(new String[]{
+                                    BUY.getName() + " WHERE " + BUY.getColumns()[1] + "= '" + x.getUsername() + "'",
+                                    SELL.getName() + " WHERE " + SELL.getColumns()[1] + "= '" + x.getUsername() + "'",
+                            });
+                            if (orderCount > 0) return -1;
+                        }
+                    }
                     statement.setBoolean(5, x.getAdminAccess());
                     if (isUpdate) statement.setString(6, x.getUsername());
                 }
@@ -596,6 +593,27 @@ public class NetworkServer {
         }
     }
 
+    int totalRecordCount() throws SQLException {
+        return totalRecordCount(DatabaseTables.values());
+    }
+    int totalRecordCount(DatabaseTables[] d) throws SQLException {
+        String[] s = new String[d.length];
+        for (int i = 0; i<d.length;i++) {
+            s[i]=d[i].getName();
+        }
+        return totalRecordCount(s);
+    }
+    int totalRecordCount(String[] d) throws SQLException {
+        ArrayList<String> inners = new ArrayList<>();
+        for (String t : d) {
+            inners.add(String.format(TOTAL_RECORDS_INNER, t));
+        }
+        String query = String.format(TOTAL_RECORDS_WRAPPER, String.join(" + ", inners));
+        ResultSet rs = connection.prepareStatement(query).executeQuery();
+        rs.next();
+        return rs.getInt(1);
+    }
+
     /**
      * Non-private wrapper for testing SELECT queries
      * @param info DataPacket of query
@@ -619,11 +637,13 @@ public class NetworkServer {
     /**
      * Empty the database. Only exists for test and debug convenience, may deprecate later due to unsafeness
      */
-    public void resetEverything() throws SQLException {
+    public int resetEverything() throws SQLException {
+        int count = totalRecordCount();
         for (String drop : CLEAR_DATA) {
             connection.prepareStatement(drop).execute();
         }
         connection.commit();
         System.out.println("All tables dropped");
+        return count;
     }
 }

@@ -8,8 +8,9 @@ import java.time.LocalDateTime;
 import static org.junit.jupiter.api.Assertions.*;
 
 //INSTRUCTIONS TO RUN: run ServerGui then run this
-public class TestNetworkDataSource {
-    static NetworkDataSource n;
+public class TestDataSource {
+    public static final LocalDateTime START_OF_YEAR = LocalDateTime.of(2021, 1, 5, 0, 0);
+    static TradingAppDataSource n;
     public static final String TEST_USER = "testUser";
     public static final String TEST_USER_2 = "testUserTwo";
     public static final String TEST_ORG_1 = "Devs";
@@ -18,16 +19,16 @@ public class TestNetworkDataSource {
     public static final String TEST_ASSET_2 = "test2";
     @BeforeAll @Test
     static void setupAndSuccessInserts() {
-        n = new NetworkDataSource();
+        n = new MockDataSource();
 
-        long ping = n.ping();
-        System.out.println(ping);
-        assertTrue(ping > 0);
+//        long ping = n.ping();
+//        System.out.println(ping);
+//        assertTrue(ping > 0);
         n.debugDeleteEverything();
         n.recreate();
         assertAll(
                 ()->assertEquals(1, n.insertUnit(new OrgUnit(TEST_ORG_1))),
-
+                ()->assertFalse(n.allOrgUnits().isEmpty()),
                 ()->assertEquals(1, n.insertUser(new User(TEST_USER,
                         "password", false, TEST_ORG_1))),
                 ()->assertEquals(1, n.insertAsset(new Asset(TEST_ASSET))),
@@ -94,9 +95,9 @@ public class TestNetworkDataSource {
                         "password", true, TEST_ORG_1))),
                 ()->assertEquals(1, n.updateAsset(new Asset(1, TEST_ASSET_2))),
                 ()->assertEquals(1, n.updateSellOrder(new SellOrder(1, TEST_USER, 1, 10, 5,
-                        LocalDateTime.of(2021, 1, 5, 0, 0), null))),
+                        START_OF_YEAR, null))),
                 ()->assertEquals(1, n.updateBuyOrder(new BuyOrder(1, TEST_USER, 1, 10, 5,
-                        LocalDateTime.of(2021, 1, 5, 0, 0), null, null)))
+                        START_OF_YEAR, null, null)))
         );
     }
     @Test
@@ -107,9 +108,9 @@ public class TestNetworkDataSource {
                         "password", true, TEST_ORG_1))),
                 ()->assertEquals(0, n.updateAsset(new Asset(2, TEST_ASSET))),
                 ()->assertEquals(0, n.updateSellOrder(new SellOrder(2, TEST_USER, 1, 10, 5,
-                        LocalDateTime.of(2021, 1, 5, 0, 0), null))),
+                        START_OF_YEAR, null))),
                 ()->assertEquals(0, n.updateBuyOrder(new BuyOrder(2, TEST_USER, 1, 10, 5,
-                        LocalDateTime.of(2021, 1, 5, 0, 0), null, null)))
+                        START_OF_YEAR, null, null)))
         );
     }
     @Test
@@ -118,16 +119,15 @@ public class TestNetworkDataSource {
                 ()->assertEquals(-1, n.updateUser(new User(TEST_USER,
                         "password", false, TEST_ORG_2))),
                 ()->assertEquals(-1, n.updateSellOrder(new SellOrder(1, TEST_USER_2, 1, 10, 5,
-                        LocalDateTime.of(2021, 1, 5, 0, 0), null))),
+                        START_OF_YEAR, null))),
                 ()->assertEquals(-1, n.updateSellOrder(new SellOrder(1, TEST_USER, 2, 10, 5,
-                        LocalDateTime.of(2021, 1, 5, 0, 0), null))),
+                        START_OF_YEAR, null))),
                 ()->assertEquals(-1, n.updateBuyOrder(new BuyOrder(1, TEST_USER_2, 1, 10, 5,
-                        LocalDateTime.of(2021, 1, 5, 0, 0), null, null))),
+                        START_OF_YEAR, null, null))),
                 ()->assertEquals(-1, n.updateBuyOrder(new BuyOrder(1, TEST_USER, 2, 10, 5,
-                        LocalDateTime.of(2021, 1, 5, 0, 0), null, null))),
+                        START_OF_YEAR, null, null))),
                 ()->assertEquals(-1, n.updateBuyOrder(new BuyOrder(1, TEST_USER, 1, 10, 5,
-                        LocalDateTime.of(2021, 1, 5, 0, 0),
-                        LocalDateTime.of(2021, 1, 6, 0, 0), 2)))
+                        START_OF_YEAR, LocalDateTime.now(), 2)))
         );
     }
     @Test
@@ -163,8 +163,8 @@ public class TestNetworkDataSource {
     @Test
     void constrainedDelByKeys() {
         n.updateBuyOrder(new BuyOrder(1, TEST_USER, 1, 10, 5,
-                LocalDateTime.of(2021, 1, 5, 0, 0),
-                LocalDateTime.of(2021, 6, 5, 0, 0), 1));
+                START_OF_YEAR,
+                LocalDateTime.now(), 1));
         assertAll(
                 ()->assertEquals(-1, n.deleteUnit(TEST_ORG_1)),
                 ()->assertEquals(-1, n.deleteUser(TEST_USER)),
@@ -172,7 +172,7 @@ public class TestNetworkDataSource {
                 ()->assertEquals(-1, n.deleteSellOrder(1))
         );
         n.updateBuyOrder(new BuyOrder(1, TEST_USER, 1, 10, 5,
-                LocalDateTime.of(2021, 1, 5, 0, 0), null, null));
+                START_OF_YEAR, null, null));
     }
     @Test
     void successDelInv() {
@@ -253,7 +253,7 @@ public class TestNetworkDataSource {
     @Test
     void successSelectByValue() {
         n.updateBuyOrder(new BuyOrder(1, TEST_USER, 1, 10, 5,
-                LocalDateTime.of(2021, 1, 5, 0, 0),
+                START_OF_YEAR,
                 LocalDateTime.of(2021, 6, 5, 0, 0), 1));
         assertAll(
                 ()->assertFalse(n.usersByUnit(TEST_ORG_1).isEmpty()),
@@ -262,7 +262,7 @@ public class TestNetworkDataSource {
                 ()->assertFalse(n.buyOrdersByBoughtFrom(1).isEmpty())
         );
         n.updateBuyOrder(new BuyOrder(1, TEST_USER, 1, 10, 5,
-                LocalDateTime.of(2021, 1, 5, 0, 0), null, null));
+                START_OF_YEAR, null, null));
     }
     @Test
     void failSelectByValue() {

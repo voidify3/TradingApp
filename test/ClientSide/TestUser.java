@@ -16,7 +16,7 @@ public class TestUser {
     User mockAdminUser;
     User mockGuy; // kept empty before tests so we can test creation exceptions
     OrgUnit mockUnit;
-    TradingAppData i = new TradingAppData();
+    //TradingAppData i = new TradingAppData(new MockDataSource());
 
     // BEFORE & AFTER EACH TEST-----------------------------------------------------------------------------------------
     /***
@@ -27,22 +27,19 @@ public class TestUser {
     @BeforeEach
     @DisplayName("Before each... create new mock users & a unit")
     public void newMockUsers() throws AlreadyExists, IllegalString {
-
-        i.mockObjectsWithPrices();
-
-        mockAdminUser = i.adminDev; //johnny
-        mockGenericUser = i.userDev; //scott
+        mockAdminUser = TradingAppData.adminDev; //johnny
+        mockGenericUser = TradingAppData.userDev; //scott
         mockUnit = new OrgUnit("devs");
     }
 
-    /***
-     * Leave no trace of the mock users.
-     */
-    @AfterEach
-    @DisplayName("After each... delete mock users & the unit")
-    public void clearMockUsers() throws DoesNotExist, ConstraintException {
-        i.deleteEverything();
-    }
+//    /***
+//     * Leave no trace of the mock users.
+//     */
+//    @AfterEach
+//    @DisplayName("After each... delete mock users & the unit")
+//    public void clearMockUsers() throws DoesNotExist, ConstraintException {
+//        i.deleteEverything();
+//    }
 
     // TEST CONSTRUCTOR, GETTERS, & SETTERS-----------------------------------------------------------------------------
     /***

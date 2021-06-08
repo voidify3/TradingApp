@@ -13,13 +13,6 @@ public class MockDataSource implements TradingAppDataSource {
         db = new MockDatabase();
     }
 
-
-
-    @Override
-    public long ping() {
-        return 0;
-    }
-
     @Override
     public ArrayList<User> allUsers() {
         return db.getAllUsers();
@@ -223,5 +216,10 @@ public class MockDataSource implements TradingAppDataSource {
     @Override
     public int deleteSellOrder(int key) {
         return db.cancelSellOrder(key);
+    }
+
+    @Override
+    public void recreate() {
+
     }
 }

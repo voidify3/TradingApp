@@ -31,7 +31,7 @@ public class TestOrders {
     BuyOrder testBuyOrder;
     SellOrder testSellOrder;
 
-    TradingAppData i = new TradingAppData();
+    TradingAppData i = new TradingAppData(new MockDataSource());
 
     public TestOrders() throws IllegalString, AlreadyExists, DoesNotExist {
         i.mockObjects();

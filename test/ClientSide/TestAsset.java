@@ -19,7 +19,7 @@ public class TestAsset {
     User mockGenericUser;
     User mockAdminUser;
     OrgUnit mockUnit;
-    TradingAppData i = new TradingAppData();
+    TradingAppData i = new TradingAppData(new MockDataSource());
 
     // BEFORE & AFTER EACH TEST-----------------------------------------------------------------------------------------
     /***
@@ -47,7 +47,7 @@ public class TestAsset {
      */
     @AfterEach
     @DisplayName("After each... delete mock asset, users & the unit")
-    public void clearMockUsers() throws DoesNotExist {
+    public void clearMockAssets() throws DoesNotExist {
         i.deleteEverything();
     }
 

@@ -6,7 +6,6 @@ import java.sql.Timestamp;
 import java.util.ArrayList;
 
 public interface TradingAppDataSource {
-    long ping();
 
     ArrayList<User> allUsers();
 
@@ -110,7 +109,7 @@ public interface TradingAppDataSource {
      *
      * @param u user object to send
      * @return 1 if update succeeded, 0 if update failed due to nonexistent key,
-     * -1 if update failed due to nonexistence of unit
+     * -1 if update failed due to nonexistence of unit, or an attempt to set the unit null when orders exist
      */
     int updateUser(User u);
 
@@ -197,4 +196,6 @@ public interface TradingAppDataSource {
      * (i.e. if any BuyOrders reference this SellOrder as BoughtFrom)
      */
     int deleteSellOrder(int key);
+
+    void recreate();
 }

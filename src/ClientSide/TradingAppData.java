@@ -21,6 +21,9 @@ public class TradingAppData {
         MONTHS,
         YEARS
     }
+    public TradingAppData(TradingAppDataSource dataSource) {
+        this.dataSource = new MockDataSource();
+    }
 
     //DEV/HELPER CONTENT --------------------------------------------------------------------
     public static User adminDev;
@@ -94,9 +97,7 @@ public class TradingAppData {
         dataSource.debugDeleteEverything();
     }
 
-    public TradingAppData() {
-        dataSource = new MockDataSource();
-    }
+
 
     public User login(String username, String password) throws IllegalString, DoesNotExist {
         User user = dataSource.userByKey(username);

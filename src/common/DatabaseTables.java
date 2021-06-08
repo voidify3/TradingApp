@@ -12,24 +12,24 @@ public enum DatabaseTables {
     BUY("buyorder",
             new String[]{"idx","user","asset","quantity","price","datePlaced","dateResolved","boughtFrom"});
 
-    DatabaseTables(String tableName, String[] columnNames) {
-        this.tableName=tableName;
-        this.columnNames=columnNames;
+    DatabaseTables(String name, String[] columns) {
+        this.name = name;
+        this.columns = columns;
     }
-    private final String tableName;
-    private final String[] columnNames;
+    private final String name;
+    private final String[] columns;
 
     private String[] ignoreAutoIncrement() { //cut off the first element for auto increment tables
         if (this == USER || this == UNIT || this == INV) {
-            return columnNames;
+            return columns;
         }
-        else return Arrays.copyOfRange(columnNames,1,columnNames.length);
+        else return Arrays.copyOfRange(columns,1, columns.length);
     }
-    public String getTableName() {
-        return tableName;
+    public String getName() {
+        return name;
     }
-    public String[] getColumnNames() {
-        return columnNames;
+    public String[] getColumns() {
+        return columns;
     }
     public String colNamesForInsert() {
         return String.join(", ", ignoreAutoIncrement());
@@ -41,4 +41,5 @@ public enum DatabaseTables {
     public String templateForUpdate() {
         return String.join("=?,", ignoreAutoIncrement()) + "=?";
     }
+
 }

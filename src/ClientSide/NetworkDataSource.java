@@ -7,8 +7,6 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.net.Socket;
 import java.sql.Timestamp;
-import java.time.LocalDateTime;
-import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 
 import static common.DatabaseTables.*;
@@ -28,17 +26,6 @@ public class NetworkDataSource implements TradingAppDataSource {
         //Ping server, exception if fail
     }
 
-    /**
-     *
-     * @return Ping time in milliseconds
-     */
-    @Override
-    public long ping() {
-        LocalDateTime start = LocalDateTime.now();
-        requestSpecial("PING");
-        LocalDateTime end = LocalDateTime.now();
-        return ChronoUnit.NANOS.between(start,end) + 1;
-    }
     //-------------ATOMIC QUERY EXECUTORS--------------
     //These methods are the ones that actually communicate with the server
 
@@ -195,7 +182,7 @@ public class NetworkDataSource implements TradingAppDataSource {
     //--------------------FILTER-FORMING HELPERS--------
 
     private String keyColumnName(DatabaseTables table) {
-        return table.getColumnNames()[0];
+        return table.getColumns()[0];
     }
     private String filterEquals(String column, String value) {
         return column + "=" + value;
@@ -266,8 +253,8 @@ public class NetworkDataSource implements TradingAppDataSource {
     @Override
     public InventoryRecord inventoryRecordByKeys(String unit, int asset) {
         ArrayList<InventoryRecord>  results = (ArrayList) select(INV,
-                filterEquals(INV.getColumnNames()[0], sqlFriendlyString(unit)) +
-                        " AND " + filterEquals(INV.getColumnNames()[1], valueOf(asset)));
+                filterEquals(INV.getColumns()[0], sqlFriendlyString(unit)) +
+                        " AND " + filterEquals(INV.getColumns()[1], valueOf(asset)));
         if (results.isEmpty()) return null;
         return results.get(0);
     }
@@ -283,7 +270,7 @@ public class NetworkDataSource implements TradingAppDataSource {
     @Override
     public ArrayList<SellOrder> sellOrdersByUser(String username, Boolean resolved) {
         return (ArrayList) select(SELL,
-                filterEquals(SELL.getColumnNames()[1], sqlFriendlyString(username)) + orderResolvedFilter(resolved));
+                filterEquals(SELL.getColumns()[1], sqlFriendlyString(username)) + orderResolvedFilter(resolved));
     }
 
     /**
@@ -297,7 +284,7 @@ public class NetworkDataSource implements TradingAppDataSource {
     @Override
     public ArrayList<SellOrder> sellOrdersByAsset(int assetID, Boolean resolved) {
         return (ArrayList) select(SELL,
-                filterEquals(SELL.getColumnNames()[2], valueOf(assetID)) + orderResolvedFilter(resolved));
+                filterEquals(SELL.getColumns()[2], valueOf(assetID)) + orderResolvedFilter(resolved));
     }
 
     /**
@@ -312,7 +299,7 @@ public class NetworkDataSource implements TradingAppDataSource {
     @Override
     public ArrayList<SellOrder> sellOrdersPlacedBetween(Timestamp start, Timestamp end, Boolean resolved) {
         return (ArrayList) select(SELL,
-                filterBetween(SELL.getColumnNames()[5], sqlFriendlyString(start), sqlFriendlyString(end))
+                filterBetween(SELL.getColumns()[5], sqlFriendlyString(start), sqlFriendlyString(end))
                         + orderResolvedFilter(resolved));
     }
 
@@ -325,7 +312,7 @@ public class NetworkDataSource implements TradingAppDataSource {
     @Override
     public ArrayList<SellOrder> sellOrdersResolvedBetween(Timestamp start, Timestamp end) {
         return (ArrayList) select(SELL,
-                filterBetween(SELL.getColumnNames()[6], sqlFriendlyString(start), sqlFriendlyString(end)));
+                filterBetween(SELL.getColumns()[6], sqlFriendlyString(start), sqlFriendlyString(end)));
     }
 
     /**
@@ -339,7 +326,7 @@ public class NetworkDataSource implements TradingAppDataSource {
     @Override
     public ArrayList<BuyOrder> buyOrdersByUser(String username, Boolean resolved) {
         return (ArrayList) select(BUY,
-                filterEquals(BUY.getColumnNames()[1], sqlFriendlyString(username))
+                filterEquals(BUY.getColumns()[1], sqlFriendlyString(username))
                         + orderResolvedFilter(resolved));
     }
 
@@ -354,14 +341,14 @@ public class NetworkDataSource implements TradingAppDataSource {
     @Override
     public ArrayList<BuyOrder> buyOrdersByAsset(int assetID, Boolean resolved) {
         return (ArrayList) select(BUY,
-                filterEquals(BUY.getColumnNames()[2], valueOf(assetID)) + orderResolvedFilter(resolved));
+                filterEquals(BUY.getColumns()[2], valueOf(assetID)) + orderResolvedFilter(resolved));
     }
 
     @Override
     public ArrayList<BuyOrder> buyOrdersByAssetResolvedBetween(int assetID, Timestamp start, Timestamp end) {
         return (ArrayList) select(BUY,
-                filterEquals(BUY.getColumnNames()[2], valueOf(assetID)) + " AND "
-                        + filterBetween(BUY.getColumnNames()[6], sqlFriendlyString(start), sqlFriendlyString(end)));
+                filterEquals(BUY.getColumns()[2], valueOf(assetID)) + " AND "
+                        + filterBetween(BUY.getColumns()[6], sqlFriendlyString(start), sqlFriendlyString(end)));
     }
 
     /**
@@ -376,7 +363,7 @@ public class NetworkDataSource implements TradingAppDataSource {
     @Override
     public ArrayList<BuyOrder> buyOrdersPlacedBetween(Timestamp start, Timestamp end, Boolean resolved) {
         return (ArrayList) select(BUY,
-                filterBetween(BUY.getColumnNames()[5], sqlFriendlyString(start), sqlFriendlyString(end))
+                filterBetween(BUY.getColumns()[5], sqlFriendlyString(start), sqlFriendlyString(end))
                         + orderResolvedFilter(resolved));
     }
 
@@ -389,25 +376,25 @@ public class NetworkDataSource implements TradingAppDataSource {
     @Override
     public ArrayList<BuyOrder> buyOrdersResolvedBetween(Timestamp start, Timestamp end) {
         return (ArrayList) select(BUY,
-                filterBetween(BUY.getColumnNames()[6], sqlFriendlyString(start), sqlFriendlyString(end)));
+                filterBetween(BUY.getColumns()[6], sqlFriendlyString(start), sqlFriendlyString(end)));
     }
 
     //--Calling selectByValue
     @Override
     public ArrayList<User> usersByUnit(String unit) {
-        return (ArrayList) selectByValue(USER, USER.getColumnNames()[3], unit);
+        return (ArrayList) selectByValue(USER, USER.getColumns()[3], unit);
     }
     @Override
     public ArrayList<InventoryRecord> inventoriesByUnit(String unit) {
-        return (ArrayList) selectByValue(INV, INV.getColumnNames()[0], unit);
+        return (ArrayList) selectByValue(INV, INV.getColumns()[0], unit);
     }
     @Override
     public ArrayList<InventoryRecord> inventoriesByAsset(int asset) {
-        return (ArrayList) selectByValue(INV, INV.getColumnNames()[1], asset);
+        return (ArrayList) selectByValue(INV, INV.getColumns()[1], asset);
     }
     @Override
     public ArrayList<BuyOrder> buyOrdersByBoughtFrom(int sellOrderID) {
-        return (ArrayList) selectByValue(INV, BUY.getColumnNames()[7], sellOrderID);
+        return (ArrayList) selectByValue(INV, BUY.getColumns()[7], sellOrderID);
     }
 
     //--Calling selectByKey
@@ -501,8 +488,8 @@ public class NetworkDataSource implements TradingAppDataSource {
      */
     @Override
     public int deleteInventoryRecord(String unit, int asset) {
-        return delete(INV,filterEquals(INV.getColumnNames()[1], sqlFriendlyString(unit)) +
-                " AND " + filterEquals(INV.getColumnNames()[1], valueOf(asset)));
+        return delete(INV,filterEquals(INV.getColumns()[1], sqlFriendlyString(unit)) +
+                " AND " + filterEquals(INV.getColumns()[1], valueOf(asset)));
     }
 
     /**
