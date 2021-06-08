@@ -17,6 +17,11 @@ public class InventoryRecord extends DataObject {
         this.quantity = quantity;
     }
 
+    public void adjustQuantity(int adjustment) {
+        this.quantity+=adjustment;
+        //no check for negative because negative is used in higher level adjustment
+    }
+
     public String getUnitName() {
         return key.getUnit();
     }
