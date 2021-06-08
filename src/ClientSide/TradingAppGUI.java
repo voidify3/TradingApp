@@ -26,7 +26,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 /***
  * @author Johnny Madigan & Scott Peachey (wrote createAndShowGui, menuBar, resizeImg, loginPanel, shellPanel);
  * Sophia Walsh Long (all other code and the fact that the members aren't static;
- * above methods have also been somewhat refactored)
+ * above methods have also been refactored)
  */
 public class TradingAppGUI {
 
@@ -35,7 +35,6 @@ public class TradingAppGUI {
 
     // instances of components & interactions
     private GuiListeners listeners = new GuiListeners();
-    private GuiComponents components = new GuiComponents();
     private TradingAppData data;
 
     // General variables
@@ -46,6 +45,50 @@ public class TradingAppGUI {
 
     // Declared here (instead of components class) as it is only used within this scope
     private final JFrame mainFrame = new JFrame("STONK MACHINE");
+
+    // Login panel & widgets
+    JPanel loginPanel = new JPanel(new GridBagLayout());
+    JCheckBox passwordHide = new JCheckBox();
+    JButton loginButton = new JButton("Login");
+    JLabel usernameLabel = new JLabel("Username");
+    JLabel passwordLabel = new JLabel("Password");
+    JLabel invalidLabel = new JLabel(" ");
+    JTextField usernameInput = new JTextField(10);
+    JPasswordField passwordInput = new JPasswordField(10);
+
+    // Shell panel & widgets
+    JPanel shellPanel = new JPanel();
+    JButton homeButton = new JButton("Home");
+    JButton searchButton = new JButton("Search");
+    JLabel welcomeLabel = new JLabel("Welcome back (username)", SwingConstants.CENTER);
+
+    // User home & widgets
+    JPanel userHome = new JPanel();
+    JButton ordersButton = new JButton("Orders");
+    JButton tradeHistoryButton = new JButton("Trade History");
+    JLabel orgUnitLabel = new JLabel("ORG UNIT HERE", SwingConstants.CENTER);
+    JTable userHoldings = new JTable();
+
+    // Admin home & widgets
+    JPanel adminHome = new JPanel();
+
+    // Asset page & widgets
+    JPanel assetPage = new JPanel();
+    JButton daysButton = new JButton("Days");
+    JButton weeksButton = new JButton("Weeks");
+    JButton monthsButton = new JButton("Months");
+    JButton yearsButton = new JButton("Years");
+    JButton buyButton = new JButton("<- Buy Asset");
+    JButton sellButton = new JButton("Sell Asset ->");
+
+    // Menu bar & widgets
+    JMenuBar menuBar = new JMenuBar();
+    JMenuItem logoutMenu = new JMenuItem("Logout");
+    JMenuItem exitMenu = new JMenuItem("Exit");
+    JMenuItem masterUserKey = new JMenuItem("Master User Key");
+    JMenuItem masterAdminKey = new JMenuItem("Master Admin Key");
+
+
 
     public TradingAppGUI(TradingAppData data) throws InvalidPrice, InvalidDate, IOException, DoesNotExist, AlreadyExists, IllegalString {
         this.data = data;
@@ -68,30 +111,30 @@ public class TradingAppGUI {
 
     // Menu Bar---------------------------------------------------------------------------------------------------------
     private void menuBar() {
-        components.menuBar = new JMenuBar(); // reset
+        menuBar = new JMenuBar(); // reset
 
         JMenu fileMenu = new JMenu("File");
         fileMenu.add("Preference");
-        fileMenu.add(components.logoutMenu);
-        fileMenu.add(components.exitMenu);
-        components.menuBar.add(fileMenu);
+        fileMenu.add(logoutMenu);
+        fileMenu.add(exitMenu);
+        menuBar.add(fileMenu);
 
         JMenu editMenu = new JMenu("Edit");
         editMenu.add("Cut");
         editMenu.add("Copy");
         editMenu.add("Paste");
-        components.menuBar.add(editMenu);
+        menuBar.add(editMenu);
 
         JMenu viewMenu = new JMenu("View");
-        components.menuBar.add(viewMenu);
+        menuBar.add(viewMenu);
 
         JMenu helpMenu = new JMenu("Help");
-        components.menuBar.add(helpMenu);
+        menuBar.add(helpMenu);
 
         JMenu devMenu = new JMenu("Dev Tools");
-        devMenu.add(components.masterUserKey);
-        devMenu.add(components.masterAdminKey);
-        components.menuBar.add(devMenu);
+        devMenu.add(masterUserKey);
+        devMenu.add(masterAdminKey);
+        menuBar.add(devMenu);
 
         // Listeners
         listeners.logoutListener();
@@ -101,7 +144,7 @@ public class TradingAppGUI {
         listeners.homeListener();
 
         // Boilerplate
-        mainFrame.setJMenuBar(components.menuBar);
+        mainFrame.setJMenuBar(menuBar);
         mainFrame.revalidate();
     }
 
@@ -126,26 +169,26 @@ public class TradingAppGUI {
 
     // Login screen-----------------------------------------------------------------------------------------------------
     private void loginPanel() throws AlreadyExists, IllegalString {
-        components.loginPanel = new JPanel(new GridBagLayout()); // reset
+        loginPanel = new JPanel(new GridBagLayout()); // reset
 
         JPanel loginBox = new JPanel();
         JPanel login = new JPanel(new GridBagLayout());
 
-        components.loginPanel.setBackground(Color.decode(DARKGREY));
+        loginPanel.setBackground(Color.decode(DARKGREY));
 
         loginBox.setLayout(new BoxLayout(loginBox, BoxLayout.PAGE_AXIS));
         loginBox.setBorder(BorderFactory.createEtchedBorder(EtchedBorder.RAISED));
 
-        components.invalidLabel.setMinimumSize(new Dimension(100, 50));
-        components.loginButton.setContentAreaFilled(false);
-        components.loginButton.setOpaque(true);
-        components.passwordHide.setToolTipText("Show & hide password...");
+        invalidLabel.setMinimumSize(new Dimension(100, 50));
+        loginButton.setContentAreaFilled(false);
+        loginButton.setOpaque(true);
+        passwordHide.setToolTipText("Show & hide password...");
 
         // Reset fields & checkbox
-        components.passwordInput.setText("");
-        components.usernameInput.setText("");
-        components.invalidLabel.setText(" "); // need space for the label to have a fixed height
-        components.passwordHide.setSelected(false);
+        passwordInput.setText("");
+        usernameInput.setText("");
+        invalidLabel.setText(" "); // need space for the label to have a fixed height
+        passwordHide.setSelected(false);
 
         GridBagConstraints cords = new GridBagConstraints();
 
@@ -164,30 +207,30 @@ public class TradingAppGUI {
         cords.gridy = 1;
         cords.gridx = -1;
         cords.gridwidth = 1;
-        login.add(components.usernameLabel, cords);
+        login.add(usernameLabel, cords);
         cords.gridx += 2;
-        login.add(components.usernameInput, cords);
+        login.add(usernameInput, cords);
 
         cords.gridy++; // password row is always below username row
         cords.gridx = -1;
-        login.add(components.passwordLabel, cords);
+        login.add(passwordLabel, cords);
         cords.gridx += 2;
-        login.add(components.passwordInput, cords);
+        login.add(passwordInput, cords);
         cords.gridx++;
-        login.add(components.passwordHide,cords);
+        login.add(passwordHide,cords);
 
         cords.gridy++; // login button is always below password row
         cords.gridx = 0;
         cords.gridwidth = 3;
-        login.add(components.loginButton, cords);
+        login.add(loginButton, cords);
 
         cords.gridy++; // warning message is always below login button
-        login.add(components.invalidLabel, cords);
+        login.add(invalidLabel, cords);
 
         // Add panels together
         loginBox.add(bannerLabel);
         loginBox.add(login);
-        components.loginPanel.add(loginBox);
+        loginPanel.add(loginBox);
 
         // Listeners
         listeners.loginActionListener();
@@ -195,23 +238,23 @@ public class TradingAppGUI {
         listeners.passwordHiddenListener();
 
         // Boilerplate
-        mainFrame.setContentPane(components.loginPanel);
+        mainFrame.setContentPane(loginPanel);
         mainFrame.revalidate();
     }
 
     // Shell template (content depends on the parameter)----------------------------------------------------------------
-    private void shellPanel(JPanel content, boolean welcomeLabel) {
-        components.shellPanel = new JPanel(); // reset
-        components.shellPanel.setBackground(Color.decode(WHITE));
+    private void shellPanel(JPanel content, boolean includeWelcomeLabel) {
+        shellPanel = new JPanel(); // reset
+        shellPanel.setBackground(Color.decode(WHITE));
 
-        components.homeButton.setToolTipText("Go to the home screen");
-        components.searchButton.setToolTipText("Go to the search screen");
-        components.welcomeLabel.setText(String.format("Welcome back %s", user.getUsername()));
-        components.welcomeLabel.setText(String.format("Welcome back %s!", user.getUsername()));
-        components.orgUnitLabel.setText(user.getUnit().toUpperCase());
+        homeButton.setToolTipText("Go to the home screen");
+        searchButton.setToolTipText("Go to the search screen");
+        welcomeLabel.setText(String.format("Welcome back %s", user.getUsername()));
+        welcomeLabel.setText(String.format("Welcome back %s!", user.getUsername()));
+        orgUnitLabel.setText(user.getUnit().toUpperCase());
 
-        components.shellPanel.setBorder(new EmptyBorder(30, 40, 30, 40));
-        components.shellPanel.setLayout(new BoxLayout(components.shellPanel, BoxLayout.PAGE_AXIS));
+        shellPanel.setBorder(new EmptyBorder(30, 40, 30, 40));
+        shellPanel.setLayout(new BoxLayout(shellPanel, BoxLayout.PAGE_AXIS));
 
         JPanel row1 = new JPanel();
         // keeps row 1 fixed in height so no matter what the content is (a table, buttons, graphs)
@@ -220,14 +263,14 @@ public class TradingAppGUI {
         row1.setBorder(BorderFactory.createEtchedBorder(EtchedBorder.RAISED));
         row1.setMaximumSize(new Dimension(WIDTH, 50));
         row1.setLayout(new BorderLayout());
-        row1.add(components.homeButton, BorderLayout.WEST);
-        row1.add(components.orgUnitLabel, BorderLayout.CENTER);
-        row1.add(components.searchButton, BorderLayout.EAST);
+        row1.add(homeButton, BorderLayout.WEST);
+        row1.add(orgUnitLabel, BorderLayout.CENTER);
+        row1.add(searchButton, BorderLayout.EAST);
 
         JPanel row2 = new JPanel();
         row2.setBackground(Color.decode(WHITE));
         row2.setLayout(new FlowLayout());
-        row2.add(components.welcomeLabel);
+        row2.add(welcomeLabel);
 
         // The parameter panel is added here, always a panel
         JPanel row3 = new JPanel();
@@ -236,18 +279,18 @@ public class TradingAppGUI {
         row3.setLayout(new FlowLayout());
         row3.add(content);
 
-        components.shellPanel.add(row1);
-        components.shellPanel.add(Box.createVerticalStrut(20));
-        if (welcomeLabel) {
-            components.shellPanel.add(row2);
-            components.shellPanel.add(Box.createVerticalStrut(20));
+        shellPanel.add(row1);
+        shellPanel.add(Box.createVerticalStrut(20));
+        if (includeWelcomeLabel) {
+            shellPanel.add(row2);
+            shellPanel.add(Box.createVerticalStrut(20));
         }
-        components.shellPanel.add(row3);
+        shellPanel.add(row3);
 
         // Listeners
 
         // Boilerplate
-        mainFrame.setContentPane(components.shellPanel);
+        mainFrame.setContentPane(shellPanel);
         mainFrame.revalidate();
     }
 
@@ -265,8 +308,8 @@ public class TradingAppGUI {
         // Checks login credentials-----------------------------------------------------------------------------------------
         private void checkLogin() {
             // store the user object for the duration of the session (if login was successful)
-            String username = components.usernameInput.getText();
-            String password = new String(components.passwordInput.getPassword());
+            String username = usernameInput.getText();
+            String password = new String(passwordInput.getPassword());
             try {
                 user = data.login(username, password);
 
@@ -277,9 +320,9 @@ public class TradingAppGUI {
                 }
             } catch (DoesNotExist | IllegalString ex) {
                 ex.printStackTrace();
-                components.passwordInput.setText("");  // clear password field
-                components.invalidLabel.setForeground(Color.RED);
-                components.invalidLabel.setText("Invalid Login Credentials");
+                passwordInput.setText("");  // clear password field
+                invalidLabel.setForeground(Color.RED);
+                invalidLabel.setText("Invalid Login Credentials");
             }
         }
 
@@ -288,8 +331,8 @@ public class TradingAppGUI {
         // Puts the user home content in the shell panel
         JPanel userHome() throws DoesNotExist {
             // Table Panel
-            components.userHome = new JPanel();
-            components.userHome.setPreferredSize(new Dimension(600,275));
+            userHome = new JPanel();
+            userHome.setPreferredSize(new Dimension(600,275));
             // Table Data
             String[] columnNames = { "Asset ID", "Description", "Qty", "$ Current"};
             String[][] data = new String[0][4];
@@ -318,79 +361,79 @@ public class TradingAppGUI {
                     return false;
                 }
             };
-            components.userHoldings = new JTable(data, columnNames);
-            components.userHoldings.setModel(tableModel);
-            JScrollPane scrollPane = new JScrollPane(components.userHoldings);
+            userHoldings = new JTable(data, columnNames);
+            userHoldings.setModel(tableModel);
+            JScrollPane scrollPane = new JScrollPane(userHoldings);
             scrollPane.setPreferredSize(new Dimension(600,270));
             // Set column widths
-            components.userHoldings.getColumnModel().getColumn(0).setWidth(25);
-            components.userHoldings.getColumnModel().getColumn(1).setPreferredWidth(400);
-            components.userHoldings.getColumnModel().getColumn(2).setWidth(20);
-            components.userHoldings.getColumnModel().getColumn(2).setWidth(30);
-            components.userHome.setBackground(Color.decode(DARKGREY));
-            components.userHome.add(scrollPane);
+            userHoldings.getColumnModel().getColumn(0).setWidth(25);
+            userHoldings.getColumnModel().getColumn(1).setPreferredWidth(400);
+            userHoldings.getColumnModel().getColumn(2).setWidth(20);
+            userHoldings.getColumnModel().getColumn(2).setWidth(30);
+            userHome.setBackground(Color.decode(DARKGREY));
+            userHome.add(scrollPane);
 
             assetTableListener();
-            return components.userHome;
+            return userHome;
         }
 
         // Puts the admin home content in the shell panel
         JPanel adminHome() {
-            components.adminHome = new JPanel();
+            adminHome = new JPanel();
             JButton button = new JButton("new user");
             JButton button2 = new JButton("delete user");
             JButton button3 = new JButton("modify user");
             JButton button4 = new JButton("other admin stuff");
 
-            components.adminHome.add(button);
-            components.adminHome.add(button2);
-            components.adminHome.add(button3);
-            components.adminHome.add(button4);
+            adminHome.add(button);
+            adminHome.add(button2);
+            adminHome.add(button3);
+            adminHome.add(button4);
 
             ArrayList<String> allUsernames = data.getAllUsernames();
             String[] allUserList = new String[allUsernames.size()];
             allUserList = allUsernames.toArray(allUserList);
             GuiSearch fcb = new GuiSearch(Arrays.asList(allUserList));
 
-            components.adminHome.add(fcb);
-            return components.adminHome;
+            adminHome.add(fcb);
+            return adminHome;
         }
 
         // Puts the asset page content in the shell panel
         JPanel assetPage(String asset) {
-            components.assetPage = new JPanel(new GridBagLayout());
-            components.assetPage.setPreferredSize(new Dimension(600,325));
-            components.assetPage.setBackground(Color.decode(DARKGREY));
-            components.assetPage.setLayout(new BorderLayout());
+            assetPage = new JPanel(new GridBagLayout());
+            assetPage.setPreferredSize(new Dimension(600,325));
+            assetPage.setBackground(Color.decode(DARKGREY));
+            assetPage.setLayout(new BorderLayout());
 
             // Position the interactive components (text fields, buttons etc)
             JPanel intervalButtons = new JPanel();
-            intervalButtons.add(components.daysButton);
-            intervalButtons.add(components.weeksButton);
-            intervalButtons.add(components.monthsButton);
-            intervalButtons.add(components.yearsButton);
-            components.assetPage.add(intervalButtons, BorderLayout.NORTH);
+            intervalButtons.add(daysButton);
+            intervalButtons.add(weeksButton);
+            intervalButtons.add(monthsButton);
+            intervalButtons.add(yearsButton);
+            assetPage.add(intervalButtons, BorderLayout.NORTH);
 
             JPanel graphPanel = new JPanel();
 
             JPanel orderButtons = new JPanel();
-            orderButtons.add(components.buyButton);
-            orderButtons.add(components.sellButton);
-            components.assetPage.add(orderButtons, BorderLayout.SOUTH);
+            orderButtons.add(buyButton);
+            orderButtons.add(sellButton);
+            assetPage.add(orderButtons, BorderLayout.SOUTH);
 
-            return components.assetPage;
+            return assetPage;
         }
 
         // Login portal listeners-------------------------------------------------------------------------------------------
 
         // Triggers checkLogin when the 'Login' button is pressed
         void loginActionListener() {
-            components.loginButton.addActionListener(e -> checkLogin());
+            loginButton.addActionListener(e -> checkLogin());
         }
 
         // Triggers checkLogin when the 'Enter' key is pressed
         void loginKeyListener() {
-            components.passwordInput.addKeyListener(new KeyListener() {
+            passwordInput.addKeyListener(new KeyListener() {
                 @Override
                 public void keyTyped(KeyEvent e) {}
 
@@ -408,11 +451,11 @@ public class TradingAppGUI {
 
         // Shows/hides password when the radio button passwordHidden is toggled
         void passwordHiddenListener() {
-            components.passwordHide.addItemListener(e -> {
+            passwordHide.addItemListener(e -> {
                 if (e.getStateChange() == ItemEvent.SELECTED) {
-                    components.passwordInput.setEchoChar((char) 0);
+                    passwordInput.setEchoChar((char) 0);
                 } else {
-                    components.passwordInput.setEchoChar('\u2022');
+                    passwordInput.setEchoChar('\u2022');
                 }
             });
         }
@@ -421,7 +464,7 @@ public class TradingAppGUI {
 
         // Logs out the user when 'Logout' is clicked in the File menu
         void logoutListener() {
-            components.logoutMenu.addActionListener(e -> {
+            logoutMenu.addActionListener(e -> {
                 try {
                     user = null; // reset session user data
                     loginPanel(); // creates & shows login portal
@@ -433,7 +476,7 @@ public class TradingAppGUI {
 
         // Dev master key to bypass login for testing (goes straight to user home)
         void masterUserKeyListener() {
-            components.masterUserKey.addActionListener(e -> {
+            masterUserKey.addActionListener(e -> {
                 user = data.userDev;
                 try {
                     shellPanel(userHome(), true);
@@ -445,7 +488,7 @@ public class TradingAppGUI {
 
         // Dev master key to bypass login for testing (goes straight to admin home)
         void masterAdminKeyListener() {
-            components.masterAdminKey.addActionListener(e -> {
+            masterAdminKey.addActionListener(e -> {
                 user = data.adminDev;
                 shellPanel(adminHome(), true);
             });
@@ -453,16 +496,16 @@ public class TradingAppGUI {
 
         // Closes mainFrame and stops Main when 'Exit' is clicked in the File menu
         public void exitListener() {
-            components.exitMenu.addActionListener(ev -> System.exit(0));
+            exitMenu.addActionListener(ev -> System.exit(0));
         }
 
         void homeListener() {
-            components.homeButton.addActionListener(e -> {
+            homeButton.addActionListener(e -> {
                 if (user.getAdminAccess()) {
-                    components.orgUnitLabel.setText("ORG UNIT HERE");
+                    orgUnitLabel.setText("ORG UNIT HERE");
                     shellPanel(adminHome(), true);
                 } else {
-                    components.orgUnitLabel.setText("ORG UNIT HERE");
+                    orgUnitLabel.setText("ORG UNIT HERE");
                     try {
                         shellPanel(userHome(), true);
                     } catch (DoesNotExist doesNotExist) {
@@ -473,18 +516,17 @@ public class TradingAppGUI {
         }
 
         void assetTableListener() {
-            components.userHoldings.addMouseListener(new MouseAdapter() {
+            userHoldings.addMouseListener(new MouseAdapter() {
                 @Override
                 public void mouseClicked(MouseEvent e) {
-                    int row = components.userHoldings.rowAtPoint(e.getPoint());
-                    String asset = components.userHoldings.getValueAt(row, 1).toString();
+                    int row = userHoldings.rowAtPoint(e.getPoint());
+                    String asset = userHoldings.getValueAt(row, 1).toString();
                     shellPanel(assetPage(asset), false);
-                    components.orgUnitLabel.setText(asset.toUpperCase());
-                    components.userHome.remove(components.welcomeLabel);
+                    orgUnitLabel.setText(asset.toUpperCase());
+                    userHome.remove(welcomeLabel);
                     System.out.println(asset);
                 }
             });
         }
-
     }
 }
