@@ -17,12 +17,14 @@ import java.util.*;
 public class TradingAppData {
     public TradingAppDataSource dataSource;
     Locale locale = Locale.ENGLISH;
+
     public enum Intervals {
         DAYS(),
         WEEKS(),
         MONTHS(),
         YEARS();
     }
+
     public TradingAppData(TradingAppDataSource dataSource) {
         this.dataSource = dataSource;
     }
@@ -35,45 +37,27 @@ public class TradingAppData {
     public static Asset assetDev2;
 
 
-    public void addHistoricalPrice(int assetID, String userResponsible, int price, LocalDateTime dateTime) {
+    public void addHistoricalPrice(int idUpTo, int assetID, String userResponsible, int price, LocalDateTime dateTime) {
         SellOrder sell = new SellOrder(0, userResponsible, assetID, 0, price, dateTime, dateTime);
-        BuyOrder buy = new BuyOrder(0, userResponsible, assetID, 0, price, dateTime, dateTime, sell.getId());
+        BuyOrder buy = new BuyOrder(0, userResponsible, assetID, 0, price, dateTime, dateTime, idUpTo);
         dataSource.insertSellOrder(sell);
         dataSource.insertBuyOrder(buy);
     }
 
     public void mockObjectsWithPrices() throws IllegalString {
-        LocalDateTime today = LocalDateTime.now();
-        adminDev = new User("johnny", "bo$$man", true);
-        userDev = new User("scott", "scotty", false);
-        unitDev = new OrgUnit("Developers");
-        assetDev1 = new Asset(999, "Test asset for development!");
-        assetDev2 = new Asset(333, "Another test asset for development!");
-        dataSource.deleteUnit(unitDev.getName());
-        dataSource.insertUnit(unitDev);
-        userDev.setUnit(unitDev.getName());
-        adminDev.setUnit(unitDev.getName());
-        dataSource.deleteUser(adminDev.getUsername());
-        dataSource.insertUser(adminDev);
-        dataSource.deleteUser(userDev.getUsername());
-        dataSource.insertUser(userDev);
-        dataSource.deleteAsset(assetDev1.getId());
-        dataSource.deleteAsset(assetDev2.getId());
-        dataSource.insertAsset(assetDev1);
-        dataSource.insertAsset(assetDev2);
-        for (int i = 0; i < 4 * 365; i++) {
-            addHistoricalPrice(assetDev1.getId(), adminDev.getUsername(), 10, today.minusDays(i));
-            addHistoricalPrice(assetDev1.getId(), adminDev.getUsername(), 15, today.minusDays(i));
-            addHistoricalPrice(assetDev1.getId(), adminDev.getUsername(), 20, today.minusDays(i));
-            addHistoricalPrice(assetDev2.getId(), adminDev.getUsername(), 10, today.minusDays(i));
-            addHistoricalPrice(assetDev2.getId(), adminDev.getUsername(), 30, today.minusDays(i));
-            addHistoricalPrice(assetDev2.getId(), adminDev.getUsername(), 50, today.minusDays(i));
+        mockObjects();
+        LocalDateTime begin = LocalDateTime.now().minusDays(4*365);
+        for (int i = 1; i < 4 * 365; i++) {
+            addHistoricalPrice(i, assetDev1.getId(), adminDev.getUsername(), 10, begin.plusDays(i));
+            addHistoricalPrice(i, assetDev1.getId(), adminDev.getUsername(), 15, begin.plusDays(i));
+            addHistoricalPrice(i, assetDev1.getId(), adminDev.getUsername(), 20, begin.plusDays(i));
+            addHistoricalPrice(i, assetDev2.getId(), adminDev.getUsername(), 10, begin.plusDays(i));
+            addHistoricalPrice(i, assetDev2.getId(), adminDev.getUsername(), 30, begin.plusDays(i));
+            addHistoricalPrice(i, assetDev2.getId(), adminDev.getUsername(), 50, begin.plusDays(i));
         }
-        dataSource.insertOrUpdateInventory(new InventoryRecord(unitDev.getName(), assetDev1.getId(), 1000));
-        dataSource.insertOrUpdateInventory(new InventoryRecord(unitDev.getName(), assetDev2.getId(), 3500));
     }
+
     public void mockObjects() throws IllegalString {
-        LocalDateTime today = LocalDateTime.now();
         adminDev = new User("johnny", "bo$$man", true);
         userDev = new User("scott", "scotty", false);
         unitDev = new OrgUnit("Developers");
@@ -100,7 +84,6 @@ public class TradingAppData {
     }
 
 
-
     public User login(String username, String password) throws IllegalString, DoesNotExist {
         User user = dataSource.userByKey(username);
         if (user == null) {
@@ -116,6 +99,7 @@ public class TradingAppData {
     public ArrayList<User> getAllUsers() {
         return dataSource.allUsers();
     }
+
     public ArrayList<String> getAllUsernames() {
 
         ArrayList<User> users = dataSource.allUsers();
@@ -129,9 +113,11 @@ public class TradingAppData {
     public ArrayList<OrgUnit> getAllUnits() {
         return dataSource.allOrgUnits();
     }
+
     public ArrayList<User> getMembers(OrgUnit unit) throws DoesNotExist {
         return dataSource.usersByUnit(unit.getName());
     }
+
     public ArrayList<User> getMembers(String unit) throws DoesNotExist {
         return dataSource.usersByUnit(unit);
     }
@@ -141,29 +127,34 @@ public class TradingAppData {
         if (result == null) throw new DoesNotExist("The user '%s' does not exist.", key);
         return result;
     }
+
     public OrgUnit getUnitByKey(String unitName) throws DoesNotExist {
         // Convert username to User object while making sure it exists in the DB.
         OrgUnit result = dataSource.unitByKey(unitName);
         if (result == null) throw new DoesNotExist("The unit '%s' does not exist.", unitName);
         return result;
     }
+
     public Asset getAssetByKey(int key) throws DoesNotExist {
         Asset result = dataSource.assetByKey(key);
         if (result == null) throw new DoesNotExist("Asset '%s' does not exist.", key);
         return result;
     }
+
     public SellOrder getSellByKey(int key) throws DoesNotExist {
         SellOrder result = dataSource.sellOrderByKey(key);
         if (result == null) throw new DoesNotExist("Sell order '%s' does not exist.", key);
         return result;
     }
+
     public BuyOrder getBuyByKey(int key) throws DoesNotExist {
         BuyOrder result = dataSource.buyOrderByKey(key);
         if (result == null) throw new DoesNotExist("Buy order '%s' does not exist.", key);
         return result;
     }
+
     public InventoryRecord getInv(String unit, int asset) {
-        InventoryRecord result = dataSource.inventoryRecordByKeys(unit,asset);
+        InventoryRecord result = dataSource.inventoryRecordByKeys(unit, asset);
         if (result == null) return new InventoryRecord(unit, asset, 0);
         //no record and a value of 0 are basically the same thing so no exception is needed
         return result;
@@ -173,6 +164,7 @@ public class TradingAppData {
         getUnitByKey(unitName);
         return dataSource.inventoriesByUnit(unitName);
     }
+
     public ArrayList<InventoryRecord> getInventoriesByAsset(int assetID) throws DoesNotExist {
         getAssetByKey(assetID);
         return dataSource.inventoriesByAsset(assetID);
@@ -189,40 +181,43 @@ public class TradingAppData {
     }
 
 
-
-
     public void deleteAsset(int id) throws DoesNotExist, ConstraintException {
         int i = dataSource.deleteAsset(id);
-        if (i==0)  throw new DoesNotExist("Asset '%s' not found", id);
-        else if (i==-1) throw new ConstraintException("Asset '%s' could not be safely deleted."
+        if (i == 0) throw new DoesNotExist("Asset '%s' not found", id);
+        else if (i == -1) throw new ConstraintException("Asset '%s' could not be safely deleted."
                 + "Delete any resolved buy orders for the asset and try again", id);
     }
+
     public void deleteUser(String name) throws DoesNotExist, ConstraintException {
         int i = dataSource.deleteUser(name);
-        if (i==0)  throw new DoesNotExist("User '%s' not found", name);
-        else if (i==-1) throw new ConstraintException("User '%s' could not be safely deleted."
+        if (i == 0) throw new DoesNotExist("User '%s' not found", name);
+        else if (i == -1) throw new ConstraintException("User '%s' could not be safely deleted."
                 + "Delete all buy and sell orders placed by the user and try again", name);
     }
+
     public void deleteUnit(String name) throws DoesNotExist, ConstraintException {
         int i = dataSource.deleteUnit(name);
         if (i == 0) throw new DoesNotExist("Unit '%s' not found", name);
-        else if (i==-1) throw new ConstraintException("Unit '%s' could not be safely deleted."
+        else if (i == -1) throw new ConstraintException("Unit '%s' could not be safely deleted."
                 + "Delete all buy and sell orders placed by members of the unit and try again", name);
 
     }
+
     public void cancelSellOrder(int id) throws ConstraintException, DoesNotExist {
         //TODO: return the remaining assets
         int i = dataSource.deleteSellOrder(id);
-        if (i==0)  throw new DoesNotExist("Sell order '%i' not found", id);
-        else if (i==-1) throw new ConstraintException("Sell order '%i' could not be safely deleted."
+        if (i == 0) throw new DoesNotExist("Sell order '%i' not found", id);
+        else if (i == -1) throw new ConstraintException("Sell order '%i' could not be safely deleted."
                 + "Delete any buy orders which have been reconciled with the order and try again", id);
     }
+
     public void cancelBuyOrder(int id) throws DoesNotExist {
         //TODO: return the remaining credits
-        if (dataSource.deleteBuyOrder(id)  == 0) throw new DoesNotExist("Buy order '%s' not found", id);
+        if (dataSource.deleteBuyOrder(id) == 0) throw new DoesNotExist("Buy order '%s' not found", id);
     }
+
     public void deleteInventoryRecord(String unit, int asset) throws DoesNotExist {
-        if (dataSource.deleteInventoryRecord(unit, asset)  == 0) {
+        if (dataSource.deleteInventoryRecord(unit, asset) == 0) {
             throw new DoesNotExist("Inventory information for this asset and unit '%s' does not exist", unit);
         }
     }
@@ -234,61 +229,71 @@ public class TradingAppData {
                 getUserByKey(s.getUser()).getUnit(), s.getAsset());
         if (inventoryRecord.getQuantity() < s.getQty()) {
             throw new OrderException("Insufficient quantity of asset");
-        }
-        else {
+        } else {
             inventoryRecord.setQuantity(inventoryRecord.getQuantity() - s.getQty());
             dataSource.insertOrUpdateInventory(inventoryRecord);
             dataSource.insertSellOrder(s);
         }
     }
+
     public void placeBuyOrder(BuyOrder s) throws OrderException, InvalidAmount {
         OrgUnit unitInQuestion = dataSource.unitByKey(dataSource.userByKey(s.getUser()).getUnit());
         if (unitInQuestion.getCredits() < s.getQty() * s.getPrice()) {
             throw new OrderException("Insufficient credits");
-        }
-        else {
+        } else {
             unitInQuestion.adjustBalance(-s.getQty());
             dataSource.updateUnit(unitInQuestion);
             dataSource.insertBuyOrder(s);
         }
     }
+
     public void addUser(User u) throws AlreadyExists, DoesNotExist {
         int result = dataSource.insertUser(u);
-        if (result==0) throw new AlreadyExists("User '%s' already exists. Please try a different username.", u.getUsername());
-        else if (result ==-1) throw new DoesNotExist("Could not create user- org unit %s does not exist");
+        if (result == 0)
+            throw new AlreadyExists("User '%s' already exists. Please try a different username.", u.getUsername());
+        else if (result == -1) throw new DoesNotExist("Could not create user- org unit %s does not exist");
     }
+
     public void addUnit(OrgUnit u) throws AlreadyExists {
-        if (dataSource.insertUnit(u)==0) throw new AlreadyExists("Unit '%s' already exists. Please try a different unit name.", u.getName());
+        if (dataSource.insertUnit(u) == 0)
+            throw new AlreadyExists("Unit '%s' already exists. Please try a different unit name.", u.getName());
     }
+
     public void addAsset(Asset a) throws AlreadyExists {
         if (dataSource.insertAsset(a) == 0) throw new AlreadyExists("Asset '%i' already exists.", a.getId());
     }
+
     public void setInventory(InventoryRecord i) throws DoesNotExist {
-        if (dataSource.insertOrUpdateInventory(i)==-1) {
+        if (dataSource.insertOrUpdateInventory(i) == -1) {
             throw new DoesNotExist("Unit %s and/or asset %i not found.");
         }
     }
+
     //UPDATE METHODS--------------------------------------------------------------------
     public void updateUser(User u) throws DoesNotExist {
         int result = dataSource.updateUser(u);
         if (result == 0) throw new DoesNotExist("User '%s' not found.", u.getUsername());
         else if (result == -1) throw new DoesNotExist("Unit %s not found.", u.getUnit());
     }
+
     public void updateUnit(OrgUnit u) throws DoesNotExist {
         if (dataSource.updateUnit(u) == 0) throw new DoesNotExist("Unit '%s' not found.", u.getName());
     }
+
     public void updateAsset(Asset a) throws DoesNotExist {
         if (dataSource.updateAsset(a) == 0) throw new DoesNotExist("Asset '%i' not found.", a.getId());
     }
+
     public void updateBuyOrder(BuyOrder o) throws DoesNotExist {
         int result = dataSource.updateBuyOrder(o);
         if (result == 0) throw new DoesNotExist("Buy order '%i' not found.", o.getId());
-        else if (result==-1) throw new DoesNotExist("User and/or asset not found.");
+        else if (result == -1) throw new DoesNotExist("User and/or asset not found.");
     }
+
     public void updateSellOrder(SellOrder o) throws DoesNotExist {
         int result = dataSource.updateSellOrder(o);
         if (result == 0) throw new DoesNotExist("Sell order '%i' not found.", o.getId());
-        else if (result==-1) throw new DoesNotExist("User and/or asset not found.");
+        else if (result == -1) throw new DoesNotExist("User and/or asset not found.");
     }
 
 
@@ -300,23 +305,27 @@ public class TradingAppData {
         userInQuestion.setUnit(unitName);
         updateUser(userInQuestion);
     }
+
     public void updateUserAccess(String username, Boolean newAccess) throws DoesNotExist {
         //Retrieve object to ensure existence
         User userInQuestion = getUserByKey(username);
         userInQuestion.setAdminAccess(newAccess);
         updateUser(userInQuestion);
     }
+
     public void changeUserPassword(String username, String newPass) throws IllegalString, DoesNotExist {
         //Retrieve object to ensure existence
         User userInQuestion = getUserByKey(username);
         userInQuestion.changePassword(newPass);
         updateUser(userInQuestion);
     }
+
     public void changeUnitBalance(String unitName, int newBalance) throws DoesNotExist, InvalidAmount {
         OrgUnit unitInQuestion = getUnitByKey(unitName);
         unitInQuestion.setBalance(newBalance);
         updateUnit(unitInQuestion);
     }
+
     public void adjustUnitBalance(String unitName, int amount) throws DoesNotExist, InvalidAmount {
         OrgUnit unitInQuestion = getUnitByKey(unitName);
         unitInQuestion.adjustBalance(amount);
@@ -329,12 +338,15 @@ public class TradingAppData {
      * @return returns an int of the average price.
      */
     public int getAveragePrice(LocalDate startDate, LocalDate endDate, Asset asset) throws InvalidDate, DoesNotExist {
+        return getAveragePrice(startDate, endDate, asset.getId());
+    }
+    public int getAveragePrice(LocalDate startDate, LocalDate endDate, int asset) throws InvalidDate, DoesNotExist {
 
         LocalDate earliestDate;
         LocalDate today = LocalDate.now();
         try{
             //get the date of the earliest resolved BuyOrder for the asset
-            earliestDate = (getResolvedBuysByAsset(asset.getId()).stream().min(BuyOrder::compareTo).orElseThrow().getDateResolved()).toLocalDate();
+            earliestDate = (getResolvedBuysByAsset(asset).stream().min(BuyOrder::compareTo).orElseThrow().getDateResolved()).toLocalDate();
         }
         catch (NoSuchElementException e) {
             return 0;
@@ -350,7 +362,7 @@ public class TradingAppData {
 
         int sum = 0;
         int count = 0;
-        ArrayList<BuyOrder> transactions = dataSource.buyOrdersByAssetResolvedBetween(asset.getId(),
+        ArrayList<BuyOrder> transactions = dataSource.buyOrdersByAssetResolvedBetween(asset,
                 Timestamp.valueOf(startDate.atStartOfDay()), Timestamp.valueOf(endDate.atTime(23,59,59)));
         for (BuyOrder b : transactions) {
             sum += b.getPrice();
@@ -360,6 +372,9 @@ public class TradingAppData {
         return sum / count;
     }
 
+    public TreeMap<LocalDate, Integer> getHistoricalPrices(Asset a, Intervals timeInterval) throws InvalidDate, DoesNotExist {
+        return getHistoricalPrices(a.getId(), timeInterval);
+    }
     /***
      * Method that collects average prices between specified intervals for the entire data set and places them into a
      * TreeMap. This may be used to create a price history graph.
@@ -367,8 +382,8 @@ public class TradingAppData {
      *                     interval. Constants are provided as days, 3 days, weeks, months and years.
      * @return returns a TreeMap with each intervals start date as a key, with its value being the corresponding average.
      */
-    public TreeMap<LocalDate, Integer> getHistoricalPrices(Asset a, Intervals timeInterval) throws InvalidDate, DoesNotExist {
-        ArrayList<BuyOrder> priceHistory = getResolvedBuysByAsset(a.getId());
+    public TreeMap<LocalDate, Integer> getHistoricalPrices(int a, Intervals timeInterval) throws InvalidDate, DoesNotExist {
+        ArrayList<BuyOrder> priceHistory = getResolvedBuysByAsset(a);
         if (priceHistory.isEmpty()) {
             System.out.println("No historical prices");
             return new TreeMap<>();
@@ -400,7 +415,7 @@ public class TradingAppData {
                     LocalDate endOfWeek = current.plusDays(6);
                     int currentAvg = getAveragePrice(current, endOfWeek, a);
                     averages.put(current, currentAvg);
-                    System.out.println(current + "-" + endOfWeek + " = " + currentAvg);
+                    System.out.println(current + " - " + endOfWeek + " = " + currentAvg);
                 }
             }
             case MONTHS -> {
@@ -411,7 +426,7 @@ public class TradingAppData {
                     LocalDate endOfMonth = current.plusMonths(1).minusDays(1);
                     int currentAvg = getAveragePrice(current, endOfMonth, a);
                     averages.put(current, currentAvg);
-                    System.out.println(current + "-" + endOfMonth + " = " + currentAvg);
+                    System.out.println(current + " - " + endOfMonth + " = " + currentAvg);
                 }
             }
             case YEARS -> {
@@ -422,7 +437,7 @@ public class TradingAppData {
                     LocalDate endOfYear = current.plusYears(1).minusDays(1);
                     int currentAvg = getAveragePrice(current, endOfYear, a);
                     averages.put(current, currentAvg);
-                    System.out.println(current + "-" + endOfYear + " = " + currentAvg);
+                    System.out.println(current + " - " + endOfYear + " = " + currentAvg);
                 }
             }
         }

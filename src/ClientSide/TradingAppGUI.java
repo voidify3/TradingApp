@@ -400,7 +400,7 @@ public class TradingAppGUI {
         }
 
         // Puts the asset page content in the shell panel
-        JPanel assetPage(String asset) {
+        JPanel assetPage(int asset) {
             assetPage = new JPanel(new GridBagLayout());
             assetPage.setPreferredSize(new Dimension(600,325));
             assetPage.setBackground(Color.decode(DARKGREY));
@@ -412,6 +412,7 @@ public class TradingAppGUI {
             intervalButtons.add(weeksButton);
             intervalButtons.add(monthsButton);
             intervalButtons.add(yearsButton);
+            intervalButtonListeners(asset);
             assetPage.add(intervalButtons, BorderLayout.NORTH);
 
             JPanel graphPanel = new JPanel();
@@ -501,11 +502,10 @@ public class TradingAppGUI {
 
         void homeListener() {
             homeButton.addActionListener(e -> {
+                orgUnitLabel.setText("ORG UNIT HERE");
                 if (user.getAdminAccess()) {
-                    orgUnitLabel.setText("ORG UNIT HERE");
                     shellPanel(adminHome(), true);
                 } else {
-                    orgUnitLabel.setText("ORG UNIT HERE");
                     try {
                         shellPanel(userHome(), true);
                     } catch (DoesNotExist doesNotExist) {
@@ -521,10 +521,41 @@ public class TradingAppGUI {
                 public void mouseClicked(MouseEvent e) {
                     int row = userHoldings.rowAtPoint(e.getPoint());
                     String asset = userHoldings.getValueAt(row, 1).toString();
-                    shellPanel(assetPage(asset), false);
+                    shellPanel(assetPage(Integer.parseInt(userHoldings.getValueAt(row, 0).toString())), false);
                     orgUnitLabel.setText(asset.toUpperCase());
                     userHome.remove(welcomeLabel);
                     System.out.println(asset);
+                }
+            });
+        }
+
+        void intervalButtonListeners(int asset) {
+            daysButton.addActionListener(e->{
+                try {
+                    data.getHistoricalPrices(asset, TradingAppData.Intervals.DAYS);
+                } catch (InvalidDate | DoesNotExist invalidDate) {
+                    invalidDate.printStackTrace();
+                }
+            });
+            weeksButton.addActionListener(e->{
+                try {
+                    data.getHistoricalPrices(asset, TradingAppData.Intervals.WEEKS);
+                } catch (InvalidDate | DoesNotExist invalidDate) {
+                    invalidDate.printStackTrace();
+                }
+            });
+            monthsButton.addActionListener(e->{
+                try {
+                    data.getHistoricalPrices(asset, TradingAppData.Intervals.MONTHS);
+                } catch (InvalidDate | DoesNotExist invalidDate) {
+                    invalidDate.printStackTrace();
+                }
+            });
+            yearsButton.addActionListener(e->{
+                try {
+                    data.getHistoricalPrices(asset, TradingAppData.Intervals.YEARS);
+                } catch (InvalidDate | DoesNotExist invalidDate) {
+                    invalidDate.printStackTrace();
                 }
             });
         }
