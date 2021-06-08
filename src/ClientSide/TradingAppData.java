@@ -42,20 +42,21 @@ public class TradingAppData {
     public void addHistoricalPrice(int idUpTo, int assetID, String userResponsible, int price, LocalDateTime dateTime) {
         SellOrder sell = new SellOrder(0, userResponsible, assetID, 0, price, dateTime, dateTime);
         BuyOrder buy = new BuyOrder(0, userResponsible, assetID, 0, price, dateTime, dateTime, idUpTo);
-        System.out.println(dataSource.insertSellOrder(sell));
-        System.out.println(dataSource.insertBuyOrder(buy));
+        dataSource.insertSellOrder(sell);
+        dataSource.insertBuyOrder(buy);
+
     }
 
     public void mockObjectsWithPrices() throws IllegalString, InvalidAmount, DoesNotExist, OrderException {
         mockObjects();
-        int numdays = 4 * 365;
+        int numdays = 365;
         LocalDateTime begin = LocalDateTime.now().minusDays(numdays);
         for (int i = 1; i < numdays; i++) {
-            addHistoricalPrice(i, assetDev1.getId(), adminDev.getUsername(), 10, begin.plusDays(i));
-            addHistoricalPrice(i, assetDev1.getId(), adminDev.getUsername(), 15, begin.plusDays(i));
-            addHistoricalPrice(i, assetDev1.getId(), adminDev.getUsername(), 20, begin.plusDays(i));
-            addHistoricalPrice(i, assetDev2.getId(), adminDev.getUsername(), 10, begin.plusDays(i));
-            addHistoricalPrice(i, assetDev2.getId(), adminDev.getUsername(), 30, begin.plusDays(i));
+            addHistoricalPrice(i, assetDev1.getId(), adminDev.getUsername(), 10, begin.plusDays(i++));
+            addHistoricalPrice(i, assetDev1.getId(), adminDev.getUsername(), 15, begin.plusDays(i++));
+            addHistoricalPrice(i, assetDev1.getId(), adminDev.getUsername(), 20, begin.plusDays(i++));
+            addHistoricalPrice(i, assetDev2.getId(), adminDev.getUsername(), 10, begin.plusDays(i++));
+            addHistoricalPrice(i, assetDev2.getId(), adminDev.getUsername(), 30, begin.plusDays(i++));
             addHistoricalPrice(i, assetDev2.getId(), adminDev.getUsername(), 50, begin.plusDays(i));
         }
     }
@@ -154,7 +155,9 @@ public class TradingAppData {
         return result;
     }
 
-    public InventoryRecord getInv(String unit, int asset) {
+    public InventoryRecord getInv(String unit, int asset) throws DoesNotExist {
+        getUnitByKey(unit);
+        getAssetByKey(asset);
         InventoryRecord result = dataSource.inventoryRecordByKeys(unit, asset);
         if (result == null) return new InventoryRecord(unit, asset, 0);
         //no record and a value of 0 are basically the same thing so no exception is needed
@@ -181,6 +184,11 @@ public class TradingAppData {
         return dataSource.buyOrdersByAsset(assetID, false);
     }
 
+    public ArrayList<BuyOrder> getBuysByUser(String username) throws DoesNotExist {
+        getUserByKey(username);
+        return dataSource.buyOrdersByUser(username, null);
+    }
+
 
     public void deleteAsset(int id) throws DoesNotExist, ConstraintException {
         int i = dataSource.deleteAsset(id);
@@ -205,11 +213,12 @@ public class TradingAppData {
     }
 
     public void cancelSellOrder(int id) throws ConstraintException, DoesNotExist {
-        //TODO: return the remaining assets
+        SellOrder s = getSellByKey(id); //this throws the doesnotexist if needed
+        String unitToReturn = getUserByKey(s.getUser()).getUnit();
         int i = dataSource.deleteSellOrder(id);
-        if (i == 0) throw new DoesNotExist("Sell order '%i' not found", id);
-        else if (i == -1) throw new ConstraintException("Sell order '%i' could not be safely deleted."
+        if (i == -1) throw new ConstraintException("Sell order '%i' could not be safely deleted."
                 + "Delete any buy orders which have been reconciled with the order and try again", id);
+
     }
 
     public void cancelBuyOrder(int id) throws DoesNotExist {
@@ -239,8 +248,10 @@ public class TradingAppData {
 
     public void placeBuyOrder(BuyOrder s) throws OrderException, InvalidAmount {
         OrgUnit unitInQuestion = dataSource.unitByKey(dataSource.userByKey(s.getUser()).getUnit());
-        if (unitInQuestion.getCredits() < s.getQty() * s.getPrice()) {
-            throw new OrderException("Insufficient credits");
+        int neededCredits = s.getQty() * s.getPrice();
+        if (unitInQuestion.getCredits() < neededCredits) {
+            throw new OrderException(String.format("Insufficient credits- unit %s has %d but %d are needed",
+                    unitInQuestion.getName(), unitInQuestion.getCredits(), neededCredits));
         } else {
             unitInQuestion.adjustBalance(-s.getQty());
             dataSource.updateUnit(unitInQuestion);
@@ -266,6 +277,17 @@ public class TradingAppData {
 
     public void setInventory(InventoryRecord i) throws DoesNotExist {
         if (dataSource.insertOrUpdateInventory(i) == -1) {
+            throw new DoesNotExist("Unit %s and/or asset %i not found.");
+        }
+    }
+
+    public void adjustInventory(InventoryKey i, int adjustment) throws DoesNotExist {
+        InventoryRecord toInsert = new InventoryRecord(i.unit, i.asset, adjustment);
+        try{toInsert.adjustQuantity(getInv(i.unit,i.asset).getQuantity());}
+        catch(DoesNotExist e){
+            throw new DoesNotExist("Unit %s and/or asset %i not found.");
+        }
+        if (dataSource.insertOrUpdateInventory(toInsert) == -1) {
             throw new DoesNotExist("Unit %s and/or asset %i not found.");
         }
     }
@@ -336,12 +358,12 @@ public class TradingAppData {
      * Method to get the average price of an asset between a start date and end date.
      * @param startDate the date at which the user wants to start reading data.
      * @param endDate the date at which the user wants to finish reading data.
-     * @return returns an int of the average price.
+     * @return returns a double of the average price.
      */
-    public int getAveragePrice(LocalDate startDate, LocalDate endDate, Asset asset) throws InvalidDate, DoesNotExist {
+    public double getAveragePrice(LocalDate startDate, LocalDate endDate, Asset asset) throws InvalidDate, DoesNotExist {
         return getAveragePrice(startDate, endDate, asset.getId());
     }
-    public int getAveragePrice(LocalDate startDate, LocalDate endDate, int asset) throws InvalidDate, DoesNotExist {
+    public double getAveragePrice(LocalDate startDate, LocalDate endDate, int asset) throws InvalidDate, DoesNotExist {
 
         LocalDate earliestDate;
         LocalDate today = LocalDate.now();
@@ -370,10 +392,10 @@ public class TradingAppData {
             count++;
         }
         if (count == 0) return 0;
-        return sum / count;
+        return (double)sum / count;
     }
 
-    public TreeMap<LocalDate, Integer> getHistoricalPrices(Asset a, Intervals timeInterval) throws InvalidDate, DoesNotExist {
+    public TreeMap<LocalDate, Double> getHistoricalPrices(Asset a, Intervals timeInterval) throws InvalidDate, DoesNotExist {
         return getHistoricalPrices(a.getId(), timeInterval);
     }
     /***
@@ -383,7 +405,7 @@ public class TradingAppData {
      *                     interval. Constants are provided as days, 3 days, weeks, months and years.
      * @return returns a TreeMap with each intervals start date as a key, with its value being the corresponding average.
      */
-    public TreeMap<LocalDate, Integer> getHistoricalPrices(int a, Intervals timeInterval) throws InvalidDate, DoesNotExist {
+    public TreeMap<LocalDate, Double> getHistoricalPrices(int a, Intervals timeInterval) throws InvalidDate, DoesNotExist {
         ArrayList<BuyOrder> priceHistory = getResolvedBuysByAsset(a);
         if (priceHistory.isEmpty()) {
             System.out.println("No historical prices");
@@ -395,7 +417,7 @@ public class TradingAppData {
         LocalDate latestDate = latest.get().getDateResolved().toLocalDate();
         LocalDate endDate;
         // Create new TreeMap for the averages
-        TreeMap<LocalDate, Integer> averages = new TreeMap<>();
+        TreeMap<LocalDate, Double> averages = new TreeMap<>();
 
 
         switch (timeInterval) {
@@ -403,7 +425,7 @@ public class TradingAppData {
                 endDate = latestDate.plusDays(1);
                 System.out.println("Daily average prices");
                 for (LocalDate current = earliestDate; current.isBefore(endDate); current = current.plusDays(1)) {
-                    int currentAvg = getAveragePrice(current, current, a);
+                    double currentAvg = getAveragePrice(current, current, a);
                     averages.put(current, currentAvg);
                     System.out.println(current + " = " + currentAvg);
                 }
@@ -414,7 +436,7 @@ public class TradingAppData {
                 for (LocalDate current = earliestDate.with(TemporalAdjusters.previousOrSame(WeekFields.of(locale).getFirstDayOfWeek()));
                      current.isBefore(endDate); current = current.plusWeeks(1)) {
                     LocalDate endOfWeek = current.plusDays(6);
-                    int currentAvg = getAveragePrice(current, endOfWeek, a);
+                    double currentAvg = getAveragePrice(current, endOfWeek, a);
                     averages.put(current, currentAvg);
                     System.out.println(current + " - " + endOfWeek + " = " + currentAvg);
                 }
@@ -425,7 +447,7 @@ public class TradingAppData {
                 for (LocalDate current = earliestDate.withDayOfMonth(1); current.isBefore(endDate);
                      current = current.plusMonths(1)) {
                     LocalDate endOfMonth = current.plusMonths(1).minusDays(1);
-                    int currentAvg = getAveragePrice(current, endOfMonth, a);
+                    double currentAvg = getAveragePrice(current, endOfMonth, a);
                     averages.put(current, currentAvg);
                     System.out.println(current + " - " + endOfMonth + " = " + currentAvg);
                 }
@@ -436,7 +458,7 @@ public class TradingAppData {
                 for (LocalDate current = earliestDate.withDayOfYear(1); current.isBefore(endDate);
                      current = current.plusYears(1)) {
                     LocalDate endOfYear = current.plusYears(1).minusDays(1);
-                    int currentAvg = getAveragePrice(current, endOfYear, a);
+                    double currentAvg = getAveragePrice(current, endOfYear, a);
                     averages.put(current, currentAvg);
                     System.out.println(current + " - " + endOfYear + " = " + currentAvg);
                 }
