@@ -92,29 +92,8 @@ public class NetworkDataSource implements TradingAppDataSource {
         }
     }
 
-    private String requestSpecial(String info) {
-        try {
-            Socket socket = new Socket(HOSTNAME, PORT);
-
-            try (
-                    ObjectOutputStream objectOutputStream =
-                            new ObjectOutputStream(socket.getOutputStream());
-            ) {
-                objectOutputStream.writeObject(SPECIAL);
-                objectOutputStream.writeObject(info);
-                objectOutputStream.flush();
-
-                try (
-                        ObjectInputStream objectInputStream =
-                                new ObjectInputStream(socket.getInputStream());
-                ) {
-                    return (String) objectInputStream.readObject();
-                }
-            }
-        } catch (IOException | ClassNotFoundException e) {
-            e.printStackTrace();
-            return null;
-        }
+    private int requestSpecial(String info) {
+        return requestNonselect(SPECIAL, new DataPacket(null, info, null, null));
     }
 
 
