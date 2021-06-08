@@ -34,8 +34,8 @@ public class TradingAppData {
 
 
     public void addHistoricalPrice(int assetID, String userResponsible, int price, LocalDateTime dateTime) {
-        SellOrder sell = new SellOrder(Order.nextId++, userResponsible, assetID, 0, price, dateTime, dateTime);
-        BuyOrder buy = new BuyOrder(Order.nextId++, userResponsible, assetID, 0, price, dateTime, dateTime, sell.getId());
+        SellOrder sell = new SellOrder(0, userResponsible, assetID, 0, price, dateTime, dateTime);
+        BuyOrder buy = new BuyOrder(0, userResponsible, assetID, 0, price, dateTime, dateTime, sell.getId());
         dataSource.insertSellOrder(sell);
         dataSource.insertBuyOrder(buy);
     }
@@ -250,7 +250,6 @@ public class TradingAppData {
             dataSource.insertBuyOrder(s);
         }
     }
-    //TODO:properly set up lookaheads for FKs
     public void addUser(User u) throws AlreadyExists, DoesNotExist {
         int result = dataSource.insertUser(u);
         if (result==0) throw new AlreadyExists("User '%s' already exists. Please try a different username.", u.getUsername());

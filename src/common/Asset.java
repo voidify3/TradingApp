@@ -18,8 +18,8 @@ import java.util.stream.IntStream;
  */
 public class Asset extends DataObject {
     // INSTANCE VARIABLES-----------------------------------------------------------------------------------------------
-    private final int id;
-    private final String description;
+    private int id;
+    private String description;
 
     // CONSTRUCTORS------------------------------------------------------------------------------------------------------
     /***
@@ -52,6 +52,10 @@ public class Asset extends DataObject {
      * @return assetID
      */
     public int getId() { return id; }
+
+    public void setId(int id) {
+        this.id = id;
+    }
 
     /***
      * Method used to get the assets ID as a string

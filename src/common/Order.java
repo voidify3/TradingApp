@@ -7,7 +7,6 @@ import java.time.LocalDateTime;
  */
 public class Order extends DataObject implements Comparable<Order> {
     private int id = 0;
-    public static int nextId = 0;
     private String user;
     private int asset;
     private LocalDateTime datePlaced;
@@ -23,24 +22,9 @@ public class Order extends DataObject implements Comparable<Order> {
      * @param price Price at which the asset is being traded
      */
     public Order(User user, Asset asset, int qty, int price) {
-        // Increment the trade ID every time a new order is created so that all orders have a unique ID.
-        this.setId(nextId);
-        nextId++;
-
-        // Set the time that the order was created.
-        this.setDatePlaced(LocalDateTime.now());
-        this.setDateResolved(null);
-
-        // Update trade specific data
-        this.setUser(user.getUsername());
-        this.setAsset(asset.getId());
-        this.setQty(qty);
-        this.setPrice(price);
+        this(user.getUsername(), asset.getId(), qty,price);
     }
     public Order(String user, int asset, int qty, int price) {
-        // Increment the trade ID every time a new order is created so that all orders have a unique ID.
-        this.setId(nextId);
-        nextId++;
 
         // Set the time that the order was created.
         this.setDatePlaced(LocalDateTime.now());
@@ -64,23 +48,24 @@ public class Order extends DataObject implements Comparable<Order> {
      * @param resolved date resolved
      */
     public Order(int id, String user, int asset, int qty, int price, LocalDateTime placed, LocalDateTime resolved) {
-        // Increment the trade ID every time a new order is created so that all orders have a unique ID.
+        this(user,asset,qty,price);
+        // Set the ID
         this.setId(id);
-
-        // Set the time that the order was created.
+        // Set the date fields
         this.setDatePlaced(placed);
         this.setDateResolved(resolved);
-
-        // Update trade specific data
-        this.setUser(user);
-        this.setAsset(asset);
-        this.setQty(qty);
-        this.setPrice(price);
     }
 
 
     // Helper Functions ------------------------------------------------------------------------------------------------
 
+    /**
+     * This compareTo override orders by DateResolved (and secondarily by ID) because this is useful for
+     * the historical price system
+     * @param o other order
+     * @return For two resolved orders with different DateResolved values, the older transaction is less
+     * Otherwise, the lower ID is less
+     */
     @Override
     public int compareTo(Order o) {
         if (this.dateResolved == null || o.getDateResolved() == null

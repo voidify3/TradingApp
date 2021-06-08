@@ -20,10 +20,20 @@ public class MockDatabase {
     private ArrayList<SellOrder> sellOrders = new ArrayList<>();
 
     private ArrayList<BuyOrder> buyOrders = new ArrayList<>();
+    private static int nextAssetID = 1;
+    private static int nextBuyID = 1;
+    private static int nextSellID = 1;
     //check if a LocalDateTime is between two others, inclusive
     private Boolean isBetween(LocalDateTime inQuestion, LocalDateTime start, LocalDateTime end) {
+        if (inQuestion == null) return false;
         return ((inQuestion.isAfter(start) || inQuestion.isEqual(start))
                 && (inQuestion.isBefore(end) || inQuestion.isEqual(end)));
+    }
+
+    public MockDatabase() {
+        nextAssetID = 1;
+        nextBuyID = 1;
+        nextSellID = 1;
     }
 
     public void close() {
@@ -40,12 +50,15 @@ public class MockDatabase {
         return result;
     }
     public int addUser(User data) {
+        //FK check
+        if (getUnit(data.getUnit()) == null) return -1;
         //Check for duplicates
         for (User user : allUsers) {
             if (user.getUsername().equalsIgnoreCase(data.getUsername())) {
                 return 0;
             }
         }
+
         allUsers.add(data);
         return 1;
     }
@@ -61,40 +74,37 @@ public class MockDatabase {
     }
 
     public int addAsset(Asset data) {
-        //Check for duplicates
-        for (Asset asset : allAssets) {
-            if (asset.getId() == data.getId()) {
-                return 0;
-            }
-        }
+        data.setId(nextAssetID++);
         allAssets.add(data);
         return 1;
     }
 
     public int addSellOrder(SellOrder order) {
-        for (SellOrder current : sellOrders) {
-            if (current.getId() == order.getId()) {
-                return 0;
-            }
-        }
+        //Check that the FK values exist
+        if (getAsset(order.getAsset()) == null || getUser(order.getUser()) == null) return -1;
+
+        order.setId(nextSellID++);
         sellOrders.add(order);
         return 1;
     }
 
     public int addBuyOrder(BuyOrder order) {
-        for (BuyOrder current : buyOrders) {
-            if (current.getId() == order.getId()) {
-                return 0;
-            }
-        }
+        //Check that the FK values exist
+        if (getAsset(order.getAsset()) == null || getUser(order.getUser()) == null ||
+                (order.getBoughtFrom() != null && getSell(order.getBoughtFrom()) == null)) return -1;
+
+        order.setId(nextBuyID++);
         buyOrders.add(order);
         return 1;
     }
 
 
     public int addOrReplaceInventory(InventoryRecord data) {
+        //FK checks
+        if (getAsset(data.getAssetID()) == null || getUnit(data.getUnitName()) == null) return -1;
+
         for (int i = 0; i < inventories.size(); i++) {
-            if (inventories.get(i).getUnitName().equals(data.getUnitName())
+            if (inventories.get(i).getUnitName().equalsIgnoreCase(data.getUnitName())
                     && inventories.get(i).getAssetID() == data.getAssetID()) {
                 inventories.set(i, data);
                 return 2;
@@ -106,8 +116,13 @@ public class MockDatabase {
     }
 
     public int replaceUser(User u) {
+        //constraint checks
+        if ((u.getUnit() != null && getUnit(u.getUnit()) == null) || //the unit does not exist
+                (u.getUnit() == null && //OR the unit is null and the user has orders
+                (!sellOrdersByUser(u.getUsername(), null).isEmpty() ||
+                    !buyOrdersByUser(u.getUsername(),null).isEmpty()))) return -1;
         for (int i = 0; i < allUsers.size(); i++) {
-            if (allUsers.get(i).getUsername() == u.getUsername()) {
+            if (allUsers.get(i).getUsername().equalsIgnoreCase(u.getUsername())) {
                 allUsers.set(i, u);
                 return 1;
             }
@@ -116,7 +131,7 @@ public class MockDatabase {
     }
     public int replaceUnit(OrgUnit u) {
         for (int i = 0; i < allUnits.size(); i++) {
-            if (allUnits.get(i).getName() == u.getName()) {
+            if (allUnits.get(i).getName().equalsIgnoreCase(u.getName())) {
                 allUnits.set(i, u);
                 return 1;
             }
@@ -133,6 +148,9 @@ public class MockDatabase {
         return 0;
     }
     public int replaceSellOrder(SellOrder s) {
+        //FK checks
+        if (getAsset(s.getAsset()) == null || getUser(s.getUser()) == null) return -1;
+
         for (int i = 0; i < sellOrders.size(); i++) {
             if (sellOrders.get(i).getId() == s.getId()) {
                 sellOrders.set(i, s);
@@ -142,6 +160,10 @@ public class MockDatabase {
         return 0;
     }
     public int replaceBuyOrder(BuyOrder b) {
+        //FK checks
+        if (getAsset(b.getAsset()) == null || getUser(b.getUser()) == null ||
+                (b.getBoughtFrom() != null && getSell(b.getBoughtFrom()) == null)) return -1;
+
         for (int i = 0; i < buyOrders.size(); i++) {
             if (buyOrders.get(i).getId() == b.getId()) {
                 buyOrders.set(i, b);
@@ -168,8 +190,13 @@ public class MockDatabase {
     public int deleteUnit(String unit) {
         OrgUnit toDelete = getUnit(unit);
         if (toDelete == null) return 0;
-        //obey dependencies: set user values null, delete inventory records
-        for (User u : unitMembers(unit)) {
+        //obey dependencies: set user values null but cancel if any have orders, delete inventory records
+        ArrayList<User> unitMembers = unitMembers(unit);
+        for (User u : unitMembers) {
+            if (!buyOrdersByUser(u.getUsername(), null).isEmpty()
+                    || !sellOrdersByUser(u.getUsername(), null).isEmpty()) return -1;
+        }
+        for (User u : unitMembers) {
             u.setUnit(null);
             replaceUser(u);
         }
@@ -236,7 +263,7 @@ public class MockDatabase {
         ArrayList<SellOrder> output = new ArrayList<>();
         for (SellOrder s : sellOrders) {
             if ((resolved == null ||  (resolved == (s.getDateResolved() != null)))  //resolved matches the truth value of `s.dateResolved != null`
-                    &&  (s.getUser() == username)) {
+                    &&  (s.getUser().equalsIgnoreCase(username))) {
                 output.add(s);
             }
         }
@@ -277,7 +304,7 @@ public class MockDatabase {
         ArrayList<BuyOrder> output = new ArrayList<>();
         for (BuyOrder s : buyOrders) {
             if ((resolved == null ||  (resolved == (s.getDateResolved() != null)))  //resolved matches the truth value of `s.dateResolved != null`
-                    &&  (s.getUser() == username)) {
+                    &&  (s.getUser().equalsIgnoreCase(username))) {
                 output.add(s);
             }
         }
@@ -360,7 +387,7 @@ public class MockDatabase {
     public ArrayList<BuyOrder> customersOf(int sellOrderID) {
         ArrayList<BuyOrder> results = new ArrayList<>();
         for (BuyOrder current : buyOrders) {
-            if (current.boughtFrom == sellOrderID) {
+            if (current.boughtFrom != null && current.boughtFrom == sellOrderID) {
                 results.add(current);
             }
         }
@@ -399,7 +426,7 @@ public class MockDatabase {
 
     public InventoryRecord getInv(String unit, int asset) {
         for (InventoryRecord x : inventories) {
-            if (x.getUnitName().equals(unit) && x.getAssetID() == asset) {
+            if (x.getUnitName().equalsIgnoreCase(unit) && x.getAssetID() == asset) {
                 return x;
             }
         }
