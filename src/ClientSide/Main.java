@@ -1,13 +1,7 @@
 package ClientSide;
 
-// class imports
-// java imports
-
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
-
 /***
- * @authors Johnny, Alistair, Scott & Sophia
+ * @author Johnny, Alistair, Scott & Sophia
  */
 public class Main {
 
@@ -17,9 +11,6 @@ public class Main {
      */
     public static void main(String[] args) {
 
-        //Date & time formatter
-        DateTimeFormatter dmy = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm:ss");
-        LocalDateTime now = LocalDateTime.now();
         TradingAppDataSource t;
         if (args.length == 1 && args[0].equals("MOCK")) {
             t = new MockDataSource();
@@ -31,6 +22,7 @@ public class Main {
         javax.swing.SwingUtilities.invokeLater(() -> {
             try {
                 TradingAppGUI gui = new TradingAppGUI(new TradingAppData(t));
+                gui.createAndShowGUI();
             } catch (Throwable ex) {
                 ex.printStackTrace();
             }
