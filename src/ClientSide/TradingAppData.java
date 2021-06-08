@@ -6,6 +6,7 @@ import common.Exceptions.*;
 import java.sql.Timestamp;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.Year;
 import java.time.ZoneId;
 import java.time.chrono.ChronoLocalDate;
 import java.time.temporal.ChronoUnit;
@@ -15,14 +16,15 @@ import java.util.*;
 
 public class TradingAppData {
     public TradingAppDataSource dataSource;
-    public static enum Intervals {
-        DAYS,
-        WEEKS,
-        MONTHS,
-        YEARS
+    Locale locale = Locale.ENGLISH;
+    public enum Intervals {
+        DAYS(),
+        WEEKS(),
+        MONTHS(),
+        YEARS();
     }
     public TradingAppData(TradingAppDataSource dataSource) {
-        this.dataSource = new MockDataSource();
+        this.dataSource = dataSource;
     }
 
     //DEV/HELPER CONTENT --------------------------------------------------------------------
@@ -331,8 +333,9 @@ public class TradingAppData {
         LocalDate earliestDate;
         LocalDate today = LocalDate.now();
         try{
-            //explanation of this logic: get the date of the earliest resolved BuyOrder for the asset
-        earliestDate = (getResolvedBuysByAsset(asset.getId()).stream().min(BuyOrder::compareTo).orElseThrow().getDateResolved()).toLocalDate();}
+            //get the date of the earliest resolved BuyOrder for the asset
+            earliestDate = (getResolvedBuysByAsset(asset.getId()).stream().min(BuyOrder::compareTo).orElseThrow().getDateResolved()).toLocalDate();
+        }
         catch (NoSuchElementException e) {
             return 0;
         }
@@ -366,22 +369,64 @@ public class TradingAppData {
      */
     public TreeMap<LocalDate, Integer> getHistoricalPrices(Asset a, Intervals timeInterval) throws InvalidDate, DoesNotExist {
         ArrayList<BuyOrder> priceHistory = getResolvedBuysByAsset(a.getId());
+        if (priceHistory.isEmpty()) {
+            System.out.println("No historical prices");
+            return new TreeMap<>();
+        }
         Optional<BuyOrder> earliest = priceHistory.stream().min(BuyOrder::compareTo);
-        LocalDateTime earliestDate = earliest.get().getDateResolved();
         Optional<BuyOrder> latest = priceHistory.stream().max(BuyOrder::compareTo);
-        LocalDateTime latestDate = latest.get().getDateResolved();
+        LocalDate earliestDate = earliest.get().getDateResolved().toLocalDate();
+        LocalDate latestDate = latest.get().getDateResolved().toLocalDate();
+        LocalDate endDate;
         // Create new TreeMap for the averages
         TreeMap<LocalDate, Integer> averages = new TreeMap<>();
 
-        // Calculate number of intervals for each interval
-        long days = ChronoUnit.DAYS.between(earliestDate, latestDate);
-        long weeks = ChronoUnit.WEEKS.between(earliestDate, latestDate);
-        long months = ChronoUnit.MONTHS.between(earliestDate, latestDate);
-        long years = ChronoUnit.YEARS.between(earliestDate, latestDate);
-        Locale locale = Locale.ENGLISH;
-        ZoneId timeZone = ZoneId.of("Australia/Sydney");
 
-        //TODO: this seems like unnecessary repetition!!!!
+        switch (timeInterval) {
+            case DAYS -> {
+                endDate = latestDate.plusDays(1);
+                System.out.println("Daily average prices");
+                for (LocalDate current = earliestDate; current.isBefore(endDate); current = current.plusDays(1)) {
+                    int currentAvg = getAveragePrice(current, current, a);
+                    averages.put(current, currentAvg);
+                    System.out.println(current + " = " + currentAvg);
+                }
+            }
+            case WEEKS -> {
+                endDate = latestDate.with(TemporalAdjusters.previousOrSame(WeekFields.of(locale).getFirstDayOfWeek())).plusWeeks(1);
+                System.out.println("Weekly average prices between:");
+                for (LocalDate current = earliestDate.with(TemporalAdjusters.previousOrSame(WeekFields.of(locale).getFirstDayOfWeek()));
+                     current.isBefore(endDate); current = current.plusWeeks(1)) {
+                    LocalDate endOfWeek = current.plusDays(6);
+                    int currentAvg = getAveragePrice(current, endOfWeek, a);
+                    averages.put(current, currentAvg);
+                    System.out.println(current + "-" + endOfWeek + " = " + currentAvg);
+                }
+            }
+            case MONTHS -> {
+                endDate = latestDate.withDayOfMonth(1).plusMonths(1);
+                System.out.println("Monthly average prices between:");
+                for (LocalDate current = earliestDate.withDayOfMonth(1); current.isBefore(endDate);
+                     current = current.plusMonths(1)) {
+                    LocalDate endOfMonth = current.plusMonths(1).minusDays(1);
+                    int currentAvg = getAveragePrice(current, endOfMonth, a);
+                    averages.put(current, currentAvg);
+                    System.out.println(current + "-" + endOfMonth + " = " + currentAvg);
+                }
+            }
+            case YEARS -> {
+                endDate = latestDate.withDayOfYear(1).plusYears(1);
+                System.out.println("Yearly average prices between:");
+                for (LocalDate current = earliestDate.withDayOfYear(1); current.isBefore(endDate);
+                     current = current.plusYears(1)) {
+                    LocalDate endOfYear = current.plusYears(1).minusDays(1);
+                    int currentAvg = getAveragePrice(current, endOfYear, a);
+                    averages.put(current, currentAvg);
+                    System.out.println(current + "-" + endOfYear + " = " + currentAvg);
+                }
+            }
+        }
+/*
         switch (timeInterval) {
             case DAYS -> {
                 LocalDate endDate = LocalDate.now();
@@ -466,6 +511,7 @@ public class TradingAppData {
                 }
             }
         }
+*/
         return averages;
     }
 
