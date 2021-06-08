@@ -90,12 +90,12 @@ public class TradingAppGUI {
 
 
 
-    public TradingAppGUI(TradingAppData data) throws InvalidPrice, InvalidDate, IOException, DoesNotExist, AlreadyExists, IllegalString {
+    public TradingAppGUI(TradingAppData data) throws InvalidPrice, InvalidDate, IOException, DoesNotExist, AlreadyExists, IllegalString, InvalidAmount, OrderException {
         this.data = data;
         createAndShowGUI();
     }
 
-    private void createAndShowGUI() throws IllegalString, AlreadyExists, IOException, DoesNotExist, InvalidPrice, InvalidDate {
+    private void createAndShowGUI() throws IllegalString, AlreadyExists, IOException, DoesNotExist, InvalidPrice, InvalidDate, InvalidAmount, OrderException {
         mainFrame.setPreferredSize(new Dimension(WIDTH, HEIGHT));
         mainFrame.setResizable(false);
         mainFrame.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);

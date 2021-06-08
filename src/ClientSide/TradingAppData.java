@@ -22,7 +22,7 @@ public class TradingAppData {
         DAYS(),
         WEEKS(),
         MONTHS(),
-        YEARS();
+        YEARS()
     }
 
     public TradingAppData(TradingAppDataSource dataSource) {
@@ -35,19 +35,22 @@ public class TradingAppData {
     public static OrgUnit unitDev;
     public static Asset assetDev1;
     public static Asset assetDev2;
+    public static BuyOrder testBuyOrder;
+    public static SellOrder testSellOrder;
 
 
     public void addHistoricalPrice(int idUpTo, int assetID, String userResponsible, int price, LocalDateTime dateTime) {
         SellOrder sell = new SellOrder(0, userResponsible, assetID, 0, price, dateTime, dateTime);
         BuyOrder buy = new BuyOrder(0, userResponsible, assetID, 0, price, dateTime, dateTime, idUpTo);
-        dataSource.insertSellOrder(sell);
-        dataSource.insertBuyOrder(buy);
+        System.out.println(dataSource.insertSellOrder(sell));
+        System.out.println(dataSource.insertBuyOrder(buy));
     }
 
-    public void mockObjectsWithPrices() throws IllegalString {
+    public void mockObjectsWithPrices() throws IllegalString, InvalidAmount, DoesNotExist, OrderException {
         mockObjects();
-        LocalDateTime begin = LocalDateTime.now().minusDays(4*365);
-        for (int i = 1; i < 4 * 365; i++) {
+        int numdays = 4 * 365;
+        LocalDateTime begin = LocalDateTime.now().minusDays(numdays);
+        for (int i = 1; i < numdays; i++) {
             addHistoricalPrice(i, assetDev1.getId(), adminDev.getUsername(), 10, begin.plusDays(i));
             addHistoricalPrice(i, assetDev1.getId(), adminDev.getUsername(), 15, begin.plusDays(i));
             addHistoricalPrice(i, assetDev1.getId(), adminDev.getUsername(), 20, begin.plusDays(i));
@@ -57,30 +60,28 @@ public class TradingAppData {
         }
     }
 
-    public void mockObjects() throws IllegalString {
-        adminDev = new User("johnny", "bo$$man", true);
-        userDev = new User("scott", "scotty", false);
-        unitDev = new OrgUnit("Developers");
-        assetDev1 = new Asset(999, "Test asset for development!");
-        assetDev2 = new Asset(333, "Another test asset for development!");
-        dataSource.deleteUnit(unitDev.getName());
+    public void mockObjects() throws IllegalString, InvalidAmount, OrderException, DoesNotExist {
+        unitDev = new OrgUnit("Developers", 1000);
+        adminDev = new User("johnny", "bo$$man", true, unitDev.getName());
+        userDev = new User("scott", "scotty", false, unitDev.getName());
+        assetDev1 = new Asset(1, "Test asset for development!");
+        assetDev2 = new Asset(2, "Another test asset for development!");
         dataSource.insertUnit(unitDev);
-        userDev.setUnit(unitDev.getName());
-        adminDev.setUnit(unitDev.getName());
-        dataSource.deleteUser(adminDev.getUsername());
         dataSource.insertUser(adminDev);
-        dataSource.deleteUser(userDev.getUsername());
         dataSource.insertUser(userDev);
-        dataSource.deleteAsset(assetDev1.getId());
-        dataSource.deleteAsset(assetDev2.getId());
         dataSource.insertAsset(assetDev1);
         dataSource.insertAsset(assetDev2);
-        dataSource.insertOrUpdateInventory(new InventoryRecord(unitDev.getName(), assetDev1.getId(), 1000));
+        dataSource.insertOrUpdateInventory(new InventoryRecord(unitDev.getName(), assetDev1.getId(), 500));
         dataSource.insertOrUpdateInventory(new InventoryRecord(unitDev.getName(), assetDev2.getId(), 3500));
+        testBuyOrder = new BuyOrder(userDev, assetDev1, 20, 13);
+        testSellOrder = new SellOrder(userDev, assetDev1, 6, 47);
+        placeBuyOrder(testBuyOrder);
+        placeSellOrder(testSellOrder);
     }
 
     public void deleteEverything() {
         dataSource.debugDeleteEverything();
+        dataSource.recreate();
     }
 
 

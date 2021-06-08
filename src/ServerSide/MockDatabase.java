@@ -47,6 +47,9 @@ public class MockDatabase {
         inventories = new ArrayList<>();
         sellOrders = new ArrayList<>();
         buyOrders = new ArrayList<>();
+        nextAssetID = 1;
+        nextBuyID = 1;
+        nextSellID = 1;
         return result;
     }
     public int addUser(User data) {
