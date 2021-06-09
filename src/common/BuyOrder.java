@@ -12,7 +12,7 @@ public class BuyOrder extends Order {
         return boughtFrom;
     }
 
-    public Integer boughtFrom = null;
+    private Integer boughtFrom = null;
 
     public BuyOrder(User user, Asset asset, int qty, int price) {
         super(user, asset, qty, price);
@@ -43,4 +43,5 @@ public class BuyOrder extends Order {
     public int compareTo(Order o) {
         return super.compareTo(o);
     }
+
 }

@@ -390,7 +390,7 @@ public class MockDatabase {
     public ArrayList<BuyOrder> customersOf(int sellOrderID) {
         ArrayList<BuyOrder> results = new ArrayList<>();
         for (BuyOrder current : buyOrders) {
-            if (current.boughtFrom != null && current.boughtFrom == sellOrderID) {
+            if (current.getBoughtFrom() != null && current.getBoughtFrom() == sellOrderID) {
                 results.add(current);
             }
         }
