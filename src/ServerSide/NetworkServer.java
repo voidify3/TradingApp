@@ -19,15 +19,15 @@ import java.util.concurrent.atomic.AtomicBoolean;
 /**
  * @author Sophia Walsh Long
  */
-public class NetworkServer {
+class NetworkServer {
 
     private static final int PORT = 10000;
     private static final int SOCKET_TIMEOUT = 100;
 
     private AtomicBoolean running = new AtomicBoolean(true);
     //private JDBCDataSource dataSource;
-    public Timer tradeReconciliation;
-    public Connection getConnection() {
+    Timer tradeReconciliation;
+    Connection getConnection() {
         return connection;
     }
 
@@ -173,7 +173,7 @@ public class NetworkServer {
         }
     }
 */
-    public NetworkServer() {
+    NetworkServer() {
         tradeReconciliation = new Timer();
         connection = DBConnection.getInstance();
         try {
@@ -446,14 +446,14 @@ public class NetworkServer {
      *
      * @return The port number
      */
-    public static int getPort() {
+    static int getPort() {
         return PORT;
     }
 
     /**
      * Starts the server running on the default port, code borrowed from week 7 exercise
      */
-    public void start() throws IOException {
+    void start() throws IOException {
         try (ServerSocket serverSocket = new ServerSocket(PORT)) {
             serverSocket.setSoTimeout(SOCKET_TIMEOUT);
             for (;;) {
@@ -487,7 +487,7 @@ public class NetworkServer {
     /**
      * Requests the server to shut down
      */
-    public void shutdown() {
+    void shutdown() {
         //Stop firing trade reconciliation
         tradeReconciliation.cancel();
         //Close the database connection
@@ -501,17 +501,17 @@ public class NetworkServer {
         running.set(false);
     }
 
-    public ResultSet executeSelectQuery(PreparedStatement statement) throws SQLException , SQLTimeoutException {
+    private ResultSet executeSelectQuery(PreparedStatement statement) throws SQLException , SQLTimeoutException {
         return statement.executeQuery();
 
     }
-    public int executeModificationQuery(PreparedStatement statement) throws SQLException, SQLTimeoutException {
+    private int executeModificationQuery(PreparedStatement statement) throws SQLException, SQLTimeoutException {
         int returnval = statement.executeUpdate();
         connection.commit();
         return returnval;
     }
 
-    public void reconcileTrades() {
+    void reconcileTrades() {
         try {
             Timestamp now = Timestamp.valueOf(LocalDateTime.now());
             ResultSet assets = executeSelectQuery(getAssets);
@@ -638,7 +638,7 @@ public class NetworkServer {
     /**
      * Empty the database. Only exists for test and debug convenience, may deprecate later due to unsafeness
      */
-    public int resetEverything() throws SQLException {
+    int resetEverything() throws SQLException {
         int count = totalRecordCount();
         for (String drop : CLEAR_DATA) {
             connection.prepareStatement(drop).execute();
