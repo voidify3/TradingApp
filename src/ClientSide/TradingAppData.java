@@ -49,15 +49,16 @@ public class TradingAppData {
 
     public void mockObjectsWithPrices() throws IllegalString, InvalidAmount, DoesNotExist, OrderException {
         mockObjects();
-        int numdays = 365;
+        int numdays = 20;
         LocalDateTime begin = LocalDateTime.now().minusDays(numdays);
-        for (int i = 1; i < numdays; i++) {
-            addHistoricalPrice(i, assetDev1.getId(), adminDev.getUsername(), 10, begin.plusDays(i++));
-            addHistoricalPrice(i, assetDev1.getId(), adminDev.getUsername(), 15, begin.plusDays(i++));
-            addHistoricalPrice(i, assetDev1.getId(), adminDev.getUsername(), 20, begin.plusDays(i++));
-            addHistoricalPrice(i, assetDev2.getId(), adminDev.getUsername(), 10, begin.plusDays(i++));
-            addHistoricalPrice(i, assetDev2.getId(), adminDev.getUsername(), 30, begin.plusDays(i++));
-            addHistoricalPrice(i, assetDev2.getId(), adminDev.getUsername(), 50, begin.plusDays(i));
+        for (int i = 1; i <= numdays; i++) {
+            LocalDateTime theDay = begin.plusDays(i);
+            addHistoricalPrice(i*6-5, assetDev1.getId(), adminDev.getUsername(), 10, theDay);
+            addHistoricalPrice(i*6-4, assetDev1.getId(), adminDev.getUsername(), 15, theDay);
+            addHistoricalPrice(i*6-3, assetDev1.getId(), adminDev.getUsername(), 20, theDay);
+            addHistoricalPrice(i*6-2, assetDev2.getId(), adminDev.getUsername(), 10, theDay);
+            addHistoricalPrice(i*6-1, assetDev2.getId(), adminDev.getUsername(), 30, theDay);
+            addHistoricalPrice(i*6, assetDev2.getId(), adminDev.getUsername(), 50, theDay);
         }
     }
 
