@@ -91,19 +91,19 @@ public class User extends DataObject {
     }
 
     /***
-     * Getter for the password.
+     * Getter for the hashed password.
      * The login method needs this to match the password.
-     * @return username string
+     * @return hashed password string
      */
     public String getPassword() {
         return this.password;
     }
 
     /***
-     * Setter for the password. Private as
-     * Admin / user password self-service methods can update the password.
+     * Setter for the password. Private because all non-private password setting goes through the
+     * non-straightforward setter
      */
-    public void setPassword(String hashedPassword) {
+    private void setPassword(String hashedPassword) {
         this.password = hashedPassword;
     }
 
