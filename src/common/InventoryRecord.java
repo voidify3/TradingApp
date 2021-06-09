@@ -1,11 +1,13 @@
 package common;
 
 public class InventoryRecord extends DataObject {
-    private final InventoryKey key;
+    private final String unit;
+    private final int asset;
     private int quantity;
 
     public InventoryRecord(String orgUnitName, int assetID, int quantity) {
-        this.key = new InventoryKey(orgUnitName,assetID);
+        this.unit = orgUnitName;
+        this.asset = assetID;
         this.quantity = quantity;
     }
 
@@ -23,10 +25,10 @@ public class InventoryRecord extends DataObject {
     }
 
     public String getUnitName() {
-        return key.getUnit();
+        return unit;
     }
 
     public int getAssetID() {
-        return key.getAsset();
+        return asset;
     }
 }

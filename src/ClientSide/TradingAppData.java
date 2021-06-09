@@ -281,13 +281,13 @@ public class TradingAppData {
         }
     }
 
-    public void adjustInventory(InventoryKey i, int adjustment) throws DoesNotExist {
-        InventoryRecord toInsert = new InventoryRecord(i.unit, i.asset, adjustment);
-        try{toInsert.adjustQuantity(getInv(i.unit,i.asset).getQuantity());}
+    public void adjustInventory(String unit, int asset, int adjustment) throws DoesNotExist {
+        InventoryRecord i = new InventoryRecord(unit, asset, adjustment);
+        try{i.adjustQuantity(getInv(unit,asset).getQuantity());}
         catch(DoesNotExist e){
             throw new DoesNotExist("Unit %s and/or asset %i not found.");
         }
-        if (dataSource.insertOrUpdateInventory(toInsert) == -1) {
+        if (dataSource.insertOrUpdateInventory(i) == -1) {
             throw new DoesNotExist("Unit %s and/or asset %i not found.");
         }
     }
