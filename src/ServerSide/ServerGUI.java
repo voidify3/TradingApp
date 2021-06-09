@@ -17,7 +17,7 @@ import java.util.TimerTask;
  */
 public class ServerGUI {
     public final static int FIVE_MINUTES = 300000;
-    static JLabel tradeLabel = new JLabel("Trade reconciliation not yet performed                            ");
+    static JLabel tradeLabel = new JLabel("Trade reconciliation not yet performed");
 
     public static void main(String[] args) throws SQLException {
         NetworkServer server = new NetworkServer();
@@ -54,6 +54,7 @@ public class ServerGUI {
         dialog.setTitle("Network server for Address Book");
         JButton shutdownButton = new JButton("Shut down server");
         JButton clearDBButton = new JButton("Drop all database tables");
+        JButton setupDBButton = new JButton("Rerun table creation script");
         JButton reconcileButton = new JButton("Reconcile trades now");
         JPanel controlPanel = new JPanel();
 
@@ -63,6 +64,13 @@ public class ServerGUI {
                 server.resetEverything();
             } catch (SQLException throwables) {
                 System.out.println("Tables could not be dropped");
+            }
+        });
+        setupDBButton.addActionListener(e -> {
+            try {
+                server.setupTables();
+            } catch (SQLException throwables) {
+                System.out.println("An error occurred rerunning the table creation script");
             }
         });
 
@@ -84,8 +92,9 @@ public class ServerGUI {
         // Add the button and labels to the dialog
         mainPanel.setLayout(new BorderLayout());
         controlPanel.setLayout(new BorderLayout());
-        controlPanel.add(reconcileButton, BorderLayout.CENTER);
-        controlPanel.add(clearDBButton, BorderLayout.WEST);
+        controlPanel.add(reconcileButton, BorderLayout.NORTH);
+        controlPanel.add(clearDBButton, BorderLayout.CENTER);
+        controlPanel.add(setupDBButton, BorderLayout.EAST);
         controlPanel.add(shutdownButton, BorderLayout.SOUTH);
         mainPanel.add(controlPanel, BorderLayout.SOUTH);
         mainPanel.add(serverLabel, BorderLayout.NORTH);
