@@ -15,8 +15,8 @@ import java.util.TimerTask;
 /**
  * Most code borrowed from week 8 address book exercise
  */
-public class ServerGUI {
-    public final static int FIVE_MINUTES = 300000;
+class ServerGUI {
+    final static int RECONCILIATION_INTERVAL = 300000; //milliseconds, equals 5 minutes
     static JLabel tradeLabel = new JLabel("Trade reconciliation not yet performed");
 
     public static void main(String[] args) throws SQLException {
@@ -36,7 +36,7 @@ public class ServerGUI {
                     SwingUtilities.invokeLater(() -> tradeLabel.setText("Trade reconciliation last done "
                             + reconcileTime.format(DateTimeFormatter.ofLocalizedDateTime(FormatStyle.MEDIUM))));
                 }
-            }, 0, FIVE_MINUTES);
+            }, 0, RECONCILIATION_INTERVAL);
 
         } catch (IOException e) {
             // In the case of an exception, show an error message and terminate

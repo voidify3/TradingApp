@@ -11,7 +11,7 @@ import java.util.Properties;
 /**
  * Entire class borrowed from the Week 7 Address Book Exercise
  */
-public class DBConnection {
+class DBConnection {
     /**
      * The singleton instance of the database connection.
      */
