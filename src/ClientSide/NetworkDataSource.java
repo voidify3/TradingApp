@@ -125,11 +125,11 @@ public class NetworkDataSource implements TradingAppDataSource {
 
     private DataObject selectByKey(DatabaseTables table, String keyValue) {
         ArrayList<DataObject> results = selectByValue(table, keyColumnName(table), keyValue);
-        return results.get(0);
+        return extractElement(results);
     }
     private DataObject selectByKey(DatabaseTables table, int keyValue) {
         ArrayList<DataObject> results = selectByValue(table, keyColumnName(table), keyValue);
-        return results.get(0); //there should only be 1 result, so return it
+        return extractElement(results); //there should only be 1 result, so return it
     }
 
     private int deleteByKey(DatabaseTables table, String keyValue) {
@@ -158,7 +158,7 @@ public class NetworkDataSource implements TradingAppDataSource {
                 .replaceAll("_","\\_");
     }
 
-    //--------------------FILTER-FORMING HELPERS--------
+    //--------------------MISC HELPERS--------
 
     private String keyColumnName(DatabaseTables table) {
         return table.getColumns()[0];
@@ -180,6 +180,11 @@ public class NetworkDataSource implements TradingAppDataSource {
     }
     private String sqlFriendlyString(String value) {
         return "'" + escapeWildcardsForMySQL(value) + "'";
+    }
+
+    private DataObject extractElement(ArrayList<DataObject> a) {
+        if (a.isEmpty()) return null;
+        else return a.get(0);
     }
 
     //--------------------PUBLIC METHODS---------------------------------
@@ -373,7 +378,7 @@ public class NetworkDataSource implements TradingAppDataSource {
     }
     @Override
     public ArrayList<BuyOrder> buyOrdersByBoughtFrom(int sellOrderID) {
-        return (ArrayList) selectByValue(INV, BUY.getColumns()[7], sellOrderID);
+        return (ArrayList) selectByValue(BUY, BUY.getColumns()[7], sellOrderID);
     }
 
     //--Calling selectByKey
@@ -467,7 +472,7 @@ public class NetworkDataSource implements TradingAppDataSource {
      */
     @Override
     public int deleteInventoryRecord(String unit, int asset) {
-        return delete(INV,filterEquals(INV.getColumns()[1], sqlFriendlyString(unit)) +
+        return delete(INV,filterEquals(INV.getColumns()[0], sqlFriendlyString(unit)) +
                 " AND " + filterEquals(INV.getColumns()[1], valueOf(asset)));
     }
 

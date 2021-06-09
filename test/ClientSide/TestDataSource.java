@@ -8,7 +8,7 @@ import java.time.LocalDateTime;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-//INSTRUCTIONS TO RUN: run ServerGui then run this
+
 public class TestDataSource {
     public static final LocalDateTime START_OF_YEAR = LocalDateTime.of(2021, 1, 5, 0, 0);
     static TradingAppDataSource n;
@@ -20,12 +20,10 @@ public class TestDataSource {
     public static final String TEST_ASSET_2 = "test2";
     @BeforeEach
     void setupAndSuccessInserts() {
+        //to test network data source,
+        // use a compound configuration: this, and ServerGui with CLI args {"RESET"}
         n = new MockDataSource();
-//        long ping = n.ping();
-//        System.out.println(ping);
-//        assertTrue(ping > 0);
-//        n.debugDeleteEverything();
-//        n.recreate();
+        //n = new NetworkDataSource();
         assertAll(
                 ()->assertEquals(1, n.insertUnit(new OrgUnit(TEST_ORG_1))),
                 ()->assertFalse(n.allOrgUnits().isEmpty()),
@@ -38,7 +36,7 @@ public class TestDataSource {
     }
     @AfterEach
     void done() {
-        n.debugDeleteEverything();
+        n.debugDeleteEverything(); n.recreate();
     }
 
     @Test
@@ -52,7 +50,7 @@ public class TestDataSource {
     @Test
     void constrainedInserts() {
         assertAll(
-                ()->assertEquals(-1, n.insertUser(new User(TEST_USER,
+                ()->assertEquals(-1, n.insertUser(new User(TEST_USER_2,
                         "password", false, "aaa"))),
                 ()->assertEquals(-1, n.insertSellOrder(new SellOrder(TEST_USER, 2, 10, 5))),
                 ()->assertEquals(-1, n.insertBuyOrder(new BuyOrder(TEST_USER, 2, 10, 5))),
@@ -165,7 +163,6 @@ public class TestDataSource {
         assertAll(
                 ()->assertEquals(-1, n.deleteUnit(TEST_ORG_1)),
                 ()->assertEquals(-1, n.deleteUser(TEST_USER)),
-                ()->assertEquals(-1, n.deleteAsset(1)),
                 ()->assertEquals(-1, n.deleteSellOrder(1))
         );
         n.updateBuyOrder(new BuyOrder(1, TEST_USER, 1, 10, 5,
@@ -173,7 +170,7 @@ public class TestDataSource {
     }
     @Test
     void successDelInv() {
-        n.insertOrUpdateInventory(new InventoryRecord(TEST_ORG_1, 1, 5));
+        assertEquals(1, n.insertOrUpdateInventory(new InventoryRecord(TEST_ORG_1, 1, 5)));
         assertEquals(1, n.deleteInventoryRecord(TEST_ORG_1, 1));
     }
     @Test
