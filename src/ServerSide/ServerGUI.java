@@ -23,6 +23,8 @@ class ServerGUI {
         NetworkServer server = new NetworkServer();
         SwingUtilities.invokeLater(() -> createAndShowGUI(server));
         if (args.length == 1 && args[0].equals("RESET")) {
+            //args={"RESET"} mean that the tables will be dropped and recreated upon startup,
+            //removing all data and resetting auto increment keys
             server.resetEverything();
             server.setupTables();
         }
