@@ -32,7 +32,11 @@ public class TradingAppData {
     //DEV/HELPER CONTENT --------------------------------------------------------------------
     public static User adminDev;
     public static User userDev;
+    public static User userDev2;
+    public static User userDev3;
+    public static User userDev4;
     public static OrgUnit unitDev;
+    public static OrgUnit unitDev2;
     public static Asset assetDev1;
     public static Asset assetDev2;
     public static BuyOrder testBuyOrder;
@@ -64,8 +68,12 @@ public class TradingAppData {
 
     public void mockObjects() throws IllegalString, InvalidAmount, OrderException, DoesNotExist {
         unitDev = new OrgUnit("Developers", 1000);
-        adminDev = new User("johnny", "bo$$man", true, unitDev.getName());
+        unitDev2 = new OrgUnit("Marketing", 1000);
+        adminDev = new User("sophia", "bo$$", true, unitDev2.getName());
         userDev = new User("scott", "scotty", false, unitDev.getName());
+        userDev2 = new User("johnny", "john", false, unitDev.getName());
+        userDev3 = new User("alistair", "allstar", false, unitDev2.getName());
+        userDev4 = new User("nullman", "nothing", false, null);
         assetDev1 = new Asset(1, "Test asset for development!");
         assetDev2 = new Asset(2, "Another test asset for development!");
         dataSource.insertUnit(unitDev);
@@ -743,7 +751,7 @@ public class TradingAppData {
     }
     //iff loggedIn is an admin, create new unit as specified and add to DB
     public boolean createUnitIfAdmin(String name, User loggedin)
-            throws NotAuthorised, AlreadyExists {
+            throws NotAuthorised, AlreadyExists, IllegalString {
         failIfNotAdmin("create a new organisational unit", loggedin);
         OrgUnit newUnit = new OrgUnit(name);
         addUnit(newUnit);

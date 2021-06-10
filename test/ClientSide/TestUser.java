@@ -27,7 +27,7 @@ public class TestUser {
     @BeforeEach
     @DisplayName("Before each... create new mock users & a unit")
     public void newMockUsers() throws AlreadyExists, IllegalString {
-        mockAdminUser = TradingAppData.adminDev; //johnny
+        mockAdminUser = TradingAppData.adminDev; //sophia
         mockGenericUser = TradingAppData.userDev; //scott
         mockUnit = new OrgUnit("devs");
     }
@@ -51,11 +51,11 @@ public class TestUser {
     public void testUserConstructor() {
         assertAll(
                 // the username is assigned correctly
-                () -> assertEquals("johnny", mockAdminUser.getUsername()),
+                () -> assertEquals("sophia", mockAdminUser.getUsername()),
                 // the admin access is true
                 () -> assertTrue(mockAdminUser.getAdminAccess()),
                 // the salt string is made unique by concatenating with the username
-                () -> assertTrue(mockAdminUser.getSalt().contains("johnny")),
+                () -> assertTrue(mockAdminUser.getSalt().contains(mockAdminUser.getUsername())),
                 // the salt string is generated as alphanumeric
                 () -> assertTrue(mockAdminUser.getSalt().matches("[A-Za-z0-9]+")),
                 // the password has been hashed (SHA-512 gives a hashed string 128 chars in length)
