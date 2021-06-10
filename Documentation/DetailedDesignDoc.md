@@ -47,10 +47,18 @@ If hashPassword threw an exception, the password change is aborted, and the exce
 
 
 ###OrgUnit
-This DataObject subclass represents a record in the ``
+This DataObject subclass represents a record in the `orgunit` table. Its fields (private with public getters) are:
+* name (no setter)
+* credits int (public setter)
+
+The class has no methods other than accessors and mutators.
+
+NAME LENGTH RESTRICTION, CREDITS POSITIVE RESTRICTION
 
 ###Asset
-This DataObject subclass represents a record in the ``
+This DataObject subclass represents a record in the `Asset` table. Its fields (private with public getters) are:
+* id (no setter)
+* description (no setter???)
 
 ###InventoryRecord
 This DataObject subclass represents a record in the ``
@@ -144,7 +152,54 @@ the protocol, and also automatically resolves trades every 5 minutes using a tim
 None of this class's members are public, because they don't need to be accessed outside the package.
 It has string constants for useful queries
 
-It has some package-private members accessed by ServerGUI
+It has some package-private members accessed by ServerGUI and its unit tests
+
+Here is the logic followed by trade reconciliation. Note that the seller's unit's inventory of the sold asset and the
+buyer's unit's credit balance were reduced by the appropriate amounts when the orders were placed, so no reduction
+of balance or inventory takes place at resolution time, and transactions with a price difference result in
+the buyer's unit being refunded the difference. Also note that the database connection should have autocommit off
+so that the entire transaction can be rolled back if an error occurs
+
+* Save the current date and time in `now`. This timestamp will be used for all orders resolved in this session.
+* Declare tracking variables used to display information about the resolution session
+* For each asset in the database: 
+    * Save the asset ID in `asset`
+    * Retrieve the list of all sell orders (ordered from oldest to newest), and the list of all buy orders 
+      (also ordered from oldest to newest). For convenience, this program uses queries with a join tp retrieve
+      the name of the buying/selling user's orgunit. It should be impossible for a user with null orgunit to own
+      any buy or sell orders, but just in case, the query also specifies the exclusion of rows with null unit.
+    * Define local int collection `ignoredBuys` as empty. This collection contains the IDs of all buy orders 
+      that were resolved earlier in the session; this way, we only need to query the table for outstanding buys
+      at the start of each asset rather than at the start of each sell order
+    * For each sell order in the list:
+        * Save the order's quantity in local variable `sellQty`. (for readability my program also saves the order's 
+          other properties in `sellID`, `sellPrice` and `sellUnit`, but the quantity is the only one which NEEDS a 
+          variable, so that the quantity for comparison accurately reflects)
+        * Iterate over the asset's list of buy orders from the start.
+        * For each buy order:
+            * For readability, my program saves its properties in `buyID`, `buyPrice`, `buyQty`, `buyUnit`
+            * Check if the order's ID is referenced in `ignoredBuys`. If so, move on to the next one
+            * If `buyPrice >= sellPrice && buyQty <= sellQty`:
+                * The transaction can be resolved! This involves two variable mutations and 4-5 SQL queries.
+                  These SQL queries are executed directly via prepared statements
+                * Reduce `sellQty` by `buyQty`
+                * Add `buyID` to `ignoredBuys`
+                * Execute an UPDATE on buyorder: set the price, dateResolved and boughtFrom columns of buyorder `buyID`
+                  to `sellPrice`, `now`, and `sellID` (the price is changed because buy orders are used to represent
+                  transactions, so resolved buy orders should store the price at which the sale actually happened)
+                * Execute an UPDATE on sellorder: set the quantity column of sellorder `sellID` to the new value of
+                  `sellQty`, and if `sellQty` now equals zero, set dateResolved to `now` (if not, leave it null)
+                * Execute an UPDATE on orgunit: increase the credits of `sellUnit` by `sellPrice * buyQty`
+                * If the prices were different, execute another UPDATE on orgunit: increase the credits of
+                  `buyUnit` by `(buyPrice-sellPrice)*buyQty` to refund the difference from the deduction upon order placement
+                * Execute an INSERT ON DUPLICATE KEY UPDATE on Inventories: attempt to insert an inventory record 
+                  for `buyUnit` and `asset` with quantity `buyQty`; if a record for this unit-asset combo
+                  already exists, SQL will instead increase the quantity by `buyQty`
+                * Commit the database connection now that all the queries have executed successfully; 
+                  there is a try/catch around this whole thing that does a rollback if a SQLException occurs 
+                * Update tracking variables
+
+Non-private methods:
 
 
 
@@ -171,7 +226,7 @@ The line types encode this information about the relations in the database:
 This table is used to store user data. It has four columns:
 - Username (string, PK)
 - Password (string)
-- OrgUnit (string, FK referencing OrgUnit.OrgUnitName)
+- OrgUnit (string, FK referencing OrgUnit.OrgUnitName, ON DELETE SET NULL )
 - AdminAccess (boolean)
 - SaltString (string)
 
@@ -236,16 +291,35 @@ so it makes the most sense to model it like this.
 This is where client execution will start. For debug purposes, if run with an args array containing only "MOCK", the
 mock database will be used instead of the real one.
 ###TradingAppGUI
-This is the GUI class. It is a Swing GUI containint the following pages:
+This is the GUI class. It is a Swing GUI containing the following:
+* A menu bar 
 * A login page to enter credentials
-* User homepage, accessible by both users and admins, containing:
-    *
-* Admin homepage, accessible to only admins, containing:
-    *
+* Popups happen when there is an error
+* Homepage, accessible by both users and admins, containing:
+    * Info on user's unit's holdings
+    * Info on all assets
+* "Admin home" page, accessible to only admins, containing:
+    * Bar with user search, containing buttons "create new user" and "view/modify selected" which go to different
+    configurations of the user editing page
+    * Bar with orgunit search, containing buttons "create new organisational unit", "view/modify selected" 
+      (both go to configurations of the unit editing page),
+        "view selected unit's holdings", "view all holdings by unit" (go to inventory editing page)
+    * Bar with asset search, containing buttons "create new asset", "view/modify selected"
+      (both go to asset editing page), "view holdings of selected asset"
 * Asset page
+    * Buttons to generate graph for each time unit
 * "Place order" page
-* "My orders" page
-* PAGES FOR ADMINS HERE
+* Order editing page
+* "View orders" page
+    * Toggle available between "me", "my unit", "everyone" 
+    * Toggle available between "buy", "sell"
+    * Toggle available between "outstanding", "resolved" 
+    * for users, "edit/delete" button is available only in "me">"outstanding" views (TODO: CHECK NEVER NEGATIVE AND ADD LOGIC FOR USER/ASSET CHANGE)
+    * for admins, it's available in all views
+* User editing page
+* Asset editing page
+* Unit editing page
+* Inventory editing page
 
 ##GuiSearch
 
@@ -261,4 +335,38 @@ This is the back end of the client program. It communicates with the server usin
 the class "MockDataSource" which implements the same interface as this class and imitates its I/O behaviour
 but uses a class of six Java collections to store data rather than the database.
 
-It has the following public methods, which are used by TradingAppData:
+NetworkDataSource has the following public methods, which are used by TradingAppData:
+
+#TODO
+*Finish this document
+* Fix the class diagram
+  -[ ] fix arrows
+  -[ ] add enums and database shape
+  -[ ] add interface shape
+  -[ ] add method lists to data source and data
+* Ensure TradingAppData functions correctly
+* FIRST PRIORITY: implement GUI pages as specified
+  -[ ] write methods for error displaying
+  -[ ] admin can go to holdings
+  -[ ] non-held assets are shown
+  -[ ] change own password page available from menu bar
+  -[ ] admin home has unit and asset bars
+  -[ ] unit editing page (can change credits)
+  -[ ] asset editing page (can change description)
+  -[ ] user editing page with password box and unit dropdown and access radio
+  -[ ] inventory editing page
+  -[ ] place order page
+  -[ ] order editing page
+  -[ ] order list page (shell)
+  -[ ] order list toggles
+  -[ ] order list interaction buttons
+  -[ ]
+*[ ] SECOND PRIORITY: have socket and hostname read from a file
+* THIRD PRIORITY: implement GUI content and protocol contingency for resolution notification
+    * third type of SPECIAL query, executed at data source setup, returning the number of seconds until the next res time
+    * Swing timer: every 5 minutes, with an initial delay of slightly more than this number to account for slowness, get 
+      `buyOrdersResolvedBetween(now.minusMinutes(5), now)` and `sellOrdersResolvedBetween(now.minusMinutes(5), now)`
+      and also refresh db info on current screen
+    * Logic to generate user-friendly summary
+    * display mini summary in a row of the screen, clickable to view full summary
+*[ ] FOURTH PRIORITY: implement graph view
