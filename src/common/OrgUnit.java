@@ -6,25 +6,26 @@ import java.util.Set;
 
 public class OrgUnit extends DataObject implements Comparable<OrgUnit> {
 
-    private String orgName;
+    private final String orgName;
     private Integer orgCredits;
     static int minBalance = 0;
 
     /***
-     * Constructor for creating new org units.
+     * Constructor for creating new org units with default credits of 0.
      * @param orgName the name of the org unit
      */
-    public OrgUnit(String orgName) {
-        this.orgName = orgName;
-        this.orgCredits = 0;
+    public OrgUnit(String orgName) throws IllegalString {
+        this(orgName, minBalance);
     }
 
     /**
-     * Constructor for org units retrieved from the database.
+     * Constructor which includes the credits number
      * @param orgName the name
      * @param credits the credits value found
      */
-    public OrgUnit(String orgName, int credits) {
+    public OrgUnit(String orgName, int credits) throws IllegalString {
+        if (orgName.length() > 30) throw new IllegalString("'%s' exceeds the maximum organisational unit" +
+                "name length of 30. Please try again.", orgName);
         this.orgName = orgName;
         this.orgCredits = credits;
     }
@@ -36,16 +37,6 @@ public class OrgUnit extends DataObject implements Comparable<OrgUnit> {
     public String getName() {
         return orgName;
     }
-
-    /***
-     * Setter method for the org unit name.
-     * (for future changes / typo during during creation).
-     * @param newName new org unit name as a string
-     */
-    public void setName(String newName) {
-        this.orgName = newName;
-    }
-
     /***
      * Getter method for the org unit's credits balance.
      * @return credit balance

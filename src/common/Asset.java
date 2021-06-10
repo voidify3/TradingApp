@@ -18,7 +18,7 @@ import java.util.stream.IntStream;
  */
 public class Asset extends DataObject {
     // INSTANCE VARIABLES-----------------------------------------------------------------------------------------------
-    private int id;
+    private final int id;
     private String description;
 
     // CONSTRUCTORS------------------------------------------------------------------------------------------------------
@@ -35,8 +35,10 @@ public class Asset extends DataObject {
         this.description = description;
     }
 
-    public Asset(String description) {
-        this.id=0;
+    public Asset(String description) throws IllegalString {
+        if (description.length() > 60) throw new IllegalString("Asset description %s exceeds the maximum length" +
+                "of 60. Please try again", description);
+        this.id = 0;
         this.description = description;
     }
 
@@ -47,24 +49,21 @@ public class Asset extends DataObject {
      */
     public String getDescription() { return description; }
 
+
     /***
      * Method used to get the assets ID
      * @return assetID
      */
     public int getId() { return id; }
 
-    public void setId(int id) {
-        this.id = id;
-    }
+
 
     /***
      * Method used to get the assets ID as a string
      * @return String
      */
     public String getIdString() {
-        Integer id = this.id;
-        String idString = id.toString();
-        return idString;
+        return Integer.toString(this.id);
     }
 }
 

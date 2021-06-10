@@ -77,8 +77,7 @@ public class MockDatabase {
     }
 
     public int addAsset(Asset data) {
-        data.setId(nextAssetID++);
-        allAssets.add(data);
+        allAssets.add(new Asset(nextAssetID++, data.getDescription()));
         return 1;
     }
 

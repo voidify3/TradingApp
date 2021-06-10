@@ -1,6 +1,8 @@
 package ServerSide;
 
 import common.*;
+import common.Exceptions.IllegalString;
+
 import static common.DatabaseTables.*;
 import static common.ProtocolKeywords.*;
 
@@ -221,19 +223,19 @@ class NetworkServer {
             {
                 handleRequest(command, info, objectOutputStream);
             }
-            catch (SQLException e) {
+            catch (SQLException | IllegalString e) {
                 e.printStackTrace();
             }
 
         }
     }
 
-    private void handleRequest(ProtocolKeywords keyword, DataPacket info, ObjectOutputStream out) throws IOException, SQLException {
+    private void handleRequest(ProtocolKeywords keyword, DataPacket info, ObjectOutputStream out) throws IOException, SQLException, IllegalString {
         if (keyword == ProtocolKeywords.SELECT) out.writeObject(handleSelect(info));
         else out.writeObject(handleNonselect(keyword, info));
     }
 
-    private ArrayList<DataObject> handleSelect(DataPacket info) throws SQLException {
+    private ArrayList<DataObject> handleSelect(DataPacket info) throws SQLException, IllegalString {
         ArrayList results = new ArrayList<>();
         String queryString = String.format(GENERIC_SELECT, info.table.getName(), info.filter,
                 info.table.getColumns()[0], info.table.getColumns()[1]);
@@ -248,7 +250,7 @@ class NetworkServer {
         }
         return results;
     }
-    private ArrayList<OrgUnit> populateUnits(ResultSet r) throws SQLException {
+    private ArrayList<OrgUnit> populateUnits(ResultSet r) throws SQLException, IllegalString {
         ArrayList<OrgUnit> output = new ArrayList<>();
         while (r.next()) {
             output.add(new OrgUnit(r.getString(1), r.getInt(2)));
@@ -620,7 +622,7 @@ class NetworkServer {
      * @param info DataPacket of query
      * @return ArrayList of results
      */
-    ArrayList<DataObject> simulateSelect(DataPacket info) throws SQLException {
+    ArrayList<DataObject> simulateSelect(DataPacket info) throws SQLException, IllegalString {
         return handleSelect(info);
     }
 

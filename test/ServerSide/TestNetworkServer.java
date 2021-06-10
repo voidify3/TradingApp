@@ -54,7 +54,7 @@ public class TestNetworkServer {
         //server.start();
     }
     @Test
-    void failInsert() throws IOException, SQLException {
+    void failInsert() throws IOException, SQLException, IllegalString {
         assertEquals(0, server.simulateNonselect(INSERT,
                 new DataPacket(UNIT, null, new OrgUnit(TEST_ORG_1), false)));
         //should give 0

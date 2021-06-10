@@ -38,6 +38,8 @@ public class User extends DataObject {
         } else {
             throw new IllegalString("Username '%s' must be letters only. Please try again.", username);
         }
+        if (usernameLC.length() > 30) throw new IllegalString("Username '%s' is too long. " +
+                "Maximum username length is 30 characters. Please try again.", username);
 
         this.name = usernameLC;
         this.adminAccess = adminAccess;
