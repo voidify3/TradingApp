@@ -59,6 +59,7 @@ public class TradingAppGUI {
     // Shell panel & widgets
     JPanel shellPanel = new JPanel();
     JButton homeButton = new JButton("Home");
+    JButton holdingsButton = new JButton("Holdings");
     JButton searchButton = new JButton("Search");
     JLabel welcomeLabel = new JLabel("Welcome back (username)", SwingConstants.CENTER);
 
@@ -248,22 +249,42 @@ public class TradingAppGUI {
 
         homeButton.setToolTipText("Go to the home screen");
         searchButton.setToolTipText("Go to the search screen");
-        welcomeLabel.setText(String.format("Welcome back %s!", user.getUsername()));
-        orgUnitLabel.setText(user.getUnit().toUpperCase());
+        holdingsButton.setToolTipText("View holdings of my organisational unit");
+        String unitText, creditsText;
+        if (user.getUnit() != null) {
+            unitText = user.getUnit();
+            try {
+                creditsText = String.format("Your organisational unit has %d credits and the following holdings:",
+                        data.getUnitByKey(user.getUnit()).getCredits());
+            } catch (DoesNotExist doesNotExist) {
+                doesNotExist.printStackTrace();
+                creditsText = "";
+            }
+        } else {
+            unitText = "No organisational unit";
+            creditsText = "";
+        }
+        welcomeLabel.setText(String.format("Welcome back %s!", user.getUsername()) + creditsText);
+        orgUnitLabel.setText(unitText.toUpperCase());
 
         shellPanel.setBorder(new EmptyBorder(30, 40, 30, 40));
         shellPanel.setLayout(new BoxLayout(shellPanel, BoxLayout.PAGE_AXIS));
 
         JPanel row1 = new JPanel();
+        JPanel leftButtons = new JPanel();
+        JPanel rightButtons = new JPanel();
         // keeps row 1 fixed in height so no matter what the content is (a table, buttons, graphs)
         // it won't change sizes (sometimes takes up most of the screen!)
         row1.setBackground(Color.decode(WHITE));
         row1.setBorder(BorderFactory.createEtchedBorder(EtchedBorder.RAISED));
         row1.setMaximumSize(new Dimension(WIDTH, 50));
         row1.setLayout(new BorderLayout());
-        row1.add(homeButton, BorderLayout.WEST);
+        leftButtons.add(homeButton);
+        if (user.getAdminAccess()) leftButtons.add(holdingsButton);
+        rightButtons.add(searchButton);
+        row1.add(leftButtons, BorderLayout.WEST);
         row1.add(orgUnitLabel, BorderLayout.CENTER);
-        row1.add(searchButton, BorderLayout.EAST);
+        row1.add(rightButtons, BorderLayout.EAST);
 
         JPanel row2 = new JPanel();
         row2.setBackground(Color.decode(WHITE));
@@ -314,7 +335,7 @@ public class TradingAppGUI {
                 if (user.getAdminAccess()) {
                     shellPanel(adminHome(), true);
                 } else {
-                    shellPanel(userHome(), true);
+                    shellPanel(home(), true);
                 }
             } catch (DoesNotExist | IllegalString ex) {
                 ex.printStackTrace();
@@ -327,7 +348,7 @@ public class TradingAppGUI {
         // Panels with the content to be passed into the shell template-----------------------------------------------------
 
         // Puts the user home content in the shell panel
-        JPanel userHome() throws DoesNotExist {
+        JPanel home() throws DoesNotExist {
             // Table Panel
             userHome = new JPanel();
             userHome.setPreferredSize(new Dimension(600,275));
@@ -335,8 +356,7 @@ public class TradingAppGUI {
             String[] columnNames = { "Asset ID", "Description", "Qty", "$ Current"};
             String[][] data = new String[0][4];
             //For every inventory record of the logged-in user's org unit...
-            ArrayList<InventoryRecord> yourInvs = TradingAppGUI.this.data.getInventoriesByOrgUnit(user.getUnit());
-            if (yourInvs != null) for (InventoryRecord inventoryRecord : yourInvs) {
+            if (user.getUnit() != null) for (InventoryRecord inventoryRecord : TradingAppGUI.this.data.getInventoriesByOrgUnit(user.getUnit())) {
                 //Get information on the asset of the inventory record
                 int assetID = inventoryRecord.getAssetID();
                 Asset asset = TradingAppGUI.this.data.getAssetByKey(inventoryRecord.getAssetID());
@@ -476,9 +496,9 @@ public class TradingAppGUI {
         // Dev master key to bypass login for testing (goes straight to user home)
         void masterUserKeyListener() {
             masterUserKey.addActionListener(e -> {
-                user = data.userDev;
+                user = TradingAppData.userDev;
                 try {
-                    shellPanel(userHome(), true);
+                    shellPanel(home(), true);
                 } catch (DoesNotExist doesNotExist) {
                     doesNotExist.printStackTrace();
                 }
@@ -488,7 +508,7 @@ public class TradingAppGUI {
         // Dev master key to bypass login for testing (goes straight to admin home)
         void masterAdminKeyListener() {
             masterAdminKey.addActionListener(e -> {
-                user = data.adminDev;
+                user = TradingAppData.adminDev;
                 shellPanel(adminHome(), true);
             });
         }
@@ -501,14 +521,10 @@ public class TradingAppGUI {
         void homeListener() {
             homeButton.addActionListener(e -> {
                 orgUnitLabel.setText("ORG UNIT HERE");
-                if (user.getAdminAccess()) {
-                    shellPanel(adminHome(), true);
-                } else {
-                    try {
-                        shellPanel(userHome(), true);
-                    } catch (DoesNotExist doesNotExist) {
-                        doesNotExist.printStackTrace();
-                    }
+                try {
+                    shellPanel(home(), true);
+                } catch (DoesNotExist doesNotExist) {
+                    doesNotExist.printStackTrace();
                 }
             });
         }

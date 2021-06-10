@@ -34,9 +34,9 @@ class ServerGUI {
                 @Override
                 public void run() {
                     server.reconcileTrades();
-                    LocalDateTime reconcileTime =  LocalDateTime.now();
                     SwingUtilities.invokeLater(() -> tradeLabel.setText("Trade reconciliation last done "
-                            + reconcileTime.format(DateTimeFormatter.ofLocalizedDateTime(FormatStyle.MEDIUM))));
+                            + server.lastReconciliation.format(
+                                    DateTimeFormatter.ofLocalizedDateTime(FormatStyle.MEDIUM))));
                 }
             }, 0, RECONCILIATION_INTERVAL);
 

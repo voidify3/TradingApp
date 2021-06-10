@@ -77,8 +77,12 @@ public class TradingAppData {
         assetDev1 = new Asset(1, "Test asset for development!");
         assetDev2 = new Asset(2, "Another test asset for development!");
         dataSource.insertUnit(unitDev);
+        dataSource.insertUnit(unitDev2);
         dataSource.insertUser(adminDev);
         dataSource.insertUser(userDev);
+        dataSource.insertUser(userDev2);
+        dataSource.insertUser(userDev3);
+        dataSource.insertUser(userDev4);
         dataSource.insertAsset(assetDev1);
         dataSource.insertAsset(assetDev2);
         dataSource.insertOrUpdateInventory(new InventoryRecord(unitDev.getName(), assetDev1.getId(), 500));
@@ -227,12 +231,17 @@ public class TradingAppData {
         int i = dataSource.deleteSellOrder(id);
         if (i == -1) throw new ConstraintException("Sell order '%i' could not be safely deleted."
                 + "Delete any buy orders which have been reconciled with the order and try again", id);
-
+        if (s.getDateResolved() == null) adjustInventory(unitToReturn, s.getAsset(), s.getQty());
+        //return the assets if it's unresolved
     }
 
-    public void cancelBuyOrder(int id) throws DoesNotExist {
-        //TODO: return the remaining credits
-        if (dataSource.deleteBuyOrder(id) == 0) throw new DoesNotExist("Buy order '%s' not found", id);
+    public void cancelBuyOrder(int id) throws DoesNotExist, InvalidAmount {
+        BuyOrder b = getBuyByKey(id);
+        String unitToReturn = getUserByKey(b.getUser()).getUnit();
+
+        dataSource.deleteBuyOrder(id);
+        if (b.getDateResolved() == null) adjustUnitBalance(unitToReturn, b.getPrice()*b.getQty());
+        //if (dataSource.deleteBuyOrder(id) == 0) throw new DoesNotExist("Buy order '%s' not found", id);
     }
 
     public void deleteInventoryRecord(String unit, int asset) throws DoesNotExist {
@@ -259,7 +268,8 @@ public class TradingAppData {
         OrgUnit unitInQuestion = dataSource.unitByKey(dataSource.userByKey(s.getUser()).getUnit());
         int neededCredits = s.getQty() * s.getPrice();
         if (unitInQuestion.getCredits() < neededCredits) {
-            throw new OrderException(String.format("Insufficient credits- unit %s has %d but %d are needed",
+            throw new OrderException(String.format("Insufficient credits- unit %s has %d but %d are needed to" +
+                            "place this buy order",
                     unitInQuestion.getName(), unitInQuestion.getCredits(), neededCredits));
         } else {
             unitInQuestion.adjustBalance(-s.getQty());
@@ -292,14 +302,12 @@ public class TradingAppData {
 
     public void adjustInventory(String unit, int asset, int adjustment) throws DoesNotExist {
         InventoryRecord i = new InventoryRecord(unit, asset, adjustment);
-        try{i.adjustQuantity(getInv(unit,asset).getQuantity());}
-        catch(DoesNotExist e){
-            throw new DoesNotExist("Unit %s and/or asset %i not found.");
-        }
+        i.adjustQuantity(getInv(unit,asset).getQuantity()); //done this way to just set it to the value if no record exists
         if (dataSource.insertOrUpdateInventory(i) == -1) {
             throw new DoesNotExist("Unit %s and/or asset %i not found.");
         }
     }
+
 
     //UPDATE METHODS--------------------------------------------------------------------
     public void updateUser(User u) throws DoesNotExist {

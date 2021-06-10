@@ -32,8 +32,8 @@ class NetworkServer {
     Connection getConnection() {
         return connection;
     }
-
     private final Connection connection;
+    LocalDateTime lastReconciliation;
     //Create Table scripts for all tables, using table and column names from the enum
     // week 7 address book exercise used as reference for syntax; "from stackoverflow" comment is from that
     static final String CREATE_TABLE_UNIT =
@@ -160,6 +160,7 @@ class NetworkServer {
     private PreparedStatement insertUpdateInv;
     private PreparedStatement insertAdjustInv;
 
+
 /*
     public NetworkServer(JDBCDataSource dataSource) {
         this.dataSource = dataSource;
@@ -221,6 +222,7 @@ class NetworkServer {
 
             try (ObjectOutputStream objectOutputStream = new ObjectOutputStream(socket.getOutputStream());)
             {
+
                 handleRequest(command, info, objectOutputStream);
             }
             catch (SQLException | IllegalString e) {
@@ -514,10 +516,12 @@ class NetworkServer {
     }
 
     void reconcileTrades() {
+        int resolutionCount = 0;
         try {
-            Timestamp now = Timestamp.valueOf(LocalDateTime.now());
+            lastReconciliation = LocalDateTime.now();
+            Timestamp now = Timestamp.valueOf(lastReconciliation);
             ResultSet assets = executeSelectQuery(getAssets);
-            int resolutionCount = 0;
+
             while (assets.next()) {
                 int assetid = assets.getInt(1);
                 String assetdesc = assets.getString(2);
@@ -542,27 +546,27 @@ class NetworkServer {
                                 sellID, sellQty, sellPrice, buyID, buyQty, buyPrice);
                         if (buyQty <= sellQty && buyPrice >= sellPrice) {
                             //System.out.printf("Resolving sell order %d and buy order %d...", sellID, buyID);
-                            int newSellQty = sellQty - buyQty;
-                            int refundAmount = (buyPrice - sellPrice)*buyQty;
-                            int totalPrice = buyQty * sellPrice;
+                            int refundAmount = (buyPrice - sellPrice) * buyQty;
                             resolveBuy.setInt(1, sellPrice);
                             resolveBuy.setTimestamp(2, now);
                             resolveBuy.setInt(3, sellID);
                             resolveBuy.setInt(4, buyID);
                             resolveBuy.execute();
 
-                            sellQty = newSellQty;
+                            sellQty -= buyQty;
 
-                            resolveSell.setInt(1,newSellQty);
-                            if (newSellQty == 0) resolveSell.setTimestamp(2,now);
+                            resolveSell.setInt(1,sellQty);
+                            if (sellQty == 0) resolveSell.setTimestamp(2,now);
                             else resolveSell.setNull(2,Types.TIMESTAMP);
                             resolveSell.setInt(3,sellID);
                             resolveSell.execute();
 
-                            adjustBalance.setInt(1, totalPrice);
+                            int totalPrice = buyQty * sellPrice;
+                            adjustBalance.setInt(1, totalPrice); //total credits gained by seller
                             adjustBalance.setString(2, sellUnit);
                             adjustBalance.addBatch();
-                            if (refundAmount > 0){ //refund the difference if needed
+                            if (buyPrice > sellPrice){
+                                //credits were deducted upon buy order placement, so refund the difference if needed
                                 adjustBalance.setInt(1, refundAmount);
                                 adjustBalance.setString(2, buyUnit);
                                 adjustBalance.addBatch();
@@ -581,13 +585,17 @@ class NetworkServer {
                         else {
                             System.out.println(" Failed to resolve.");
                         }
+                        if (sellQty == 0) break;
                     }
+
                 }
                 System.out.printf("Reconciliation done for asset %d (%s)\n", assetid, assetdesc);
             }
             System.out.printf("Trade reconciliation complete! %d transactions processed\n", resolutionCount);
         } catch (SQLException throwables) {
             throwables.printStackTrace();
+            System.out.printf("Trade reconciliation interrupted by an error. %d transactions were processed.",
+                    resolutionCount);
             try {
                 connection.rollback();
             } catch (SQLException e) {
