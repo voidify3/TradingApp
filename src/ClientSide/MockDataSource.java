@@ -5,6 +5,8 @@ import common.*;
 
 import java.sql.Timestamp;
 import java.util.ArrayList;
+import java.util.Set;
+import java.util.TreeSet;
 
 public class MockDataSource implements TradingAppDataSource {
     MockDatabase db;
@@ -34,6 +36,16 @@ public class MockDataSource implements TradingAppDataSource {
     }
 
     @Override
+    public ArrayList<SellOrder> allSellOrders() {
+        return db.getSellOrders();
+    }
+
+    @Override
+    public ArrayList<BuyOrder> allBuyOrders() {
+        return db.getBuyOrders();
+    }
+
+    @Override
     public InventoryRecord inventoryRecordByKeys(String unit, int asset) {
         return db.getInv(unit, asset);
     }
@@ -56,6 +68,21 @@ public class MockDataSource implements TradingAppDataSource {
     @Override
     public ArrayList<SellOrder> sellOrdersResolvedBetween(Timestamp start, Timestamp end) {
         return db.sellOrdersResolvedBetween(start, end);
+    }
+
+    @Override
+    public ArrayList<SellOrder> sellOrdersReconciledBetween(Timestamp start, Timestamp end) {
+        ArrayList<BuyOrder> b = buyOrdersResolvedBetween(start, end);
+        //using a set because they ignore duplicates
+        Set<Integer> ids = new TreeSet<>();
+        for (BuyOrder o : b) {
+            ids.add(o.getBoughtFrom());
+        }
+        ArrayList<SellOrder> output = new ArrayList<>();
+        for (int i : ids) {
+            output.add(sellOrderByKey(i));
+        }
+        return output;
     }
 
     @Override

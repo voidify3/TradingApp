@@ -7,32 +7,146 @@ import java.util.ArrayList;
 
 public interface TradingAppDataSource {
 
+    /**
+     *
+     * @return ArrayList of all users
+     */
     ArrayList<User> allUsers();
 
+    /**
+     *
+     * @return ArrayList of all OrgUnits
+     */
     ArrayList<OrgUnit> allOrgUnits();
 
+    /**
+     *
+     * @return ArrayList of all assets
+     */
     ArrayList<Asset> allAssets();
 
+    /**
+     *
+     * @return ArrayList of all inventory records
+     */
     ArrayList<InventoryRecord> inventoryList();
 
+    /**
+     *
+     * @return ArrayList of all sell orders
+     */
+    ArrayList<SellOrder> allSellOrders();
+
+    /**
+     *
+     * @return ArrayList of all buy orders
+     */
+    ArrayList<BuyOrder> allBuyOrders();
+
+    /**
+     *
+     * @param unit OrgUnit component of the composite key
+     * @param asset Asset component of the composite key
+     * @return The InventoryRecord object with the requested keys
+     */
     InventoryRecord inventoryRecordByKeys(String unit, int asset);
 
+    /**
+     *
+     * @param username a username
+     * @param resolved Flag describing resolvedness filter:
+     *                 true for "resolved orders only", false for "unresolved orders only",
+     *                 null for "include both resolved and unresolved orders"
+     * @return ArrayList of all sell orders placed by the requested user that meet the resolvedness filter
+     */
     ArrayList<SellOrder> sellOrdersByUser(String username, Boolean resolved);
 
+    /**
+     *
+     * @param assetID an asset ID
+     * @param resolved Flag describing resolvedness filter:
+     *                 true for "resolved orders only", false for "unresolved orders only",
+     *                 null for "include both resolved and unresolved orders"
+     * @return ArrayList of all sell orders for the requested asset that meet the resolvedness filter
+     */
     ArrayList<SellOrder> sellOrdersByAsset(int assetID, Boolean resolved);
 
+    /**
+     *
+     * @param start Start date
+     * @param end End date
+     * @param resolved Flag describing resolvedness filter:
+     *                 true for "resolved orders only", false for "unresolved orders only",
+     *                 null for "include both resolved and unresolved orders"
+     * @return ArrayList of all sell orders with DatePlaced in requested range that meet the resolvedness filter
+     */
     ArrayList<SellOrder> sellOrdersPlacedBetween(Timestamp start, Timestamp end, Boolean resolved);
 
+    /**
+     *
+     * @param start Start date
+     * @param end End date
+     * @return ArrayList of all sell orders with DateResolved in requested range
+     */
     ArrayList<SellOrder> sellOrdersResolvedBetween(Timestamp start, Timestamp end);
 
+    /**
+     *
+     * @param start Start date
+     * @param end End date
+     * @return ArrayList of all sell orders that were involved in transactions during the requested range
+     * i.e. these sell orders are listed as BoughtFrom by buy orders resolved in that range, even if their quantity
+     * was not reduced to zero by the transaction.
+     * The results of this query are a superset to sellOrdersResolvedBetween(start, end)
+     */
+    ArrayList<SellOrder> sellOrdersReconciledBetween(Timestamp start, Timestamp end);
+
+    /**
+     *
+     * @param username a username
+     * @param resolved Flag describing resolvedness filter:
+     *                 true for "resolved orders only", false for "unresolved orders only",
+     *                 null for "include both resolved and unresolved orders"
+     * @return ArrayList of all buy orders placed by the requested user that meet the resolvedness filter
+     */
     ArrayList<BuyOrder> buyOrdersByUser(String username, Boolean resolved);
 
+    /**
+     *
+     * @param assetID an asset ID
+     * @param resolved Flag describing resolvedness filter:
+     *                 true for "resolved orders only", false for "unresolved orders only",
+     *                 null for "include both resolved and unresolved orders"
+     * @return ArrayList of all buy orders for the requested asset that meet the resolvedness filter
+     */
     ArrayList<BuyOrder> buyOrdersByAsset(int assetID, Boolean resolved);
 
+    /**
+     *
+     * @param assetID an asset ID
+     * @param start Start date
+     * @param end End date
+     * @return ArrayList of all buy orders for the asset in question with DateResolved in requested range
+     */
     ArrayList<BuyOrder> buyOrdersByAssetResolvedBetween(int assetID, Timestamp start, Timestamp end);
 
+    /**
+     *
+     * @param start Start date
+     * @param end End date
+     * @param resolved Flag describing resolvedness filter:
+     *                 true for "resolved orders only", false for "unresolved orders only",
+     *                 null for "include both resolved and unresolved orders"
+     * @return ArrayList of all buy orders with DatePlaced in requested range that meet the resolvedness filter
+     */
     ArrayList<BuyOrder> buyOrdersPlacedBetween(Timestamp start, Timestamp end, Boolean resolved);
 
+    /**
+     *
+     * @param start Start date
+     * @param end End date
+     * @return ArrayList of all buy orders with DateResolved in requested range
+     */
     ArrayList<BuyOrder> buyOrdersResolvedBetween(Timestamp start, Timestamp end);
 
     //--Calling selectByValue
@@ -144,8 +258,17 @@ public interface TradingAppDataSource {
     int updateBuyOrder(BuyOrder b);
 
     //---DELETE---
+
+    /**
+     * Reset the data-- delete everything and reset auto-increment keys to 1. Exists for test purposes
+     * @return The total number of records in all tables before the request was executed
+     */
     int debugDeleteEverything();
 
+    /**
+     * Recreate the tables. Does nothing if debugDeleteEverything wasn't just called. Exists for test purposes
+     */
+    void recreate();
     /**
      *
      * @param unit Unit name of intended record
@@ -197,5 +320,4 @@ public interface TradingAppDataSource {
      */
     int deleteSellOrder(int key);
 
-    void recreate();
 }

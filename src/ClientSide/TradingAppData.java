@@ -129,6 +129,10 @@ public class TradingAppData {
         return dataSource.allOrgUnits();
     }
 
+    public ArrayList<BuyOrder> getAllBuys() { return dataSource.allBuyOrders();}
+
+    public ArrayList<SellOrder> getAllSells() {return dataSource.allSellOrders();}
+
     public ArrayList<User> getMembers(OrgUnit unit) throws DoesNotExist {
         return dataSource.usersByUnit(unit.getName());
     }
@@ -202,6 +206,12 @@ public class TradingAppData {
         return dataSource.buyOrdersByUser(username, null);
     }
 
+    //TODO: methods to get the buys resolved in the last session
+    // and the sells affected by it
+
+
+    //DELETE METHODS
+
 
     public void deleteAsset(int id) throws DoesNotExist, ConstraintException {
         int i = dataSource.deleteAsset(id);
@@ -251,6 +261,8 @@ public class TradingAppData {
     }
 
     //INSERT METHODS-----------------------------------------------------
+
+    //TODO: prevent negative price or quantity
     public void placeSellOrder(SellOrder s) throws OrderException, DoesNotExist {
         //OrgUnit unitInQuestion = dataSource.unitByKey(dataSource.userByKey(s.getUsername()).getUnit());
         InventoryRecord inventoryRecord = getInv(
@@ -481,92 +493,6 @@ public class TradingAppData {
                 }
             }
         }
-/*
-        switch (timeInterval) {
-            case DAYS -> {
-                LocalDate endDate = LocalDate.now();
-                LocalDate startDate = endDate;
-                System.out.println("Daily average prices");
-                for (int i = 0; i < days + 1; i++) {
-                    averages.put(startDate, getAveragePrice(startDate, endDate, a));
-                    System.out.println(startDate + " = " + averages.get(startDate));
-                    endDate = startDate.minusDays(1);
-                    startDate = endDate;
-                }
-            }
-            case WEEKS -> {
-
-                LocalDate endDate = LocalDate.now();
-                LocalDate startDate = LocalDate.now(timeZone).
-                        with(TemporalAdjusters.previousOrSame(WeekFields.of(locale).getFirstDayOfWeek()));
-                System.out.println("Weekly average prices between:");
-                for (int i = 0; i <= weeks + 1; i++) {
-                    averages.put(startDate, getAveragePrice(startDate, endDate, a));
-                    System.out.println(startDate + " - " + endDate + " = " + averages.get(startDate));
-
-                    if (startDate.minusDays(1).isBefore(ChronoLocalDate.from(earliestDate)))
-                        break;
-
-                    if (startDate.minusWeeks(1).isAfter(ChronoLocalDate.from(earliestDate))
-                            || startDate.minusDays(1).isAfter(ChronoLocalDate.from(earliestDate)))
-                        endDate = startDate.minusDays(1);
-                    else
-                        endDate = LocalDate.from(earliestDate);
-
-                    if (endDate.minusWeeks(1).isAfter(ChronoLocalDate.from(earliestDate)))
-                        startDate = endDate.minusWeeks(1).plusDays(1);
-                    else
-                        startDate = LocalDate.from(earliestDate);
-                }
-            }
-            case MONTHS -> {
-                LocalDate endDate = LocalDate.now();
-                LocalDate startDate = LocalDate.now().withDayOfMonth(1);
-                System.out.println("Monthly average prices between:");
-                for (int i = 0; i <= months + 1; i++) {
-                    averages.put(startDate, getAveragePrice(startDate, endDate, a));
-                    System.out.println(startDate + " - " + endDate + " = " + averages.get(startDate));
-
-                    if (startDate.minusDays(1).isBefore(ChronoLocalDate.from(earliestDate)))
-                        break;
-
-                    if (startDate.minusMonths(1).isAfter(ChronoLocalDate.from(earliestDate))
-                            || startDate.minusDays(1).isAfter(ChronoLocalDate.from(earliestDate)))
-                        endDate = startDate.minusDays(1);
-                    else
-                        endDate = LocalDate.from(earliestDate);
-
-                    if (endDate.minusMonths(1).isAfter(ChronoLocalDate.from(earliestDate)))
-                        startDate = endDate.withDayOfMonth(1);
-                    else
-                        startDate = LocalDate.from(earliestDate);
-                }
-            }
-            case YEARS -> {
-                LocalDate endDate = LocalDate.now();
-                LocalDate startDate = LocalDate.now().withDayOfYear(1);
-                System.out.println("Yearly average prices between:");
-                for (int i = 0; i <= years + 1; i++) {
-                    averages.put(startDate, getAveragePrice(startDate, endDate, a));
-                    System.out.println(startDate + " - " + endDate + " = " + averages.get(startDate));
-
-                    if (startDate.minusDays(1).isBefore(ChronoLocalDate.from(earliestDate)))
-                        break;
-
-                    if (startDate.minusYears(1).isAfter(ChronoLocalDate.from(earliestDate))
-                            || startDate.minusDays(1).isAfter(ChronoLocalDate.from(earliestDate)))
-                        endDate = startDate.minusDays(1);
-                    else
-                        endDate = LocalDate.from(earliestDate);
-
-                    if (endDate.minusYears(1).isAfter(ChronoLocalDate.from(earliestDate)))
-                        startDate = endDate.withDayOfYear(1);
-                    else
-                        startDate = LocalDate.from(earliestDate);
-                }
-            }
-        }
-*/
         return averages;
     }
 

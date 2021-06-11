@@ -23,7 +23,8 @@ public class NetworkDataSource implements TradingAppDataSource {
 
 
     public NetworkDataSource() {
-        //Ping server, exception if fail
+        //Send special request type 3
+        //Save the number
     }
 
     //-------------ATOMIC QUERY EXECUTORS--------------
@@ -91,13 +92,11 @@ public class NetworkDataSource implements TradingAppDataSource {
             //TODO: do something better to signal the server is down
         }
     }
+    //--------------QUERY TYPE HELPERS-----------------
 
     private int requestSpecial(String info) {
         return requestNonselect(SPECIAL, new DataPacket(null, info, null, null));
     }
-
-
-    //--------------QUERY TYPE HELPERS-----------------
     private ArrayList<DataObject> select(DatabaseTables table, String filter) {
         return requestSelect(new DataPacket(table, filter, null, null));
     }
@@ -167,11 +166,13 @@ public class NetworkDataSource implements TradingAppDataSource {
         return column + "=" + value;
     }
     private String filterBetween(String column, String value1, String value2) {
-        return column + " BETWEEN " + value1 + " AND " + value2;
+        return String.format("%s BETWEEN %s AND %s", column, value1, value2);
+        //return column + " BETWEEN " + value1 + " AND " + value2;
     }
     private String orderResolvedFilter(Boolean resolvedFlag) {
         if (resolvedFlag == null) return "";
-        return " AND DateResolved IS " + (resolvedFlag? "NOT " : "") + "NULL";
+        return String.format(" AND %s IS %s NULL", SELL.getColumns()[6], (resolvedFlag? "NOT " : ""));
+        //return " AND " + SELL.getColumns()[6] + " IS " + (resolvedFlag? "NOT " : "") + "NULL";
     }
 
     private String sqlFriendlyString(Timestamp value) {
@@ -180,6 +181,10 @@ public class NetworkDataSource implements TradingAppDataSource {
     }
     private String sqlFriendlyString(String value) {
         return "'" + escapeWildcardsForMySQL(value) + "'";
+    }
+
+    private String innerQuery(String tablename, String column, String filter) {
+        return String.format("(SELECT %s FROM %s WHERE %s)", column, tablename, filter);
     }
 
     private DataObject extractElement(ArrayList<DataObject> a) {
@@ -192,194 +197,91 @@ public class NetworkDataSource implements TradingAppDataSource {
 
     //--Calling select
 
-    /**
-     *
-     * @return ArrayList of all users
-     */
     @Override
     public ArrayList<User> allUsers() {
         return (ArrayList) select(DatabaseTables.USER, BLANK_FILTER);
     }
-
-    /**
-     *
-     * @return ArrayList of all OrgUnits
-     */
     @Override
     public ArrayList<OrgUnit> allOrgUnits() {
         return (ArrayList) select(UNIT, BLANK_FILTER);
     }
-
-    /**
-     *
-     * @return ArrayList of all assets
-     */
     @Override
     public ArrayList<Asset> allAssets() {
         return (ArrayList) select(ASSET, BLANK_FILTER);
     }
-
-    /**
-     *
-     * @return ArrayList of all inventory records
-     */
     @Override
     public ArrayList<InventoryRecord> inventoryList() {
         return  (ArrayList) select(INV, BLANK_FILTER);
     }
+    @Override
+    public ArrayList<SellOrder> allSellOrders() { return (ArrayList) select(SELL, BLANK_FILTER); }
+    @Override
+    public ArrayList<BuyOrder> allBuyOrders() { return (ArrayList) select(BUY, BLANK_FILTER); }
 
-    /**
-     *
-     * @param unit OrgUnit component of the composite key
-     * @param asset Asset component of the composite key
-     * @return The InventoryRecord object with the requested keys
-     */
     @Override
     public InventoryRecord inventoryRecordByKeys(String unit, int asset) {
-        ArrayList<InventoryRecord>  results = (ArrayList) select(INV,
+        ArrayList<DataObject> results = select(INV,
                 filterEquals(INV.getColumns()[0], sqlFriendlyString(unit)) +
                         " AND " + filterEquals(INV.getColumns()[1], valueOf(asset)));
-        if (results.isEmpty()) return null;
-        return results.get(0);
-    }
-
-    /**
-     *
-     * @param username a username
-     * @param resolved Flag describing resolvedness filter:
-     *                 true for "resolved orders only", false for "unresolved orders only",
-     *                 null for "include both resolved and unresolved orders"
-     * @return ArrayList of all sell orders placed by the requested user that meet the resolvedness filter
-     */
+        return (InventoryRecord) extractElement(results); }
     @Override
     public ArrayList<SellOrder> sellOrdersByUser(String username, Boolean resolved) {
         return (ArrayList) select(SELL,
-                filterEquals(SELL.getColumns()[1], sqlFriendlyString(username)) + orderResolvedFilter(resolved));
-    }
-
-    /**
-     *
-     * @param assetID an asset ID
-     * @param resolved Flag describing resolvedness filter:
-     *                 true for "resolved orders only", false for "unresolved orders only",
-     *                 null for "include both resolved and unresolved orders"
-     * @return ArrayList of all sell orders for the requested asset that meet the resolvedness filter
-     */
+                filterEquals(SELL.getColumns()[1], sqlFriendlyString(username)) + orderResolvedFilter(resolved)); }
     @Override
     public ArrayList<SellOrder> sellOrdersByAsset(int assetID, Boolean resolved) {
         return (ArrayList) select(SELL,
-                filterEquals(SELL.getColumns()[2], valueOf(assetID)) + orderResolvedFilter(resolved));
-    }
-
-    /**
-     *
-     * @param start Start date
-     * @param end End date
-     * @param resolved Flag describing resolvedness filter:
-     *                 true for "resolved orders only", false for "unresolved orders only",
-     *                 null for "include both resolved and unresolved orders"
-     * @return ArrayList of all sell orders with DatePlaced in requested range that meet the resolvedness filter
-     */
+                filterEquals(SELL.getColumns()[2], valueOf(assetID)) + orderResolvedFilter(resolved)); }
     @Override
     public ArrayList<SellOrder> sellOrdersPlacedBetween(Timestamp start, Timestamp end, Boolean resolved) {
         return (ArrayList) select(SELL,
                 filterBetween(SELL.getColumns()[5], sqlFriendlyString(start), sqlFriendlyString(end))
-                        + orderResolvedFilter(resolved));
-    }
-
-    /**
-     *
-     * @param start Start date
-     * @param end End date
-     * @return ArrayList of all sell orders with DateResolved in requested range
-     */
+                        + orderResolvedFilter(resolved)); }
     @Override
     public ArrayList<SellOrder> sellOrdersResolvedBetween(Timestamp start, Timestamp end) {
         return (ArrayList) select(SELL,
-                filterBetween(SELL.getColumns()[6], sqlFriendlyString(start), sqlFriendlyString(end)));
-    }
-
-    /**
-     *
-     * @param username a username
-     * @param resolved Flag describing resolvedness filter:
-     *                 true for "resolved orders only", false for "unresolved orders only",
-     *                 null for "include both resolved and unresolved orders"
-     * @return ArrayList of all buy orders placed by the requested user that meet the resolvedness filter
-     */
+                filterBetween(SELL.getColumns()[6], sqlFriendlyString(start), sqlFriendlyString(end))); }
+    @Override
+    public ArrayList<SellOrder> sellOrdersReconciledBetween(Timestamp start, Timestamp end) {
+        return (ArrayList) select(SELL, SELL.getColumns()[0] + "IN" + innerQuery(BUY.getName(), BUY.getColumns()[7],
+                filterBetween(BUY.getColumns()[6], sqlFriendlyString(start), sqlFriendlyString(end)))); }
     @Override
     public ArrayList<BuyOrder> buyOrdersByUser(String username, Boolean resolved) {
         return (ArrayList) select(BUY,
                 filterEquals(BUY.getColumns()[1], sqlFriendlyString(username))
-                        + orderResolvedFilter(resolved));
-    }
-
-    /**
-     *
-     * @param assetID an asset ID
-     * @param resolved Flag describing resolvedness filter:
-     *                 true for "resolved orders only", false for "unresolved orders only",
-     *                 null for "include both resolved and unresolved orders"
-     * @return ArrayList of all buy orders for the requested asset that meet the resolvedness filter
-     */
+                        + orderResolvedFilter(resolved)); }
     @Override
     public ArrayList<BuyOrder> buyOrdersByAsset(int assetID, Boolean resolved) {
         return (ArrayList) select(BUY,
-                filterEquals(BUY.getColumns()[2], valueOf(assetID)) + orderResolvedFilter(resolved));
-    }
-
+                filterEquals(BUY.getColumns()[2], valueOf(assetID)) + orderResolvedFilter(resolved)); }
     @Override
     public ArrayList<BuyOrder> buyOrdersByAssetResolvedBetween(int assetID, Timestamp start, Timestamp end) {
         return (ArrayList) select(BUY,
                 filterEquals(BUY.getColumns()[2], valueOf(assetID)) + " AND "
-                        + filterBetween(BUY.getColumns()[6], sqlFriendlyString(start), sqlFriendlyString(end)));
-    }
-
-    /**
-     *
-     * @param start Start date
-     * @param end End date
-     * @param resolved Flag describing resolvedness filter:
-     *                 true for "resolved orders only", false for "unresolved orders only",
-     *                 null for "include both resolved and unresolved orders"
-     * @return ArrayList of all buy orders with DatePlaced in requested range that meet the resolvedness filter
-     */
+                        + filterBetween(BUY.getColumns()[6], sqlFriendlyString(start), sqlFriendlyString(end))); }
     @Override
     public ArrayList<BuyOrder> buyOrdersPlacedBetween(Timestamp start, Timestamp end, Boolean resolved) {
         return (ArrayList) select(BUY,
                 filterBetween(BUY.getColumns()[5], sqlFriendlyString(start), sqlFriendlyString(end))
-                        + orderResolvedFilter(resolved));
-    }
-
-    /**
-     *
-     * @param start Start date
-     * @param end End date
-     * @return ArrayList of all buy orders with DateResolved in requested range
-     */
+                        + orderResolvedFilter(resolved)); }
     @Override
     public ArrayList<BuyOrder> buyOrdersResolvedBetween(Timestamp start, Timestamp end) {
         return (ArrayList) select(BUY,
-                filterBetween(BUY.getColumns()[6], sqlFriendlyString(start), sqlFriendlyString(end)));
-    }
+                filterBetween(BUY.getColumns()[6], sqlFriendlyString(start), sqlFriendlyString(end))); }
 
     //--Calling selectByValue
     @Override
     public ArrayList<User> usersByUnit(String unit) {
-        return (ArrayList) selectByValue(USER, USER.getColumns()[3], unit);
-    }
+        return (ArrayList) selectByValue(USER, USER.getColumns()[3], unit); }
     @Override
     public ArrayList<InventoryRecord> inventoriesByUnit(String unit) {
-        return (ArrayList) selectByValue(INV, INV.getColumns()[0], unit);
-    }
+        return (ArrayList) selectByValue(INV, INV.getColumns()[0], unit); }
     @Override
     public ArrayList<InventoryRecord> inventoriesByAsset(int asset) {
-        return (ArrayList) selectByValue(INV, INV.getColumns()[1], asset);
-    }
+        return (ArrayList) selectByValue(INV, INV.getColumns()[1], asset); }
     @Override
     public ArrayList<BuyOrder> buyOrdersByBoughtFrom(int sellOrderID) {
-        return (ArrayList) selectByValue(BUY, BUY.getColumns()[7], sellOrderID);
-    }
+        return (ArrayList) selectByValue(BUY, BUY.getColumns()[7], sellOrderID); }
 
     //--Calling selectByKey
     @Override
@@ -394,12 +296,10 @@ public class NetworkDataSource implements TradingAppDataSource {
     public Asset assetByKey(int ID) {
         return (Asset) selectByKey(ASSET, ID);
     }
-
     @Override
     public SellOrder sellOrderByKey(int ID) {
         return (SellOrder) selectByKey(SELL, ID);
     }
-
     @Override
     public BuyOrder buyOrderByKey(int ID) {
         return (BuyOrder) selectByKey(BUY, ID);
@@ -456,71 +356,34 @@ public class NetworkDataSource implements TradingAppDataSource {
     //---DELETE---
     @Override
     public int debugDeleteEverything() {
-        requestSpecial(DROP_PASSWORD);
-        return 1;
+        return requestSpecial(DROP_PASSWORD);
     }
-
+    @Override
     public void recreate() {
         requestSpecial(RECREATE_PASSWORD);
     }
 
-    /**
-     *
-     * @param unit OrgUnit name component of composite key
-     * @param asset Asset ID component of composite key
-     * @return Number of rows affected
-     */
     @Override
     public int deleteInventoryRecord(String unit, int asset) {
         return delete(INV,filterEquals(INV.getColumns()[0], sqlFriendlyString(unit)) +
                 " AND " + filterEquals(INV.getColumns()[1], valueOf(asset)));
     }
-
-    /**
-     *
-     * @param key
-     * @return Number of rows affected
-     */
     @Override
     public int deleteUser(String key) {
         return deleteByKey(USER, key);
     }
-
-    /**
-     *
-     * @param key
-     * @return Number of rows affected
-     */
     @Override
     public int deleteUnit(String key) {
         return deleteByKey(UNIT, key);
     }
-
-    /**
-     *
-     * @param key
-     * @return Number of rows affected
-     */
     @Override
     public int deleteAsset(int key) {
         return deleteByKey(ASSET, key);
     }
-
-    /**
-     *
-     * @param key
-     * @return Number of rows affected
-     */
     @Override
     public int deleteBuyOrder(int key) {
         return deleteByKey(BUY, key);
     }
-
-    /**
-     *
-     * @param key
-     * @return Number of rows affected
-     */
     @Override
     public int deleteSellOrder(int key) {
         return deleteByKey(SELL, key);
