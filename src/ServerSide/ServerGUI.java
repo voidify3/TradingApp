@@ -1,12 +1,13 @@
 package ServerSide;
 
+import common.ProtocolKeywords;
+
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.io.IOException;
 import java.sql.SQLException;
-import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.time.format.FormatStyle;
 import java.util.TimerTask;
@@ -16,7 +17,6 @@ import java.util.TimerTask;
  * Most code borrowed from week 8 address book exercise
  */
 class ServerGUI {
-    final static int RECONCILIATION_INTERVAL = 300000; //milliseconds, equals 5 minutes
     static JLabel tradeLabel = new JLabel("Trade reconciliation not yet performed");
 
     public static void main(String[] args) throws SQLException {
@@ -29,7 +29,6 @@ class ServerGUI {
             server.setupTables();
         }
         try {
-            server.start();
             server.tradeReconciliation.schedule(new TimerTask() {
                 @Override
                 public void run() {
@@ -38,7 +37,8 @@ class ServerGUI {
                             + server.lastReconciliation.format(
                                     DateTimeFormatter.ofLocalizedDateTime(FormatStyle.MEDIUM))));
                 }
-            }, 0, RECONCILIATION_INTERVAL);
+            }, 0, ProtocolKeywords.RECONCILIATION_INTERVAL);
+            server.start();
 
         } catch (IOException e) {
             // In the case of an exception, show an error message and terminate

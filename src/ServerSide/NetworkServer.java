@@ -14,6 +14,7 @@ import java.net.Socket;
 import java.net.SocketTimeoutException;
 import java.sql.*;
 import java.time.LocalDateTime;
+import java.time.temporal.ChronoUnit;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 
@@ -313,15 +314,19 @@ class NetworkServer {
         boolean isUpdate = false;
         if (keyword == SPECIAL) {
             String s = info.filter;
-            if (s.equals(DROP_PASSWORD)) {
-                return resetEverything();
-            }
-            else if (s.equals(RECREATE_PASSWORD)) {
-                setupTables();
-                return 6;
-            }
-            else {
-                return 0;
+            switch (s) {
+                case DROP_PASSWORD:
+                    return resetEverything();
+                case RECREATE_PASSWORD:
+                    setupTables();
+                    return 6;
+                case TRADE_DELAY_PASSWORD:
+                    //get the milliseconds since the last reconciliation
+                    long since = ChronoUnit.MILLIS.between(lastReconciliation, LocalDateTime.now());
+                    return RECONCILIATION_INTERVAL - (int) since;
+                //the number of milliseconds until the next reconciliation
+                default:
+                    return 0;
             }
         }
         else if (keyword == DELETE) {
