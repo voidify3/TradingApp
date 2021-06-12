@@ -1,5 +1,7 @@
 package common;
 
+import java.util.Objects;
+
 public class InventoryRecord extends DataObject {
     private final String unit;
     private final int asset;
@@ -30,5 +32,18 @@ public class InventoryRecord extends DataObject {
 
     public int getAssetID() {
         return asset;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof InventoryRecord)) return false;
+        InventoryRecord that = (InventoryRecord) o;
+        return asset == that.asset && quantity == that.quantity && unit.equals(that.unit);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(unit, asset, quantity);
     }
 }

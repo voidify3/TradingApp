@@ -1,6 +1,7 @@
 package common;
 
 import java.time.LocalDateTime;
+import java.util.Objects;
 
 /**
  * @author Alistair Ridge
@@ -73,6 +74,19 @@ public class Order extends DataObject implements Comparable<Order> {
             return Integer.compare(this.id, o.getId());
         }
         else return this.getDateResolved().compareTo(o.getDateResolved());
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof Order)) return false;
+        Order order = (Order) o;
+        return id == order.id && asset == order.asset && qty == order.qty && price == order.price && user.equals(order.user) && datePlaced.equals(order.datePlaced) && Objects.equals(dateResolved, order.dateResolved);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(id, user, asset, datePlaced, dateResolved, qty, price);
     }
 
     public int getQty() {

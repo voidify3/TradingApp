@@ -217,4 +217,17 @@ public class User extends DataObject {
         return hashedPassword;
     }
 
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof User)) return false;
+        User user = (User) o;
+        return adminAccess == user.adminAccess && name.equals(user.name) && salt.equals(user.salt) && password.equals(user.password) && Objects.equals(unit, user.unit);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(name, salt, password, adminAccess, unit);
+    }
 }

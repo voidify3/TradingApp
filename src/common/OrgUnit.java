@@ -2,6 +2,7 @@ package common;
 
 import common.Exceptions.*;
 import java.util.HashMap;
+import java.util.Objects;
 import java.util.Set;
 
 public class OrgUnit extends DataObject implements Comparable<OrgUnit> {
@@ -80,6 +81,19 @@ public class OrgUnit extends DataObject implements Comparable<OrgUnit> {
     @Override
     public int compareTo(OrgUnit o) {
         return this.orgName.compareTo(o.getName());
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof OrgUnit)) return false;
+        OrgUnit orgUnit = (OrgUnit) o;
+        return orgName.equals(orgUnit.orgName) && orgCredits.equals(orgUnit.orgCredits);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(orgName, orgCredits);
     }
 }
 
