@@ -346,10 +346,11 @@ NetworkDataSource has the following public methods, which are used by TradingApp
 * FIRST PRIORITY: implement GUI pages as specified, adding tradingappdata content and error handling on the way
   -[x] home page/admin portal system  
   -[x] admin home has unit and asset bars
+  -[ ] reset listeners before adding them!!
   -[ ] show all assets page
   -[x] change own password page (available from menu bar)
   -[ ] unit editing page (can change credits)
-  -[ ] asset editing page (can change description)
+  -[x] asset editing page (can change description)
   -[ ] user editing page with password box and unit dropdown and access radio
   -[ ] inventory editing page
   -[ ] place order page

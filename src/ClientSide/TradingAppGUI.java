@@ -23,6 +23,8 @@ import java.util.Arrays;
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import static java.lang.Integer.parseInt;
+
 /***
  * @author Johnny Madigan & Scott Peachey (wrote createAndShowGui, menuBar, resizeImg, loginPanel, shellPanel);
  * Sophia Walsh Long (all other code and the fact that the members aren't static;
@@ -82,7 +84,7 @@ public class TradingAppGUI {
     JLabel orgUnitLabel = new JLabel("ORG UNIT HERE", SwingConstants.CENTER);
     JTable userHoldings = new JTable();
 
-    // Admin portal & widgets
+    // Admin portal & widgets (some also used in edit pages)
     JPanel adminHome = new JPanel();
     JButton newUserButton = new JButton("New user");
     JButton editUserButton = new JButton("Edit selected");
@@ -93,6 +95,9 @@ public class TradingAppGUI {
     JButton newAssetButton = new JButton("New asset");
     JButton editAssetButton = new JButton("Edit selected");
     JButton assetHoldingsButton = new JButton("Holdings");
+    GuiSearch userSearch;
+    GuiSearch unitSearch;
+    GuiSearch assetSearch;
 
     // Asset page & widgets
     JPanel assetPage = new JPanel();
@@ -103,7 +108,19 @@ public class TradingAppGUI {
     JButton buyButton = new JButton("Buy Asset");
     JButton sellButton = new JButton("Sell Asset");
 
-
+    // Edit record form widgets
+    JPanel editRecordPage = new JPanel();
+    JButton saveEditButton = new JButton("Save");
+    JButton saveCreateButton = new JButton("Create");
+    JButton cancelEditButton = new JButton("Discard");
+    JButton deleteButton = new JButton("Delete");
+    JLabel infoLabel = new JLabel();
+    JLabel numberKeyLabel = new JLabel();
+    JTextField stringKeyField = new JTextField(30);
+    JTextField stringField = new JTextField(30);
+    JSpinner numberInput1 = new JSpinner(new SpinnerNumberModel());
+    JSpinner numberInput2 = new JSpinner(new SpinnerNumberModel());
+    JCheckBox adminAccessCheckbox = new JCheckBox();
 
 
 
@@ -187,7 +204,7 @@ public class TradingAppGUI {
     }
 
     // Login screen-----------------------------------------------------------------------------------------------------
-    private void loginPanel() throws AlreadyExists, IllegalString {
+    private void loginPanel() {
         loginPanel = new JPanel(new GridBagLayout()); // reset
 
         JPanel loginBox = new JPanel();
@@ -208,8 +225,6 @@ public class TradingAppGUI {
         invalidLabel.setText(" "); // need space for the label to have a fixed height
         passwordHide.setSelected(false);
 
-
-
         BufferedImage img;
         JLabel bannerLabel = new JLabel();
         try {
@@ -220,12 +235,9 @@ public class TradingAppGUI {
             bannerLabel.setText("STONK MACHINE");
         }
         JPanel login = new JPanel(new GridBagLayout());
-        GridBagConstraints cords = new GridBagConstraints();
+        GridBagConstraints cords = new GridBagConstraints(-1, 1, 1, 1, 0, 0,
+                GridBagConstraints.CENTER, GridBagConstraints.NONE, new Insets(5,5,5,5), 0,0);
         // Position the interactive components (text fields, buttons etc)
-        cords.insets =new Insets(5,5,5,5);
-        cords.gridy = 1;
-        cords.gridx = -1;
-        cords.gridwidth = 1;
         login.add(usernameLabel, cords);
         cords.gridx += 2;
         login.add(usernameInput, cords);
@@ -343,6 +355,28 @@ public class TradingAppGUI {
      */
     private class GuiListeners {
 
+        void displayError(String title, String message) {
+            JOptionPane.showMessageDialog(TradingAppGUI.this.mainFrame,message,
+                    title, JOptionPane.ERROR_MESSAGE);
+        }
+        int displayConfirm(String title, String message) {
+            return JOptionPane.showConfirmDialog(TradingAppGUI.this.mainFrame, message, title, JOptionPane.YES_NO_OPTION);
+        }
+
+        void displayFeedback(String title, String message) {
+            JOptionPane.showMessageDialog(TradingAppGUI.this.mainFrame,message,
+                    title, JOptionPane.PLAIN_MESSAGE);
+        }
+
+        private void doLogin() throws DoesNotExist {
+            shellPanel(home(), true);
+        }
+
+        private void doLogout() throws AlreadyExists, IllegalString {
+            user = null; // reset session user data
+            loginPanel(); // creates & shows login portal
+        }
+
         // Checks login credentials-----------------------------------------------------------------------------------------
         private void checkLogin() {
             // store the user object for the duration of the session (if login was successful)
@@ -360,33 +394,35 @@ public class TradingAppGUI {
         }
 
         private void checkPassChange() {
-            String username = usernameInput.getText();
-            String password = new String(passwordInput.getPassword());
-            String newPassword = new String(newPasswordInput.getPassword());
-            String newPassword2 = new String(confirmNewPasswordInput.getPassword());
-            try {
-                data.login(username, password);
-                if (!newPassword.equals(newPassword2)) {
+            int i = displayConfirm("Confirm password change", "Click yes to confirm password change");
+            if (i == JOptionPane.YES_OPTION){
+                String username = usernameInput.getText();
+                String password = new String(passwordInput.getPassword());
+                String newPassword = new String(newPasswordInput.getPassword());
+                String newPassword2 = new String(confirmNewPasswordInput.getPassword());
+                try {
+                    data.login(username, password);
+                    if (!newPassword.equals(newPassword2)) {
+                        invalidLabel.setForeground(Color.RED);
+                        invalidLabel.setText("New passwords do not match");
+                    } else {
+                        user.changePassword(newPassword);
+                        data.updateUser(user);
+                        passwordInput.setText("");
+                        newPasswordInput.setText("");
+                        confirmNewPasswordInput.setText("");
+                        invalidLabel.setForeground(Color.GREEN);
+                        invalidLabel.setText("Password successfully changed!");
+                    }
+                } catch (DoesNotExist ex) {
+                    ex.printStackTrace();
                     invalidLabel.setForeground(Color.RED);
-                    invalidLabel.setText("New passwords do not match");
+                    invalidLabel.setText("Incorrect current password");
+                } catch (IllegalString ex) {
+                    ex.printStackTrace();
+                    invalidLabel.setForeground(Color.RED);
+                    invalidLabel.setText("Password may not contain whitespace");
                 }
-                else {
-                    user.changePassword(newPassword);
-                    data.updateUser(user);
-                    passwordInput.setText("");
-                    newPasswordInput.setText("");
-                    confirmNewPasswordInput.setText("");
-                    invalidLabel.setForeground(Color.GREEN);
-                    invalidLabel.setText("Password successfully changed!");
-                }
-            } catch (DoesNotExist ex) {
-                ex.printStackTrace();
-                invalidLabel.setForeground(Color.RED);
-                invalidLabel.setText("Incorrect current password");
-            } catch (IllegalString ex) {
-                ex.printStackTrace();
-                invalidLabel.setForeground(Color.RED);
-                invalidLabel.setText("Password may not contain whitespace");
             }
         }
 
@@ -430,12 +466,14 @@ public class TradingAppGUI {
         JPanel adminHome() {
             adminHome = new JPanel();
             adminHome.setLayout(new BoxLayout(adminHome, BoxLayout.PAGE_AXIS));
-            GuiSearch userSearch = new GuiSearch(data.getAllUsernames());
-            GuiSearch unitSearch = new GuiSearch(data.getAllUnitNames());
-            GuiSearch assetSearch = new GuiSearch(data.getAllAssetStrings());
+            userSearch = new GuiSearch(data.getAllUsernames());
+            unitSearch = new GuiSearch(data.getAllUnitNames());
+            assetSearch = new GuiSearch(data.getAllAssetStrings());
             adminHome.add(adminActionRow(new JButton[]{newUserButton, editUserButton, userListButton}, userSearch));
             adminHome.add(adminActionRow(new JButton[]{newUnitButton, editUnitButton, unitHoldingsButton}, unitSearch));
             adminHome.add(adminActionRow(new JButton[]{newAssetButton,editAssetButton,assetHoldingsButton}, assetSearch));
+            adminCreateButtonListeners();
+            adminEditButtonListeners();
             return adminHome;
         }
 
@@ -479,12 +517,9 @@ public class TradingAppGUI {
             invalidLabel.setText(" "); // need space for the label to have a fixed height
             passwordHide.setSelected(false);
             JPanel login = new JPanel(new GridBagLayout());
-            GridBagConstraints cords = new GridBagConstraints();
+            GridBagConstraints cords = new GridBagConstraints(-1, 1, 1, 1, 0, 0,
+                    GridBagConstraints.CENTER, GridBagConstraints.NONE, new Insets(5,5,5,5), 0,0);
             // Position the interactive components (text fields, buttons etc)
-            cords.insets =new Insets(5,5,5,5);
-            cords.gridy = 1;
-            cords.gridx = -1;
-            cords.gridwidth = 1;
             login.add(usernameLabel, cords);
             cords.gridx += 2;
             login.add(usernameInput, cords);
@@ -542,16 +577,56 @@ public class TradingAppGUI {
             return new JPanel();
         }
 
-        JPanel editUserPage(boolean isCreate) {
-            return new JPanel();
+        /**
+         * Load the edit-record page to edit a User record
+         * @param name Username to look up (null if creating a new record)
+         * @return JPanel with all the necessary components
+         */
+        JPanel editUserPage(String name) {
+            editRecordPage = new JPanel();
+            return editRecordPage;
         }
 
-        JPanel editAssetPage(boolean isCreate) {
-            return new JPanel();
+
+        JPanel editAssetPage(String dropdownString) throws DoesNotExist, NumberFormatException {
+            editRecordPage = new JPanel(new GridLayout(3, 1));
+            JPanel rowOne = new JPanel();
+            JPanel rowTwo = new JPanel();
+            JPanel rowThree = new JPanel();
+            int id = 0;
+            Asset old;
+            Asset newValues;
+            resetEditPageButtons();
+            infoLabel.setText("Creating new asset");
+            stringField.setText("");
+            rowOne.add(infoLabel);
+            editRecordPage.add(rowOne);
+            editRecordPage.add(rowTwo);
+            editRecordPage.add(rowThree);
+            rowTwo.add(new JLabel("Asset description:"));
+            rowTwo.add(stringField);
+
+            rowThree.add(cancelEditButton);
+            if (dropdownString != null) {
+                int i = dropdownString.indexOf('(');
+                if (i<1) throw new NumberFormatException();
+                id = parseInt(dropdownString.substring(0, i - 1));
+                old = data.getAssetByKey(id);
+                stringField.setText(old.getDescription());
+                infoLabel.setText("Editing asset ");
+                numberKeyLabel.setText(String.valueOf(id));
+                rowOne.add(numberKeyLabel);
+                rowThree.add(deleteButton);
+                rowThree.add(saveEditButton);
+            }
+            else rowThree.add(saveCreateButton);
+            assetEditPageListeners();
+            return editRecordPage;
         }
 
-        JPanel editUnitPage(boolean isCreate) {
-            return new JPanel();
+        JPanel editUnitPage(String name) {
+            editRecordPage = new JPanel();
+            return editRecordPage;
         }
 
         JPanel editInventoryPage() {
@@ -657,8 +732,7 @@ public class TradingAppGUI {
         void logoutListener() {
             logoutMenu.addActionListener(e -> {
                 try {
-                    user = null; // reset session user data
-                    loginPanel(); // creates & shows login portal
+                    doLogout();
                 } catch (AlreadyExists | IllegalString ex) {
                     ex.printStackTrace();
                 }
@@ -670,7 +744,7 @@ public class TradingAppGUI {
             masterUserKey.addActionListener(e -> {
                 user = TradingAppData.userDev;
                 try {
-                    shellPanel(home(), true);
+                    doLogin();
                 } catch (DoesNotExist doesNotExist) {
                     doesNotExist.printStackTrace();
                 }
@@ -682,7 +756,7 @@ public class TradingAppGUI {
             masterAdminKey.addActionListener(e -> {
                 user = TradingAppData.adminDev;
                 try {
-                    shellPanel(home(), true);
+                    doLogin();
                 } catch (DoesNotExist doesNotExist) {
                     doesNotExist.printStackTrace();
                 }
@@ -728,7 +802,7 @@ public class TradingAppGUI {
                 public void mouseClicked(MouseEvent e) {
                     int row = userHoldings.rowAtPoint(e.getPoint());
                     String asset = userHoldings.getValueAt(row, 1).toString();
-                    shellPanel(assetPage(Integer.parseInt(userHoldings.getValueAt(row, 0).toString())),
+                    shellPanel(assetPage(parseInt(userHoldings.getValueAt(row, 0).toString())),
                             false);
                     orgUnitLabel.setText(asset.toUpperCase());
                     userHome.remove(welcomeLabel);
@@ -768,15 +842,79 @@ public class TradingAppGUI {
             });
         }
 
+        int counter = 0;
         void adminCreateButtonListeners() {
             newUserButton.addActionListener(e->{
-                shellPanel(editUserPage(true), false);
+                shellPanel(editUserPage(null), false);
             });
             newUnitButton.addActionListener(e->{
-                shellPanel(editUnitPage(true), false);
+                shellPanel(editUnitPage(null), false);
             });
             newAssetButton.addActionListener(e->{
-                shellPanel(editAssetPage(true), false);
+                try {
+                    shellPanel(editAssetPage(null), false);
+                } catch (DoesNotExist doesNotExist) {
+                    displayError("Could not load page due to unexpected error", doesNotExist.getMessage());
+                }
+            });
+        }
+        void adminEditButtonListeners() {
+            editAssetButton = new JButton(editAssetButton.getText());
+            editAssetButton.addActionListener(e->{
+                try {shellPanel(editAssetPage((String) assetSearch.getSelectedItem()), false);}
+                catch (NumberFormatException n) {
+                    displayError("Could not load page", "Please select a valid asset option");
+                }
+                catch (DoesNotExist d) {
+                    displayError("Could not load page", d.getMessage());
+                }
+            });
+        }
+
+        void resetEditPageButtons() {
+            saveCreateButton = new JButton(saveCreateButton.getText());
+            cancelEditButton = new JButton(cancelEditButton.getText());
+            saveEditButton = new JButton(saveEditButton.getText());
+        }
+
+        void assetEditPageListeners() {
+            cancelEditButton.addActionListener(e->{
+                    if (displayConfirm("Return to portal?", "Changes will be discarded")
+                            == JOptionPane.YES_OPTION) {
+                        shellPanel(adminHome(), false);
+                    }
+            });
+            saveEditButton.addActionListener(e->{
+                String description = stringField.getText();
+                try {
+                    new Asset(description); //for the check
+                    Asset toSend = new Asset(parseInt(numberKeyLabel.getText()), description);
+                    data.updateAsset(toSend);
+                    displayFeedback("Asset successfully updated", "Click OK to return to admin portal");
+                    shellPanel(adminHome(),false);
+                } catch (IllegalString illegalString) {
+                    displayError("Invalid description", illegalString.getMessage());
+                } catch (DoesNotExist doesNotExist) {
+                    displayError("Unexpected error: " + doesNotExist.getMessage(),
+                            "Someone else probably deleted the asset while you were editing it.\n" +
+                                    "Return to the admin portal and try again");
+                }
+            });
+            saveCreateButton.addActionListener(e->{
+                String description = stringField.getText();
+                try {
+                    Asset toSend = new Asset(description);
+                    data.addAsset(toSend);
+                    counter++;
+                    System.out.println(counter);
+                    displayFeedback("Asset successfully created", "Click OK to return to admin portal");
+                    shellPanel(adminHome(),false);
+                } catch (IllegalString illegalString) {
+                    displayError("Invalid description", illegalString.getMessage());
+                } catch (AlreadyExists alreadyExists) {
+                    displayError("Unexpected error: " + alreadyExists.getMessage(),
+                            "This error should never happen; try again");
+                }
             });
         }
     }
