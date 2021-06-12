@@ -12,7 +12,7 @@ import java.util.List;
  * Inspired by methods from Stack Overflow, these have been modified to suit our app.
  * @see <a href="https://stackoverflow.com/a/28555827"/>
  */
-public class GuiSearch extends JComboBox {
+public class GuiSearch extends JComboBox<String> {
 
     private List<String> entries;
     public List<String> getEntries() {
@@ -20,7 +20,7 @@ public class GuiSearch extends JComboBox {
     }
 
     public GuiSearch(List<String> entries) {
-        super(entries.toArray());
+        super(entries.toArray(new String[0]));
         this.entries = entries;
         this.setEditable(true);
 

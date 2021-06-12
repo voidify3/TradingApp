@@ -115,7 +115,7 @@ The protocol connecting the server and client programs works like this:
   the object field contains the DataObject to insert, and the insertTypeFlag
   field is set to true if the query should be "INSERT UPDATE IF DUPLICATE KEY", false otherwise 
   - For a special debug request, the filter field contains one of the string constants specified in ProtocolKeywords
-  to determine which debug request type to do
+  to determine which special request type to do: drop all tables, rerun create table script, or get time until reconciliation
 * The server runs the desired query and sends back one of two types of feedback:
   - For a SELECT query, an `ArrayList<DataObject>` of the results, sorted by primary key value ascending 
     (for Inventories, primary order by orgunit and secondary by asset)
@@ -303,7 +303,7 @@ This is the GUI class. It is a Swing GUI containing the following:
     configurations of the user editing page
     * Bar with orgunit search, containing buttons "create new organisational unit", "view/modify selected" 
       (both go to configurations of the unit editing page),
-        "view selected unit's holdings", "view all holdings by unit" (go to inventory editing page)
+        "view selected unit's holdings" (go to inventory editing page)
     * Bar with asset search, containing buttons "create new asset", "view/modify selected"
       (both go to asset editing page), "view holdings of selected asset"
 * Asset page
@@ -338,19 +338,16 @@ but uses a class of six Java collections to store data rather than the database.
 NetworkDataSource has the following public methods, which are used by TradingAppData:
 
 #TODO
-*Finish this document
 * Fix the class diagram
   -[ ] fix arrows
   -[ ] add enums and database shape
   -[ ] add interface shape
   -[ ] add method lists to data source and data
-* Ensure TradingAppData functions correctly
-* FIRST PRIORITY: implement GUI pages as specified
-  -[ ] write methods for error displaying
-  -[ ] admin can go to holdings
-  -[ ] non-held assets are shown
-  -[ ] change own password page available from menu bar
-  -[ ] admin home has unit and asset bars
+* FIRST PRIORITY: implement GUI pages as specified, adding tradingappdata content and error handling on the way
+  -[x] home page/admin portal system  
+  -[x] admin home has unit and asset bars
+  -[ ] show all assets page
+  -[x] change own password page (available from menu bar)
   -[ ] unit editing page (can change credits)
   -[ ] asset editing page (can change description)
   -[ ] user editing page with password box and unit dropdown and access radio
@@ -363,10 +360,10 @@ NetworkDataSource has the following public methods, which are used by TradingApp
   -[ ]
 *[ ] SECOND PRIORITY: have socket and hostname read from a file
 * THIRD PRIORITY: implement GUI content and protocol contingency for resolution notification
-    * third type of SPECIAL query, executed at data source setup, returning the number of seconds until the next res time
-    * Swing timer: every 5 minutes, with an initial delay of slightly more than this number to account for slowness, get 
+    *[ ] third type of SPECIAL query, executed at data source setup, returning the number of seconds until the next res time
+    *[ ] Swing timer: every 5 minutes, with an initial delay of slightly more than this number to account for slowness, get 
       `buyOrdersResolvedBetween(now.minusMinutes(5), now)` and `sellOrdersResolvedBetween(now.minusMinutes(5), now)`
       and also refresh db info on current screen
-    * Logic to generate user-friendly summary
-    * display mini summary in a row of the screen, clickable to view full summary
+    *[ ] Logic to generate user-friendly summary
+    *[ ] display mini summary in a row of the screen, clickable to view full summary
 *[ ] FOURTH PRIORITY: implement graph view

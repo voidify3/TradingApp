@@ -54,7 +54,7 @@ public class MockDatabase {
     }
     public int addUser(User data) {
         //FK check
-        if (getUnit(data.getUnit()) == null) return -1;
+        if (data.getUnit() != null && getUnit(data.getUnit()) == null) return -1;
         //Check for duplicates
         for (User user : allUsers) {
             if (user.getUsername().equalsIgnoreCase(data.getUsername())) {

@@ -114,9 +114,14 @@ public class TradingAppData {
     public ArrayList<User> getAllUsers() {
         return dataSource.allUsers();
     }
+    public ArrayList<OrgUnit> getAllUnits() {
+        return dataSource.allOrgUnits();
+    }
+    public ArrayList<Asset> getAllAssets() { return dataSource.allAssets();}
+    public ArrayList<BuyOrder> getAllBuys() { return dataSource.allBuyOrders();}
+    public ArrayList<SellOrder> getAllSells() {return dataSource.allSellOrders();}
 
     public ArrayList<String> getAllUsernames() {
-
         ArrayList<User> users = dataSource.allUsers();
         ArrayList<String> output = new ArrayList<>();
         for (User u : users) {
@@ -124,14 +129,22 @@ public class TradingAppData {
         }
         return output;
     }
-
-    public ArrayList<OrgUnit> getAllUnits() {
-        return dataSource.allOrgUnits();
+    public ArrayList<String> getAllUnitNames() {
+        ArrayList<OrgUnit> units = dataSource.allOrgUnits();
+        ArrayList<String> output = new ArrayList<>();
+        for (OrgUnit u : units) {
+            output.add(u.getName());
+        }
+        return output;
     }
-
-    public ArrayList<BuyOrder> getAllBuys() { return dataSource.allBuyOrders();}
-
-    public ArrayList<SellOrder> getAllSells() {return dataSource.allSellOrders();}
+    public ArrayList<String> getAllAssetStrings() {
+        ArrayList<Asset> assets = dataSource.allAssets();
+        ArrayList<String> output = new ArrayList<>();
+        for (Asset a : assets) {
+            output.add(String.format("%d (%s)", a.getId(), a.getDescription()));
+        }
+        return output;
+    }
 
     public ArrayList<User> getMembers(OrgUnit unit) throws DoesNotExist {
         return dataSource.usersByUnit(unit.getName());
