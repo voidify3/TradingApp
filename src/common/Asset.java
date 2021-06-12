@@ -33,8 +33,11 @@ public class Asset extends DataObject {
     }
 
     public Asset(String description) throws IllegalString {
-        if (description.length() > 60) throw new IllegalString("Asset description %s exceeds the maximum length" +
-                "of 60. Please try again", description);
+        if (description.length() > 60) {
+            throw new IllegalString("Asset description exceeds the maximum length of 60. Please try again");
+        } else if (description.trim().equals("")) {
+            throw new IllegalString("Asset description should not be empty or all whitespace");
+        }
         this.id = 0;
         this.description = description;
     }
