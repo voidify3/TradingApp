@@ -8,6 +8,9 @@ public class OrderException extends Exception {
     public OrderException(String message) {
         super(message);
     }
+    public OrderException(String message, Object... args) {
+        super(String.format(message,args));
+    }
 
     public OrderException(String message, Throwable cause) {
         super(message, cause);

@@ -280,8 +280,10 @@ public class TradingAppData {
         //OrgUnit unitInQuestion = dataSource.unitByKey(dataSource.userByKey(s.getUsername()).getUnit());
         InventoryRecord inventoryRecord = getInv(
                 getUserByKey(s.getUser()).getUnit(), s.getAsset());
-        if (inventoryRecord.getQuantity() < s.getQty()) {
-            throw new OrderException("Insufficient quantity of asset");
+        int quantity = inventoryRecord.getQuantity();
+        if (quantity < s.getQty()) {
+            throw new OrderException("Insufficient quantity of asset- unit %s has %d but %d are needed to" +
+                    "place this order", inventoryRecord.getUnitName(), quantity, s.getQty());
         } else {
             inventoryRecord.setQuantity(inventoryRecord.getQuantity() - s.getQty());
             dataSource.insertOrUpdateInventory(inventoryRecord);
@@ -293,9 +295,9 @@ public class TradingAppData {
         OrgUnit unitInQuestion = dataSource.unitByKey(dataSource.userByKey(s.getUser()).getUnit());
         int neededCredits = s.getQty() * s.getPrice();
         if (unitInQuestion.getCredits() < neededCredits) {
-            throw new OrderException(String.format("Insufficient credits- unit %s has %d but %d are needed to" +
+            throw new OrderException("Insufficient credits- unit %s has %d but %d are needed to" +
                             "place this buy order",
-                    unitInQuestion.getName(), unitInQuestion.getCredits(), neededCredits));
+                    unitInQuestion.getName(), unitInQuestion.getCredits(), neededCredits);
         } else {
             unitInQuestion.adjustBalance(-s.getQty());
             dataSource.updateUnit(unitInQuestion);
