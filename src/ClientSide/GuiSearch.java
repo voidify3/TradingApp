@@ -23,6 +23,7 @@ public class GuiSearch extends JComboBox<String> {
         super(entries.toArray(new String[0]));
         this.entries = entries;
         this.setEditable(true);
+        this.setSelectedItem(null);
 
         final JTextField textfield = (JTextField) this.getEditor().getEditorComponent();
 
