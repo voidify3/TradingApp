@@ -337,33 +337,50 @@ but uses a class of six Java collections to store data rather than the database.
 
 NetworkDataSource has the following public methods, which are used by TradingAppData:
 
+...
+
 #TODO
-* Fix the class diagram
-  -[ ] fix arrows
-  -[ ] add enums and database shape
-  -[ ] add interface shape
-  -[ ] add method lists to data source and data
+
+* Fix the class diagram (ensure arrows are correct)
+  - [ ] add package shapes 
+  - [ ] add enums and database shape
+  - [ ] add data interface shape
+  - [ ] add method lists to data source and data
+  - [ ] update to reflect GUI structure  
 * FIRST PRIORITY: implement GUI pages as specified, adding tradingappdata content and error handling on the way
-  -[x] home page/admin portal system  
-  -[ ] convert home page
-  -[ ] convert change password page
-  -[ ] convert shell panel?
-  -[x] admin home has unit and asset bars
-  -[ ] show all assets page
-  -[x] change own password page (available from menu bar)
-  -[x] unit editing page (can change credits)
-  -[x] asset editing page (can change description)
-  -[x] user editing page with password box and unit dropdown and access radio
-  -[ ] inventory editing page
-  -[x] place order page (asset dropdown, quantity spinner, price spinner)
-  -[x] place sell order page
-  -[x] order list page
-*[ ] SECOND PRIORITY: have socket and hostname read from a file
+  - [x] home page/admin portal system 
+  - [x] admin home has unit and asset bars
+  - [x] change own password page (available from menu bar)
+  - [x] unit editing page (can change credits)
+  - [x] asset editing page (can change description)
+  - [x] user editing page with password box and unit dropdown and access radio
+  - [x] place order page (asset dropdown, quantity spinner, price spinner)
+  - [x] place sell order page
+  - [x] convert home page 
+  - [ ] branch off for GUI changes
+  - [x] order list page
+    - [ ] order list toggles
+    - [ ] order list clickthrough
+  - [ ] asset list page class
+    - [ ] clickthrough to info page
+  - [ ] inventory list page class
+    - [ ] search boxes and radio buttons
+    - [ ] clickthrough to an input dialog 
+* PRIORITY 1.5:
+  - [ ] JavaDoc for TradingAppData
+  - [ ] unit tests for TradingAppData
+  - [ ] unit test file for object class AssertThrows cases
+  - [ ] convert change password page
+  - [ ] convert login page
+  - [ ] convert shell panel
+  - [ ] `TradingAppGUI extends JFrame`
+  - [ ] Fix order placing problems
+* [ ] SECOND PRIORITY: have socket and hostname read from a file
 * THIRD PRIORITY: implement GUI content and protocol contingency for resolution notification
-    *[ ] third type of SPECIAL query, executed at data source setup, returning the number of seconds until the next res time
-    *[ ] Swing timer: every 5 minutes, with an initial delay of slightly more than this number to account for slowness, get 
+  * [ ] third type of SPECIAL query, executed at data source setup, returning the number of seconds until the next res time
+  * [ ] Swing timer: every 5 minutes, with an initial delay of slightly more than this number to account for slowness, get 
       `buyOrdersResolvedBetween(now.minusMinutes(5), now)` and `sellOrdersResolvedBetween(now.minusMinutes(5), now)`
       and also refresh db info on current screen
-    *[ ] Logic to generate user-friendly summary
-    *[ ] display mini summary in a row of the screen, clickable to view full summary
-*[ ] FOURTH PRIORITY: implement graph view
+  * [ ] Logic to generate user-friendly summary
+  * [ ] display mini summary in a row of the screen, clickable to view full summary
+* [ ] FOURTH PRIORITY: implement graph view
