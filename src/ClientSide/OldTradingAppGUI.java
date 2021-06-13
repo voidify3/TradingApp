@@ -30,7 +30,8 @@ import static java.lang.Integer.parseInt;
  * Sophia Walsh Long (all other code and the fact that the members aren't static;
  * above methods have also been refactored)
  */
-public class TradingAppGUI {
+@Deprecated
+public class OldTradingAppGUI {
 
     // Logged in user for the session
     private User user = null;
@@ -124,11 +125,11 @@ public class TradingAppGUI {
 
 
 
-    public TradingAppGUI(TradingAppData data) throws InvalidPrice, InvalidDate, IOException, DoesNotExist, AlreadyExists, IllegalString, InvalidAmount, OrderException {
+    public OldTradingAppGUI(TradingAppData data) {
         this.data = data;
     }
 
-    void createAndShowGUI() throws IllegalString, AlreadyExists, IOException, DoesNotExist, InvalidPrice, InvalidDate, InvalidAmount, OrderException {
+    void createAndShowGUI() throws IllegalString, AlreadyExists, IOException, DoesNotExist, InvalidDate, InvalidAmount, OrderException {
         mainFrame.setPreferredSize(new Dimension(WIDTH, HEIGHT));
         mainFrame.setResizable(false);
         mainFrame.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
@@ -277,71 +278,81 @@ public class TradingAppGUI {
     private void shellPanel(JPanel content, boolean includeWelcomeLabel) {
         shellPanel = new JPanel(); // reset
         shellPanel.setBackground(Color.decode(WHITE));
-
-        homeButton.setToolTipText("Go to the home screen");
-        assetsButton.setToolTipText("Go to the search screen");
-        adminButton.setToolTipText("Go to admin portal");
-        String unitText, creditsText;
-        if (user.getUnit() != null) {
-            unitText = user.getUnit();
-            try {
-                creditsText = String.format("Your organisational unit has %d credits and the below holdings:",
-                        data.getUnitByKey(user.getUnit()).getCredits());
-            } catch (DoesNotExist doesNotExist) {
-                doesNotExist.printStackTrace();
+        try { //entire thing needs to be this
+            user = data.getUserByKey(user.getUsername());
+            homeButton.setToolTipText("Go to the home screen");
+            assetsButton.setToolTipText("Go to the search screen");
+            adminButton.setToolTipText("Go to admin portal");
+            String unitText, creditsText;
+            if (user.getUnit() != null) {
+                unitText = user.getUnit();
+                try {
+                    creditsText = String.format("Your organisational unit has %d credits and the below holdings:",
+                            data.getUnitByKey(user.getUnit()).getCredits());
+                } catch (DoesNotExist doesNotExist) {
+                    doesNotExist.printStackTrace();
+                    listeners.displayError("Unexpected error: " + doesNotExist.getMessage(),
+                            "Either something went wrong internally, or an admin deleted your organisational" +
+                                    "unit while this page was loading. Use Help > Refresh User Data to fix the problem");
+                    creditsText = "";
+                }
+            } else {
+                unitText = "No organisational unit";
                 creditsText = "";
             }
-        } else {
-            unitText = "No organisational unit";
-            creditsText = "";
-        }
-        welcomeLabel.setText(String.format("Welcome back %s! %s", user.getUsername(), creditsText));
-        orgUnitLabel.setText(unitText.toUpperCase());
+            welcomeLabel.setText(String.format("Welcome back %s! %s", user.getUsername(), creditsText));
+            orgUnitLabel.setText(unitText.toUpperCase());
 
-        shellPanel.setBorder(new EmptyBorder(30, 40, 30, 40));
-        shellPanel.setLayout(new BoxLayout(shellPanel, BoxLayout.PAGE_AXIS));
+            shellPanel.setBorder(new EmptyBorder(30, 40, 30, 40));
+            shellPanel.setLayout(new BoxLayout(shellPanel, BoxLayout.PAGE_AXIS));
 
-        JPanel row1 = new JPanel();
-        JPanel leftButtons = new JPanel();
-        JPanel rightButtons = new JPanel();
-        // keeps row 1 fixed in height so no matter what the content is (a table, buttons, graphs)
-        // it won't change sizes (sometimes takes up most of the screen!)
-        row1.setBackground(Color.decode(WHITE));
-        row1.setBorder(BorderFactory.createEtchedBorder(EtchedBorder.RAISED));
-        row1.setMaximumSize(new Dimension(WIDTH, 50));
-        row1.setLayout(new BorderLayout());
-        leftButtons.add(homeButton);
-        if (user.getAdminAccess()) leftButtons.add(adminButton);
-        rightButtons.add(assetsButton);
-        row1.add(leftButtons, BorderLayout.WEST);
-        row1.add(orgUnitLabel, BorderLayout.CENTER);
-        row1.add(rightButtons, BorderLayout.EAST);
+            JPanel row1 = new JPanel();
+            JPanel leftButtons = new JPanel();
+            JPanel rightButtons = new JPanel();
+            // keeps row 1 fixed in height so no matter what the content is (a table, buttons, graphs)
+            // it won't change sizes (sometimes takes up most of the screen!)
+            row1.setBackground(Color.decode(WHITE));
+            row1.setBorder(BorderFactory.createEtchedBorder(EtchedBorder.RAISED));
+            row1.setMaximumSize(new Dimension(WIDTH, 50));
+            row1.setLayout(new BorderLayout());
+            leftButtons.add(homeButton);
+            if (user.getAdminAccess()) leftButtons.add(adminButton);
+            rightButtons.add(assetsButton);
+            row1.add(leftButtons, BorderLayout.WEST);
+            row1.add(orgUnitLabel, BorderLayout.CENTER);
+            row1.add(rightButtons, BorderLayout.EAST);
 
-        JPanel row2 = new JPanel();
-        row2.setBackground(Color.decode(WHITE));
-        row2.setLayout(new FlowLayout());
-        row2.add(welcomeLabel);
+            JPanel row2 = new JPanel();
+            row2.setBackground(Color.decode(WHITE));
+            row2.setLayout(new FlowLayout());
+            row2.add(welcomeLabel);
 
-        // The parameter panel is added here, always a panel
-        JPanel row3 = new JPanel();
-        row3.setBackground(Color.decode(WHITE));
-        row3.setPreferredSize(new Dimension(700,400));
-        row3.setLayout(new FlowLayout());
-        row3.add(content);
+            // The parameter panel is added here, always a panel
+            JPanel row3 = new JPanel();
+            row3.setBackground(Color.decode(WHITE));
+            row3.setPreferredSize(new Dimension(700,400));
+            row3.setLayout(new FlowLayout());
+            row3.add(content);
 
-        shellPanel.add(row1);
-        shellPanel.add(Box.createVerticalStrut(20));
-        if (includeWelcomeLabel) {
-            shellPanel.add(row2);
+            shellPanel.add(row1);
             shellPanel.add(Box.createVerticalStrut(20));
+            if (includeWelcomeLabel) {
+                shellPanel.add(row2);
+                shellPanel.add(Box.createVerticalStrut(20));
+            }
+            shellPanel.add(row3);
+
+            // Listeners
+
+            // Boilerplate
+            mainFrame.setContentPane(shellPanel);
+            mainFrame.revalidate();
+        } catch (DoesNotExist doesNotExist) {
+            doesNotExist.printStackTrace();
+            listeners.displayError("Unexpected error: " + doesNotExist.getMessage(),
+                    "Either something went wrong internally, or an admin deleted your account while" +
+                            "this page was loading. Logging you out...");
         }
-        shellPanel.add(row3);
-
-        // Listeners
-
-        // Boilerplate
-        mainFrame.setContentPane(shellPanel);
-        mainFrame.revalidate();
     }
 
 
@@ -354,19 +365,26 @@ public class TradingAppGUI {
      * refactored to make this an inner non-static class instead of a static class in its own file)
      */
     private class GuiListeners {
-
+        final String wrapDialog ="<html><body><p style='width: 200px;'>%s</p></body></html>";
         void displayError(String title, String message) {
-            JOptionPane.showMessageDialog(TradingAppGUI.this.mainFrame,message,
-                    title, JOptionPane.ERROR_MESSAGE);
+            messageDialogFormatted(title, message, JOptionPane.ERROR_MESSAGE);
         }
         int displayConfirm(String title, String message) {
-            return JOptionPane.showConfirmDialog(TradingAppGUI.this.mainFrame, message, title, JOptionPane.YES_NO_OPTION);
+            return JOptionPane.showConfirmDialog(OldTradingAppGUI.this.mainFrame, String.format(wrapDialog, message),
+                    title, JOptionPane.YES_NO_OPTION);
         }
 
         void displayFeedback(String title, String message) {
-            JOptionPane.showMessageDialog(TradingAppGUI.this.mainFrame,message,
-                    title, JOptionPane.PLAIN_MESSAGE);
+            messageDialogFormatted(title, message, JOptionPane.INFORMATION_MESSAGE);
+            //JOptionPane.showMessageDialog(TradingAppGUI.this.mainFrame,message, title, JOptionPane.PLAIN_MESSAGE);
         }
+        void messageDialogFormatted(String title, String message, int type) {
+            JOptionPane.showMessageDialog(OldTradingAppGUI.this.mainFrame,
+                    String.format(wrapDialog, message),
+                    title, type);
+        }
+
+
 
         private void doLogin() throws DoesNotExist {
             shellPanel(home(), true);
@@ -422,6 +440,8 @@ public class TradingAppGUI {
                     ex.printStackTrace();
                     invalidLabel.setForeground(Color.RED);
                     invalidLabel.setText("Password may not contain whitespace");
+                } catch (ConstraintException e) {
+                    displayError("Unexpected error", e.getMessage());
                 }
             }
         }
@@ -437,7 +457,7 @@ public class TradingAppGUI {
             String[] columnNames = { "Asset ID", "Description", "Qty", "$ Current"};
             String[][] data = new String[0][4];
             //For every inventory record of the logged-in user's org unit...
-            if (user.getUnit() != null) data = populateTable(TradingAppGUI.this.data.getInventoriesByOrgUnit(user.getUnit()));
+            if (user.getUnit() != null) data = populateTable(OldTradingAppGUI.this.data.getInventoriesByOrgUnit(user.getUnit()));
             //Make cells not editable
             DefaultTableModel tableModel = new DefaultTableModel(data, columnNames) {
                 @Override
@@ -469,6 +489,7 @@ public class TradingAppGUI {
             userSearch = new GuiSearch(data.getAllUsernames());
             unitSearch = new GuiSearch(data.getAllUnitNames());
             assetSearch = new GuiSearch(data.getAllAssetStrings());
+            resetAdminButtonListeners();
             adminHome.add(adminActionRow(new JButton[]{newUserButton, editUserButton, userListButton}, userSearch));
             adminHome.add(adminActionRow(new JButton[]{newUnitButton, editUnitButton, unitHoldingsButton}, unitSearch));
             adminHome.add(adminActionRow(new JButton[]{newAssetButton,editAssetButton,assetHoldingsButton}, assetSearch));
@@ -582,13 +603,39 @@ public class TradingAppGUI {
          * @param name Username to look up (null if creating a new record)
          * @return JPanel with all the necessary components
          */
-        JPanel editUserPage(String name) {
+        JPanel editUserPage(String name) throws DoesNotExist {
             editRecordPage = new JPanel();
             return editRecordPage;
         }
 
 
         JPanel editAssetPage(String dropdownString) throws DoesNotExist, NumberFormatException {
+            resetEditPageButtons();
+            JComponent[] rowOne = new JComponent[2];
+            JComponent[] rowThree = new JComponent[3];
+            Asset old;
+            Asset newValues;
+            infoLabel.setText("Creating new asset");
+            stringField.setText("");
+            rowOne[0]=infoLabel;
+            JComponent[] rowTwo={new JLabel("Asset description:"),stringField};
+            int id = 0;
+            rowThree[0]=cancelEditButton;
+            if (dropdownString != null) {
+                int i = dropdownString.indexOf('(');
+                if (i<1) throw new NumberFormatException();
+                id = parseInt(dropdownString.substring(0, i - 1));
+                old = data.getAssetByKey(id);
+                stringField.setText(old.getDescription());
+                infoLabel.setText("Editing asset ");
+                numberKeyLabel.setText(String.valueOf(id));
+                rowOne[1]=numberKeyLabel;
+                rowThree[1]=deleteButton;
+                rowThree[2]=saveEditButton;
+            }
+            else rowThree[2]=saveCreateButton;
+            editRecordPage = editRecordPage(rowOne, rowTwo, rowThree);
+/*
             editRecordPage = new JPanel(new GridLayout(3, 1));
             JPanel rowOne = new JPanel();
             JPanel rowTwo = new JPanel();
@@ -596,7 +643,6 @@ public class TradingAppGUI {
             int id = 0;
             Asset old;
             Asset newValues;
-            resetEditPageButtons();
             infoLabel.setText("Creating new asset");
             stringField.setText("");
             rowOne.add(infoLabel);
@@ -620,11 +666,13 @@ public class TradingAppGUI {
                 rowThree.add(saveEditButton);
             }
             else rowThree.add(saveCreateButton);
+*/
             assetEditPageListeners();
             return editRecordPage;
         }
 
-        JPanel editUnitPage(String name) {
+        JPanel editUnitPage(String name) throws DoesNotExist {
+            resetEditPageButtons();
             editRecordPage = new JPanel();
             return editRecordPage;
         }
@@ -633,11 +681,22 @@ public class TradingAppGUI {
             return new JPanel();
         }
 
-        JPanel editOrderPage(boolean isCreate, boolean isBuy) {
+        JPanel createOrderPage(boolean isBuy) {
             return new JPanel();
         }
 
-
+        JPanel editRecordPage(JComponent[]... args) {
+            JPanel output = new JPanel(new GridLayout(0,1));
+            for (JComponent[] row : args) {
+                JPanel thisRow = new JPanel();
+                for (JComponent component : row) {
+                    if (component == null) continue;
+                    thisRow.add(component);
+                }
+                output.add(thisRow);
+            }
+            return output;
+        }
 
         // Helpers------------------------------------------
         String[][] populateTable(ArrayList<InventoryRecord> a) throws DoesNotExist {
@@ -645,9 +704,9 @@ public class TradingAppGUI {
             for (InventoryRecord inventoryRecord : a) {
                 //Get information on the asset of the inventory record
                 int assetID = inventoryRecord.getAssetID();
-                Asset asset = TradingAppGUI.this.data.getAssetByKey(assetID);
+                Asset asset = OldTradingAppGUI.this.data.getAssetByKey(assetID);
                 //Get information on the resolved BuyOrders of this asset (i.e. price history)
-                ArrayList<BuyOrder> assetPriceHistory = TradingAppGUI.this.data.getResolvedBuysByAsset(assetID);
+                ArrayList<BuyOrder> assetPriceHistory = OldTradingAppGUI.this.data.getResolvedBuysByAsset(assetID);
                 Optional<BuyOrder> mostRecentSale = assetPriceHistory.stream().max(BuyOrder::compareTo);
                 AtomicInteger recentPrice = new AtomicInteger();
                 mostRecentSale.ifPresent(buyOrder -> recentPrice.set(buyOrder.getPrice()));
@@ -770,7 +829,7 @@ public class TradingAppGUI {
 
         public void changePassMenuListener() {
             changePassword.addActionListener(e->{
-                if (TradingAppGUI.this.user != null) {
+                if (OldTradingAppGUI.this.user != null) {
                     shellPanel(changePasswordPage(), false);
                 }
             });
@@ -811,6 +870,7 @@ public class TradingAppGUI {
             });
         }
 
+
         void intervalButtonListeners(int asset) {
             daysButton.addActionListener(e->{
                 try {
@@ -842,13 +902,34 @@ public class TradingAppGUI {
             });
         }
 
-        int counter = 0;
+
+
+        void resetAdminButtonListeners() {
+            newUserButton = new JButton(newUserButton.getText());
+            newAssetButton = new JButton(newAssetButton.getText());
+            newUnitButton = new JButton(newUnitButton.getText());
+            editAssetButton = new JButton(editAssetButton.getText());
+            editUnitButton = new JButton(editUnitButton.getText());
+            editUserButton = new JButton(editUserButton.getText());
+            userListButton = new JButton(userListButton.getText());
+            unitHoldingsButton = new JButton(unitHoldingsButton.getText());
+            assetHoldingsButton = new JButton(assetHoldingsButton.getText());
+        }
+
         void adminCreateButtonListeners() {
             newUserButton.addActionListener(e->{
-                shellPanel(editUserPage(null), false);
+                try {
+                    shellPanel(editUserPage(null), false);
+                } catch (DoesNotExist doesNotExist) {
+                    doesNotExist.printStackTrace();
+                }
             });
             newUnitButton.addActionListener(e->{
-                shellPanel(editUnitPage(null), false);
+                try {
+                    shellPanel(editUnitPage(null), false);
+                } catch (DoesNotExist doesNotExist) {
+                    doesNotExist.printStackTrace();
+                }
             });
             newAssetButton.addActionListener(e->{
                 try {
@@ -859,12 +940,25 @@ public class TradingAppGUI {
             });
         }
         void adminEditButtonListeners() {
-            editAssetButton = new JButton(editAssetButton.getText());
             editAssetButton.addActionListener(e->{
                 try {shellPanel(editAssetPage((String) assetSearch.getSelectedItem()), false);}
                 catch (NumberFormatException n) {
                     displayError("Could not load page", "Please select a valid asset option");
                 }
+                catch (DoesNotExist d) {
+                    displayError("Could not load page", d.getMessage());
+                }
+            });
+            editUnitButton.addActionListener(e->{
+                try {shellPanel(editUnitPage((String) unitSearch.getSelectedItem()), false);}
+
+                catch (DoesNotExist d) {
+                    displayError("Could not load page", d.getMessage());
+                }
+            });
+            editUserButton.addActionListener(e->{
+                try {shellPanel(editUserPage((String) userSearch.getSelectedItem()), false);}
+
                 catch (DoesNotExist d) {
                     displayError("Could not load page", d.getMessage());
                 }
@@ -875,6 +969,7 @@ public class TradingAppGUI {
             saveCreateButton = new JButton(saveCreateButton.getText());
             cancelEditButton = new JButton(cancelEditButton.getText());
             saveEditButton = new JButton(saveEditButton.getText());
+            deleteButton = new JButton(deleteButton.getText());
         }
 
         void assetEditPageListeners() {
@@ -905,8 +1000,6 @@ public class TradingAppGUI {
                 try {
                     Asset toSend = new Asset(description);
                     data.addAsset(toSend);
-                    counter++;
-                    System.out.println(counter);
                     displayFeedback("Asset successfully created", "Click OK to return to admin portal");
                     shellPanel(adminHome(),false);
                 } catch (IllegalString illegalString) {
@@ -916,6 +1009,31 @@ public class TradingAppGUI {
                             "This error should never happen; try again");
                 }
             });
+            deleteButton.addActionListener(e->{
+                if (displayConfirm("Confirm deletion", "Are you sure you want to delete asset "
+                        + numberKeyLabel.getText() + "?<br/>If the deletion succeeds, it will permanently delete all " +
+                        "information on holdings of the asset, and all buy and sell orders for the asset. " +
+                        "<br/>Please note that the orders will be deleted, not cancelled; i.e. credits held in outstanding " +
+                        "buy orders will NOT be returned to the appropriate organisational unit. Manually cancel the " +
+                        "orders before deleting this asset if you want to return the credits. " +
+                        "<br/>Also note that for technical reasons, deletion will fail if any transactions involving the " +
+                        "asset have been resolved. ") == JOptionPane.YES_OPTION) {
+                    try {
+                        data.deleteAsset(Integer.parseInt(numberKeyLabel.getText()));
+                        displayFeedback("Asset successfully deleted", "Click OK to return to admin portal");
+                    } catch (DoesNotExist doesNotExist) {
+                        displayError("Unexpected error: " + doesNotExist.getMessage(),
+                                "Another admin may have deleted the asset.");
+                    } catch (ConstraintException constraintException) {
+                        displayError("Deletion failed for technical reasons", constraintException.getMessage());
+                        //TODO: take user to list
+                    }
+                    finally {
+                        shellPanel(adminHome(), false);
+                    }
+                }
+            });
         }
+
     }
 }

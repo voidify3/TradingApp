@@ -314,7 +314,7 @@ This is the GUI class. It is a Swing GUI containing the following:
     * Toggle available between "me", "my unit", "everyone" 
     * Toggle available between "buy", "sell"
     * Toggle available between "outstanding", "resolved" 
-    * for users, "edit/delete" button is available only in "me">"outstanding" views (TODO: CHECK NEVER NEGATIVE AND ADD LOGIC FOR USER/ASSET CHANGE)
+    * for users, "delete" button is available only in "me">"outstanding" views (TODO: CHECK NEVER NEGATIVE)
     * for admins, it's available in all views
 * User editing page
 * Asset editing page
@@ -345,20 +345,19 @@ NetworkDataSource has the following public methods, which are used by TradingApp
   -[ ] add method lists to data source and data
 * FIRST PRIORITY: implement GUI pages as specified, adding tradingappdata content and error handling on the way
   -[x] home page/admin portal system  
+  -[ ] convert home page
+  -[ ] convert 
+  -[ ] convert shell panel?
   -[x] admin home has unit and asset bars
-  -[ ] reset listeners before adding them!!
   -[ ] show all assets page
   -[x] change own password page (available from menu bar)
-  -[ ] unit editing page (can change credits)
+  -[x] unit editing page (can change credits)
   -[x] asset editing page (can change description)
-  -[ ] user editing page with password box and unit dropdown and access radio
+  -[x] user editing page with password box and unit dropdown and access radio
   -[ ] inventory editing page
-  -[ ] place order page
-  -[ ] order editing page
-  -[ ] order list page (shell)
-  -[ ] order list toggles
-  -[ ] order list interaction buttons
-  -[ ]
+  -[x] place order page (asset dropdown, quantity spinner, price spinner)
+  -[ ] place sell order page
+  -[x] order list page
 *[ ] SECOND PRIORITY: have socket and hostname read from a file
 * THIRD PRIORITY: implement GUI content and protocol contingency for resolution notification
     *[ ] third type of SPECIAL query, executed at data source setup, returning the number of seconds until the next res time
