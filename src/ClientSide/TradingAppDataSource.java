@@ -51,6 +51,9 @@ public interface TradingAppDataSource {
      */
     InventoryRecord inventoryRecordByKeys(String unit, int asset);
 
+    ArrayList<SellOrder> allSellOrders(Boolean resolved);
+
+    ArrayList<BuyOrder> allBuyOrders(Boolean resolved);
     /**
      *
      * @param username a username

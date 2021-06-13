@@ -214,9 +214,9 @@ public class NetworkDataSource implements TradingAppDataSource {
         return  (ArrayList) select(INV, BLANK_FILTER);
     }
     @Override
-    public ArrayList<SellOrder> allSellOrders() { return (ArrayList) select(SELL, BLANK_FILTER); }
+    public ArrayList<SellOrder> allSellOrders() { return allSellOrders(null); }
     @Override
-    public ArrayList<BuyOrder> allBuyOrders() { return (ArrayList) select(BUY, BLANK_FILTER); }
+    public ArrayList<BuyOrder> allBuyOrders() { return allBuyOrders(null); }
 
     @Override
     public InventoryRecord inventoryRecordByKeys(String unit, int asset) {
@@ -224,6 +224,17 @@ public class NetworkDataSource implements TradingAppDataSource {
                 filterEquals(INV.getColumns()[0], sqlFriendlyString(unit)) +
                         " AND " + filterEquals(INV.getColumns()[1], valueOf(asset)));
         return (InventoryRecord) extractElement(results); }
+
+    @Override
+    public ArrayList<SellOrder> allSellOrders(Boolean resolved) {
+        return (ArrayList) select(SELL, BLANK_FILTER + orderResolvedFilter(resolved));
+    }
+
+    @Override
+    public ArrayList<BuyOrder> allBuyOrders(Boolean resolved) {
+        return (ArrayList) select(BUY, BLANK_FILTER + orderResolvedFilter(resolved));
+    }
+
     @Override
     public ArrayList<SellOrder> sellOrdersByUser(String username, Boolean resolved) {
         return (ArrayList) select(SELL,

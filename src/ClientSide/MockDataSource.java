@@ -51,6 +51,24 @@ public class MockDataSource implements TradingAppDataSource {
     }
 
     @Override
+    public ArrayList<SellOrder> allSellOrders(Boolean resolved) {
+        ArrayList<SellOrder> output = new ArrayList<>();
+        for (SellOrder s : db.getSellOrders()) {
+            if (resolved ==(s.getDateResolved() == null)) output.add(s);
+        }
+        return  output;
+    }
+
+    @Override
+    public ArrayList<BuyOrder> allBuyOrders(Boolean resolved) {
+        ArrayList<BuyOrder> output = new ArrayList<>();
+        for (BuyOrder s : db.getBuyOrders()) {
+            if (resolved ==(s.getDateResolved() == null)) output.add(s);
+        }
+        return  output;
+    }
+
+    @Override
     public ArrayList<SellOrder> sellOrdersByUser(String username, Boolean resolved) {
         return db.sellOrdersByUser(username, resolved);
     }
