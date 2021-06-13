@@ -346,7 +346,7 @@ NetworkDataSource has the following public methods, which are used by TradingApp
 * FIRST PRIORITY: implement GUI pages as specified, adding tradingappdata content and error handling on the way
   -[x] home page/admin portal system  
   -[ ] convert home page
-  -[ ] convert 
+  -[ ] convert change password page
   -[ ] convert shell panel?
   -[x] admin home has unit and asset bars
   -[ ] show all assets page
@@ -356,7 +356,7 @@ NetworkDataSource has the following public methods, which are used by TradingApp
   -[x] user editing page with password box and unit dropdown and access radio
   -[ ] inventory editing page
   -[x] place order page (asset dropdown, quantity spinner, price spinner)
-  -[ ] place sell order page
+  -[x] place sell order page
   -[x] order list page
 *[ ] SECOND PRIORITY: have socket and hostname read from a file
 * THIRD PRIORITY: implement GUI content and protocol contingency for resolution notification

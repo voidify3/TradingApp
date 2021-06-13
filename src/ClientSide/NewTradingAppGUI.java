@@ -68,6 +68,7 @@ public class NewTradingAppGUI {
     JButton assetsButton = new JButton("All assets");
     JButton ordersButton = new JButton("Orders");
     JLabel welcomeLabel = new JLabel("Welcome back (username)", SwingConstants.CENTER);
+    JLabel topLabel = new JLabel("ORG UNIT HERE", SwingConstants.CENTER);
 
     // Menu bar & widgets
     JMenuBar menuBar = new JMenuBar();
@@ -77,21 +78,6 @@ public class NewTradingAppGUI {
     JMenuItem masterUserKey = new JMenuItem("Master User Key");
     JMenuItem masterAdminKey = new JMenuItem("Master Admin Key");
 
-    //TODO: MOVE ALL BELOW TO JPANEL SUBCLASSES
-
-    // User home & widgets
-    JPanel userHome = new JPanel();
-    JLabel orgUnitLabel = new JLabel("ORG UNIT HERE", SwingConstants.CENTER);
-    JTable userHoldings = new JTable();
-
-    // Asset page & widgets
-    JPanel assetPage = new JPanel();
-    JButton daysButton = new JButton("Days");
-    JButton weeksButton = new JButton("Weeks");
-    JButton monthsButton = new JButton("Months");
-    JButton yearsButton = new JButton("Years");
-    JButton buyButton = new JButton("Buy Asset");
-    JButton sellButton = new JButton("Sell Asset");
 
 
     public NewTradingAppGUI(TradingAppData data) {
@@ -189,6 +175,7 @@ public class NewTradingAppGUI {
         listeners.homeListener();
         listeners.adminListener();
         listeners.changePassMenuListener();
+        listeners.ordersListener();
 
         // Boilerplate
         mainFrame.setJMenuBar(menuBar);
@@ -293,6 +280,7 @@ public class NewTradingAppGUI {
             homeButton.setToolTipText("Go to the home screen");
             assetsButton.setToolTipText("Go to the search screen");
             adminButton.setToolTipText("Go to admin portal");
+            ordersButton.setToolTipText("View my orders");
             String unitText, creditsText;
             if (user.getUnit() != null) {
                 unitText = user.getUnit();
@@ -311,7 +299,7 @@ public class NewTradingAppGUI {
                 creditsText = "";
             }
             welcomeLabel.setText(String.format("Welcome back %s! %s", user.getUsername(), creditsText));
-            orgUnitLabel.setText(unitText.toUpperCase());
+            topLabel.setText(unitText.toUpperCase());
 
             shellPanel.setBorder(new EmptyBorder(30, 40, 30, 40));
             shellPanel.setLayout(new BoxLayout(shellPanel, BoxLayout.PAGE_AXIS));
@@ -328,8 +316,9 @@ public class NewTradingAppGUI {
             leftButtons.add(homeButton);
             if (user.getAdminAccess()) leftButtons.add(adminButton);
             rightButtons.add(assetsButton);
+            rightButtons.add(ordersButton);
             row1.add(leftButtons, BorderLayout.WEST);
-            row1.add(orgUnitLabel, BorderLayout.CENTER);
+            row1.add(topLabel, BorderLayout.CENTER);
             row1.add(rightButtons, BorderLayout.EAST);
 
             JPanel row2 = new JPanel();
@@ -366,7 +355,7 @@ public class NewTradingAppGUI {
     }
     private void shellPanel(JPanel content, boolean includeWelcomeLabel, String unitLabel) {
         shellPanel(content, includeWelcomeLabel);
-        orgUnitLabel.setText(unitLabel);
+        topLabel.setText(unitLabel);
     }
 
     final String wrapDialog ="<html><body><p style='width: 200px;'>%s</p></body></html>";
@@ -464,32 +453,6 @@ public class NewTradingAppGUI {
 
         // Panels with the content to be passed into the shell template-----------------------------------------------------
 
-
-        // Puts the asset page content in the shell panel
-        JPanel assetPage(int asset) {
-            assetPage = new JPanel(new GridBagLayout());
-            assetPage.setPreferredSize(new Dimension(600,325));
-            assetPage.setBackground(Color.decode(DARKGREY));
-            assetPage.setLayout(new BorderLayout());
-
-            // Position the interactive components (text fields, buttons etc)
-            JPanel intervalButtons = new JPanel();
-            intervalButtons.add(daysButton);
-            intervalButtons.add(weeksButton);
-            intervalButtons.add(monthsButton);
-            intervalButtons.add(yearsButton);
-            intervalButtonListeners(asset);
-            assetPage.add(intervalButtons, BorderLayout.NORTH);
-
-            JPanel graphPanel = new JPanel();
-
-            JPanel orderButtons = new JPanel();
-            orderButtons.add(buyButton);
-            orderButtons.add(sellButton);
-            assetPage.add(orderButtons, BorderLayout.SOUTH);
-
-            return assetPage;
-        }
 
         JPanel changePasswordPage() {
             changePassPanel = new JPanel();
@@ -658,9 +621,14 @@ public class NewTradingAppGUI {
 
         //Other listeners
 
+        void ordersListener() {
+            ordersButton.addActionListener(e->{
+                shellPanel(new OrdersPage(true, true, false), false);
+            });
+        }
         void homeListener() {
             homeButton.addActionListener(e -> {
-                orgUnitLabel.setText("ORG UNIT HERE");
+                topLabel.setText("ORG UNIT HERE");
                 try {
                     shellPanel(new HomePage(), true);
                 } catch (DoesNotExist doesNotExist) {
@@ -672,49 +640,75 @@ public class NewTradingAppGUI {
         void adminListener() {
             adminButton.addActionListener(e->{
                 shellPanel(new AdminPortal(), false);
-                orgUnitLabel.setText("ADMIN PORTAL");
-            });
-        }
-
-        void intervalButtonListeners(int asset) {
-            daysButton.addActionListener(e->{
-                try {
-                    data.getHistoricalPrices(asset, TradingAppData.Intervals.DAYS);
-                } catch (InvalidDate | DoesNotExist invalidDate) {
-                    invalidDate.printStackTrace();
-                }
-            });
-            weeksButton.addActionListener(e->{
-                try {
-                    data.getHistoricalPrices(asset, TradingAppData.Intervals.WEEKS);
-                } catch (InvalidDate | DoesNotExist invalidDate) {
-                    invalidDate.printStackTrace();
-                }
-            });
-            monthsButton.addActionListener(e->{
-                try {
-                    data.getHistoricalPrices(asset, TradingAppData.Intervals.MONTHS);
-                } catch (InvalidDate | DoesNotExist invalidDate) {
-                    invalidDate.printStackTrace();
-                }
-            });
-            yearsButton.addActionListener(e->{
-                try {
-                    data.getHistoricalPrices(asset, TradingAppData.Intervals.YEARS);
-                } catch (InvalidDate | DoesNotExist invalidDate) {
-                    invalidDate.printStackTrace();
-                }
+                topLabel.setText("ADMIN PORTAL");
             });
         }
     }
     class AssetInfoPage extends JPanel implements ActionListener {
-
+        int asset;
+        JButton daysButton = new JButton("Days");
+        JButton weeksButton = new JButton("Weeks");
+        JButton monthsButton = new JButton("Months");
+        JButton yearsButton = new JButton("Years");
+        JButton buyButton = new JButton("Buy Asset");
+        JButton sellButton = new JButton("Sell Asset");
         public AssetInfoPage(int asset) {
+            this.asset=asset;
+            setPreferredSize(new Dimension(600,325));
+            setBackground(Color.decode(DARKGREY));
+            setLayout(new BorderLayout());
+
+            // Position the interactive components (text fields, buttons etc)
+            JPanel intervalButtons = new JPanel();
+            intervalButtons.add(daysButton);
+            intervalButtons.add(weeksButton);
+            intervalButtons.add(monthsButton);
+            intervalButtons.add(yearsButton);
+            daysButton.addActionListener(this);
+            weeksButton.addActionListener(this);
+            monthsButton.addActionListener(this);
+            yearsButton.addActionListener(this);
+            buyButton.addActionListener(this);
+            sellButton.addActionListener(this);
+            add(intervalButtons, BorderLayout.NORTH);
+
+            JPanel graphPanel = new JPanel();
+            add(graphPanel, BorderLayout.CENTER);
+
+            JPanel orderButtons = new JPanel();
+            orderButtons.add(buyButton);
+            orderButtons.add(sellButton);
+            add(orderButtons, BorderLayout.SOUTH);
+        }
+
+        void tryGetHistoricalPrices(TradingAppData.Intervals intervals) {
+            try {
+                data.getHistoricalPrices(asset, intervals);
+            } catch (InvalidDate | DoesNotExist invalidDate) {
+                displayError("An error occurred while displaying prices", invalidDate.getMessage());
+            }
         }
 
         @Override
         public void actionPerformed(ActionEvent e) {
-
+            if (e.getSource() == daysButton) tryGetHistoricalPrices(TradingAppData.Intervals.DAYS);
+            else if (e.getSource() == weeksButton) tryGetHistoricalPrices(TradingAppData.Intervals.WEEKS);
+            else if (e.getSource() == monthsButton) tryGetHistoricalPrices(TradingAppData.Intervals.MONTHS);
+            else if (e.getSource() == yearsButton) tryGetHistoricalPrices(TradingAppData.Intervals.YEARS);
+            else if (e.getSource() == buyButton) {
+                try {
+                    shellPanel(new OrderFormPage(asset, true, true), false);
+                } catch (DoesNotExist doesNotExist) {
+                    displayError("Unexpected error", doesNotExist.getMessage());
+                }
+            }
+            else if (e.getSource() == sellButton) {
+                try {
+                    shellPanel(new OrderFormPage(asset, true, false), false);
+                } catch (DoesNotExist doesNotExist) {
+                    displayError("Unexpected error", doesNotExist.getMessage());
+                }
+            }
         }
     }
     abstract class TablePage extends JPanel implements MouseListener {
@@ -739,6 +733,7 @@ public class NewTradingAppGUI {
             scrollPane.setPreferredSize(new Dimension(600,270));
             this.setBackground(Color.decode(DARKGREY));
             this.add(scrollPane);
+            table.addMouseListener(this);
         }
 
         abstract void view(String key, String col2);
@@ -784,7 +779,7 @@ public class NewTradingAppGUI {
         void view(String key, String col2) {
             shellPanel(new AssetInfoPage(parseInt(key)),
                     false);
-            orgUnitLabel.setText(col2.toUpperCase());
+            topLabel.setText(col2.toUpperCase());
         }
     }
     class OrdersPage extends TablePage {
@@ -828,6 +823,10 @@ public class NewTradingAppGUI {
         abstract void save();
         abstract void create();
         abstract void delete();
+        void cancel() {
+            if (displayConfirm("Return to portal?", "Changes will be discarded")
+                    == JOptionPane.YES_OPTION) exitToPortal();
+        }
         void exitToPortal(){shellPanel(new AdminPortal(),false);}
         void notAuthorisedDialog(String message) {
             displayError("Unexpected error: " + message,
@@ -840,8 +839,7 @@ public class NewTradingAppGUI {
             else if (e.getSource()==deleteButton) {
                 if (displayConfirm("Confirm deletion",  deletePromptText) == JOptionPane.YES_OPTION) delete();}
             else if (e.getSource()==cancelEditButton) {
-                if (displayConfirm("Return to portal?", "Changes will be discarded")
-                        == JOptionPane.YES_OPTION) exitToPortal();
+                cancel();
             }
         }
     }
@@ -1072,6 +1070,10 @@ public class NewTradingAppGUI {
                 old = data.getUnitByKey(seed);
                 infoLabel.setText("Editing unit with name:");
                 nameField.setText(seed);
+                deletePromptText = "Are you sure you want to delete organisational unit"
+                        + seed + "?<br/>If the deletion succeeds, it will permanently delete all " +
+                        "information on the unit's holdings. Users will not be deleted, but they will be removed from the" +
+                        "organisational unit.";
                 nameField.setEnabled(false);
                 creditsInput.setValue(old.getCredits());}
         }
@@ -1110,6 +1112,7 @@ public class NewTradingAppGUI {
             }
         }
 
+
         @Override
         void create() {
             try {
@@ -1144,42 +1147,53 @@ public class NewTradingAppGUI {
             }
         }
     }
-    class BuyOrderFormPage extends FormPage {
+    class OrderFormPage extends FormPage {
         int id; //asset id if creating, order id if viewing existing order
-        BuyOrder b;
-        JLabel infoLabel = new JLabel("Placing new buy order for asset: ");
+        Order o;
+        boolean isBuy;
+        JLabel infoLabel = new JLabel();
         JLabel extraInfoLabel = new JLabel();
         JLabel numberKeyLabel = new JLabel();
         JSpinner quantityInput = new JSpinner(new SpinnerNumberModel(1, 1, null, 1));
         JSpinner priceInput = new JSpinner(new SpinnerNumberModel(1,1,null,1));
-        BuyOrderFormPage(int id, boolean isCreate) throws DoesNotExist {
+        OrderFormPage(int id, boolean isCreate, boolean isBuy) throws DoesNotExist {
             super(isCreate);
+            this.isBuy = isBuy;
+            String typeText = isBuy?"buy":"sell";
+            infoLabel.setText(String.format("Placing new %s order for asset: ", typeText));
             numberKeyLabel.setText(String.valueOf(id));
+            deletePromptText = String.format("Are you sure you want to delete this %s order?", typeText);
             if (isCreate){
             this.id = id;
             }
             else {
-                b = data.getBuyByKey(id);
-                infoLabel.setText("Info for buy order");
-                extraInfoLabel.setText(String.format(wrapDialog, "Placed at " + b.getDatePlaced().toString() +
-                        " by " + b.getUser() + "; " +
-                        (b.getDateResolved() == null ? "unresolved" : "resolved at " + b.getDateResolved().toString()
-                                + " with sell order " + b.getBoughtFrom().toString())));
-                quantityInput.setValue(b.getQty());
+                o = data.getBuyByKey(id);
+                infoLabel.setText(String.format("Info for %s order", typeText));
+                extraInfoLabel.setText(String.format(wrapDialog, "Placed at " + o.getDatePlaced().toString() +
+                        " by " + o.getUser() + "for" + o.getAsset() + "; " +
+                        (o.getDateResolved() == null ? "unresolved" : "resolved at " + o.getDateResolved().toString()
+                                + (o instanceof BuyOrder ? " with sell order " + ((BuyOrder)o).getBoughtFrom().toString():""))));
+                quantityInput.setValue(o.getQty());
                 quantityInput.setEnabled(false);
-                priceInput.setValue(b.getPrice());
+                priceInput.setValue(o.getPrice());
                 priceInput.setEnabled(false);
             }
 
         }
-        void done(String title) {
-            if (displayConfirm(title, "Go to order list rather than returning to asset page?")
+        void done(String title, int asset) {
+            if (displayConfirm(title, "Go to order list rather than asset page?")
                 == JOptionPane.YES_OPTION) shellPanel(new OrdersPage(true, true, false), false);
-            else shellPanel(new AssetInfoPage(id), false);
+            else shellPanel(new AssetInfoPage(asset), false);
         }
 
+        void initialiseFields() {
+            infoLabel = new JLabel();extraInfoLabel = new JLabel();numberKeyLabel = new JLabel();
+            quantityInput = new JSpinner(new SpinnerNumberModel(1, 1, null, 1));
+            priceInput = new JSpinner(new SpinnerNumberModel(1,1,null,1));
+        }
         @Override
         JPanel[] generateRows() {
+            initialiseFields();
             JPanel[] output = {new JPanel(), new JPanel(), new JPanel(), new JPanel()};
             output[0].add(infoLabel);
             output[0].add(numberKeyLabel);
@@ -1192,30 +1206,46 @@ public class NewTradingAppGUI {
         }
 
         @Override
+        void cancel() {
+            if (displayConfirm("Exit", "Changes will be discarded")
+                    == JOptionPane.YES_OPTION) done("Exiting", (o==null?id:o.getAsset()));
+        }
+
+        @Override
         void save() {
-            displayError("Cannot edit", "Orders can only be created and deleted");
+            displayError("Cannot edit", "Orders can only be created and deleted, I meant to remove" +
+                    "this button before the deadline, oops");
         }
 
         @Override
         void create() {
             try {
-                data.placeBuyOrder(new BuyOrder(user.getUsername(), id, (Integer)quantityInput.getValue(), (Integer)priceInput.getValue()));
-                done("Buy order successfully placed!");
+                if (isBuy) data.placeBuyOrder(new BuyOrder(user.getUsername(), id,
+                        (Integer)quantityInput.getValue(), (Integer)priceInput.getValue()));
+                else data.placeSellOrder(new SellOrder(user.getUsername(), id,
+                        (Integer)quantityInput.getValue(), (Integer)priceInput.getValue()));
+                done("Order successfully placed!", id);
             } catch (OrderException e) {
                 displayError("Could not place order", e.getMessage());
             } catch (InvalidAmount invalidAmount) {
                 displayError("Invalid value", invalidAmount.getMessage());
+            } catch (DoesNotExist doesNotExist) {
+                displayError("Unexpected error", doesNotExist.getMessage());
             }
         }
 
         @Override
         void delete() {
             try {
-                data.cancelBuyOrder(id);
+                if (isBuy) data.cancelBuyOrder(id);
+                else data.cancelSellOrder(id);
+                done("Buy order successfully deleted!", o.getAsset());
             } catch (DoesNotExist doesNotExist) {
-                doesNotExist.printStackTrace();
+                displayError("Unexpected error", doesNotExist.getMessage());
             } catch (InvalidAmount invalidAmount) {
-                displayError("Unexpected error when returning credits", invalidAmount.getMessage());
+                displayError("Unexpected error when doing refund", invalidAmount.getMessage());
+            } catch (ConstraintException e) {
+                displayError("Order could not be deleted", e.getMessage());
             }
         }
     }
