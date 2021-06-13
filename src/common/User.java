@@ -31,7 +31,7 @@ public class User extends DataObject {
      */
     public User(String username, String password, boolean adminAccess) throws IllegalString {
         String usernameLC;
-
+        if (username.equals("")) throw new IllegalString("Username must not be empty");
         // Check if the username is letters only and make lowercase if so
         if (username.matches("[a-zA-Z]+") && !(username.contains(" "))) {
             usernameLC = username.toLowerCase();
@@ -48,9 +48,6 @@ public class User extends DataObject {
         this.salt = generateSALT(usernameLC);
         this.password = hashPassword(password, this.salt);
 
-        // The server-side method to add new user records will be called in the
-        // NewUser() method separately as this constructor will also be used when
-        // returning user objects from the DB (by re-creating them with the data)
     }
     public User(String username, String password, boolean adminAccess, String orgunit) throws IllegalString {
         this(username, password, adminAccess);
@@ -198,7 +195,8 @@ public class User extends DataObject {
         // Check if the password contains white spaces
         if (password.contains(" ")) {
             throw new IllegalString("Password must not contain white-spaces. Please try again.", password);
-        } else {
+        } else if (password == null || password.equals("")) throw new IllegalString("Password must not be empty");
+        else {
             checkedPassword = password;
         }
 

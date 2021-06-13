@@ -25,6 +25,7 @@ public class OrgUnit extends DataObject implements Comparable<OrgUnit> {
      * @param credits the credits value found
      */
     public OrgUnit(String orgName, int credits) throws IllegalString {
+        if (orgName.equals("")) throw new IllegalString("Unit name may not be empty");
         if (orgName.length() > 30) throw new IllegalString("'%s' exceeds the maximum organisational unit" +
                 "name length of 30. Please try again.", orgName);
         this.orgName = orgName;
