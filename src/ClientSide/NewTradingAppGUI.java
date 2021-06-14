@@ -15,6 +15,7 @@ import java.awt.event.*;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
+import java.text.MessageFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Objects;
@@ -114,7 +115,7 @@ class NewTradingAppGUI {
     String[][] populateTable(ArrayList<Order> a) {
         String[][] info = new String[0][7];
         for (Order o : a) {
-            String[] infoNew = new String[]{String.valueOf(o.getId()), o.getUser(), String.valueOf(o.getAsset()),
+            String[] infoNew = new String[]{String.valueOf(o.getId()), o.getUnit(), String.valueOf(o.getAsset()),
                     String.valueOf(o.getQty()), String.valueOf(o.getPrice()), o.getDatePlaced().toString(),
                     (o.getDateResolved() == null? "N/A" : o.getDateResolved().toString())};
             info = Arrays.copyOf(info, info.length + 1);
@@ -784,11 +785,11 @@ class NewTradingAppGUI {
     }
     class OrdersPage extends TablePage {
         private OrdersPage(String[][] info) {
-            super(new String[]{"ID", "User", "Asset", "Price", "Quantity", "Placed", "Resolved"}, info,
+            super(new String[]{"ID", "Unit", "Asset", "Price", "Quantity", "Placed", "Resolved"}, info,
                     new int[]{50,50,50,50,50,50,50}, new boolean[7]);
         }
         OrdersPage(boolean justMine, boolean isBuy, boolean resolvedFlag) {
-            this(populateTable(data.getOrdersForTable(user.getUsername(), justMine,isBuy,resolvedFlag)));
+            this(populateTable(data.getOrdersForTable(user.getUnit(), justMine,isBuy,resolvedFlag)));
             //do more things
         }
         @Override
@@ -928,9 +929,6 @@ class NewTradingAppGUI {
             } catch (DoesNotExist doesNotExist) {
                 displayError("Unexpected error: " + doesNotExist.getMessage(),
                         "Another admin may have deleted the asset.");
-            } catch (ConstraintException constraintException) {
-                displayError("Deletion failed for technical reasons", constraintException.getMessage());
-                //TODO: take user to list
             } catch (NotAuthorised notAuthorised) {
                 notAuthorisedDialog(notAuthorised.getMessage());
             } finally {
@@ -1047,8 +1045,6 @@ class NewTradingAppGUI {
             } catch (DoesNotExist doesNotExist) {
                 displayError("Unexpected error: " + doesNotExist.getMessage(),
                         "Another admin may have deleted the user.");
-            } catch (ConstraintException e) {
-                displayError("Deletion failed for technical reasons", e.getMessage());
             }
             finally {
                 exitToPortal();
@@ -1066,10 +1062,11 @@ class NewTradingAppGUI {
                 old = data.getUnitByKey(seed);
                 infoLabel.setText("Editing unit with name:");
                 nameField.setText(seed);
-                deletePromptText = "Are you sure you want to delete organisational unit"
-                        + seed + "?<br/>If the deletion succeeds, it will permanently delete all " +
-                        "information on the unit's holdings. Users will not be deleted, but they will be removed from the" +
-                        "organisational unit.";
+                deletePromptText = "Are you sure you want to delete organisational unit "
+                        + seed + "?<br/>This cannot be undone, and will also permanently delete all " +
+                        "information on the unit's holdings, buy and sell orders placed by the unit, " +
+                        "and past resolved transactions involving the unit. " +
+                        "Users will not be deleted; they will only be removed from the unit.";
                 nameField.setEnabled(false);
                 creditsInput.setValue(old.getCredits());}
         }
@@ -1128,7 +1125,7 @@ class NewTradingAppGUI {
         @Override
         void delete() {
             try {
-                failIfNotAdmin("Create an organisational unit");
+                failIfNotAdmin("Delete an organisational unit");
                 data.deleteUnit(old.getName());
                 displayFeedback("Unit successfully deleted", "Click OK to return to admin portal");
             } catch (NotAuthorised notAuthorised) {
@@ -1136,8 +1133,6 @@ class NewTradingAppGUI {
             } catch (DoesNotExist doesNotExist) {
                 displayError("Unexpected error: " + doesNotExist.getMessage(),
                         "Another admin may have deleted the unit.");
-            } catch (ConstraintException e) {
-                displayError("Deletion failed for technical reasons", e.getMessage());
             } finally {
                 exitToPortal();
             }
@@ -1158,17 +1153,19 @@ class NewTradingAppGUI {
             String typeText = isBuy?"buy":"sell";
             infoLabel.setText(String.format("Placing new %s order for asset: ", typeText));
             numberKeyLabel.setText(String.valueOf(id));
-            deletePromptText = String.format("Are you sure you want to delete this %s order?", typeText);
+            deletePromptText = String.format("Are you sure you want to delete this %s order?", typeText) +
+                    (isBuy?"":"If it has been involved in any transactions, the buy order(s) resolved in those transactions" +
+                            "will also be deleted");
             if (isCreate){
             this.id = id;
             }
             else {
                 o = data.getBuyByKey(id);
                 infoLabel.setText(String.format("Info for %s order", typeText));
-                extraInfoLabel.setText(String.format(wrapDialog, "Placed at " + o.getDatePlaced().toString() +
-                        " by " + o.getUser() + "for" + o.getAsset() + "; " +
-                        (o.getDateResolved() == null ? "unresolved" : "resolved at " + o.getDateResolved().toString()
-                                + (o instanceof BuyOrder ? " with sell order " + ((BuyOrder)o).getBoughtFrom().toString():""))));
+                extraInfoLabel.setText(String.format(wrapDialog, MessageFormat.format("Placed at {0} by a member of {1} for asset {2}; {3}",
+                        o.getDatePlaced().toString(), o.getUnit(), o.getAsset(),
+                        (o.getDateResolved() == null) ? "unresolved." : MessageFormat.format("resolved at {0}{1}.",
+                                o.getDateResolved().toString(), (o instanceof BuyOrder ? " with sell order " + ((BuyOrder) o).getBoughtFrom().toString() : "")))));
                 quantityInput.setValue(o.getQty());
                 quantityInput.setEnabled(false);
                 priceInput.setValue(o.getPrice());
@@ -1178,7 +1175,7 @@ class NewTradingAppGUI {
         }
         void done(String title, int asset) {
             if (displayConfirm(title, "Go to order list rather than asset page?")
-                == JOptionPane.YES_OPTION) shellPanel(new OrdersPage(true, true, false), false);
+                == JOptionPane.YES_OPTION) shellPanel(new OrdersPage(true, isBuy, false), false);
             else shellPanel(new AssetInfoPage(asset), false);
         }
 
@@ -1216,9 +1213,9 @@ class NewTradingAppGUI {
         @Override
         void create() {
             try {
-                if (isBuy) data.placeBuyOrder(new BuyOrder(user.getUsername(), id,
+                if (isBuy) data.placeBuyOrder(new BuyOrder(user.getUnit(), id,
                         (Integer)quantityInput.getValue(), (Integer)priceInput.getValue()));
-                else data.placeSellOrder(new SellOrder(user.getUsername(), id,
+                else data.placeSellOrder(new SellOrder(user.getUnit(), id,
                         (Integer)quantityInput.getValue(), (Integer)priceInput.getValue()));
                 done("Order successfully placed!", id);
             } catch (OrderException e) {
@@ -1240,8 +1237,6 @@ class NewTradingAppGUI {
                 displayError("Unexpected error", doesNotExist.getMessage());
             } catch (InvalidAmount invalidAmount) {
                 displayError("Unexpected error when doing refund", invalidAmount.getMessage());
-            } catch (ConstraintException e) {
-                displayError("Order could not be deleted", e.getMessage());
             }
         }
     }

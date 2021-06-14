@@ -5,8 +5,7 @@ import org.junit.jupiter.api.*;
 
 import java.time.LocalDate;
 
-import static ClientSide.TradingAppData.assetDev1;
-import static ClientSide.TradingAppData.userDev;
+import static ClientSide.TradingAppData.*;
 import static org.junit.jupiter.api.Assertions.*;
 
 public class TestTradingAppData {
@@ -24,7 +23,7 @@ public class TestTradingAppData {
      */
     @Test
     public void TestSellTooMany() {
-        SellOrder testSellOrder = new SellOrder(userDev, assetDev1, 500, 10);
+        SellOrder testSellOrder = new SellOrder(unitDev, assetDev1, 500, 10);
         assertThrows(OrderException.class, () -> {i.placeSellOrder(testSellOrder);});
 
     }
@@ -34,7 +33,7 @@ public class TestTradingAppData {
      */
     @Test
     public void TestBuyTooExpensive() {
-        BuyOrder testBuyOrder = new BuyOrder(userDev, assetDev1, 5, 1000);
+        BuyOrder testBuyOrder = new BuyOrder(unitDev, assetDev1, 5, 1000);
         assertThrows(OrderException.class, () -> {i.placeBuyOrder(testBuyOrder);});
     }
     @Test
@@ -66,6 +65,7 @@ public class TestTradingAppData {
 
     @Test
     public void testGetHistoricalPrices() throws InvalidDate, DoesNotExist {
+        //TODO: TEST THAT VALUES ARE CORRECT
         i.getHistoricalPrices(assetDev1, TradingAppData.Intervals.DAYS);
         i.getHistoricalPrices(assetDev1, TradingAppData.Intervals.WEEKS);
         i.getHistoricalPrices(assetDev1, TradingAppData.Intervals.MONTHS);

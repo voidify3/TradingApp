@@ -1012,21 +1012,16 @@ public class OldTradingAppGUI {
             deleteButton.addActionListener(e->{
                 if (displayConfirm("Confirm deletion", "Are you sure you want to delete asset "
                         + numberKeyLabel.getText() + "?<br/>If the deletion succeeds, it will permanently delete all " +
-                        "information on holdings of the asset, and all buy and sell orders for the asset. " +
+                        "information on holdings of the asset, and all buy and sell orders for the asset, both outstanding and resolved. " +
                         "<br/>Please note that the orders will be deleted, not cancelled; i.e. credits held in outstanding " +
                         "buy orders will NOT be returned to the appropriate organisational unit. Manually cancel the " +
-                        "orders before deleting this asset if you want to return the credits. " +
-                        "<br/>Also note that for technical reasons, deletion will fail if any transactions involving the " +
-                        "asset have been resolved. ") == JOptionPane.YES_OPTION) {
+                        "orders before deleting this asset if you want to return the credits. ") == JOptionPane.YES_OPTION) {
                     try {
                         data.deleteAsset(Integer.parseInt(numberKeyLabel.getText()));
                         displayFeedback("Asset successfully deleted", "Click OK to return to admin portal");
                     } catch (DoesNotExist doesNotExist) {
                         displayError("Unexpected error: " + doesNotExist.getMessage(),
                                 "Another admin may have deleted the asset.");
-                    } catch (ConstraintException constraintException) {
-                        displayError("Deletion failed for technical reasons", constraintException.getMessage());
-                        //TODO: take user to list
                     }
                     finally {
                         shellPanel(adminHome(), false);

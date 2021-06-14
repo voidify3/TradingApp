@@ -53,7 +53,7 @@ class MockDataSource extends TradingAppDataSource {
     ArrayList<SellOrder> allSellOrders(Boolean resolved) {
         ArrayList<SellOrder> output = new ArrayList<>();
         for (SellOrder s : db.getSellOrders()) {
-            if (resolved ==(s.getDateResolved() == null)) output.add(s);
+            if (resolved==null || resolved ==(s.getDateResolved() != null)) output.add(s);
         }
         return  output;
     }
@@ -62,14 +62,14 @@ class MockDataSource extends TradingAppDataSource {
     ArrayList<BuyOrder> allBuyOrders(Boolean resolved) {
         ArrayList<BuyOrder> output = new ArrayList<>();
         for (BuyOrder s : db.getBuyOrders()) {
-            if (resolved ==(s.getDateResolved() == null)) output.add(s);
+            if (resolved==null || resolved ==(s.getDateResolved() != null)) output.add(s);
         }
         return  output;
     }
 
     @Override
-    ArrayList<SellOrder> sellOrdersByUser(String username, Boolean resolved) {
-        return db.sellOrdersByUser(username, resolved);
+    ArrayList<SellOrder> sellOrdersByUnit(String unitName, Boolean resolved) {
+        return db.sellOrdersByUnit(unitName, resolved);
     }
 
     @Override
@@ -103,8 +103,8 @@ class MockDataSource extends TradingAppDataSource {
     }
 
     @Override
-    ArrayList<BuyOrder> buyOrdersByUser(String username, Boolean resolved) {
-        return db.buyOrdersByUser(username, resolved);
+    ArrayList<BuyOrder> buyOrdersByUnit(String unitName, Boolean resolved) {
+        return db.buyOrdersByUnit(unitName, resolved);
     }
 
     @Override

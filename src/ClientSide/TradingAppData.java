@@ -39,9 +39,9 @@ class TradingAppData {
     static SellOrder testSellOrder;
 
 
-    void addHistoricalPrice(int idUpTo, int assetID, String userResponsible, int price, LocalDateTime dateTime) {
-        SellOrder sell = new SellOrder(0, userResponsible, assetID, 0, price, dateTime, dateTime);
-        BuyOrder buy = new BuyOrder(0, userResponsible, assetID, 0, price, dateTime, dateTime, idUpTo);
+    void addHistoricalPrice(int idUpTo, int assetID, String unitResponsible, int price, LocalDateTime dateTime) {
+        SellOrder sell = new SellOrder(0, unitResponsible, assetID, 0, price, dateTime, dateTime);
+        BuyOrder buy = new BuyOrder(0, unitResponsible, assetID, 0, price, dateTime, dateTime, idUpTo);
         dataSource.insertSellOrder(sell);
         dataSource.insertBuyOrder(buy);
 
@@ -49,16 +49,16 @@ class TradingAppData {
 
     void mockObjectsWithPrices() throws IllegalString, InvalidAmount, DoesNotExist, OrderException {
         mockObjects();
-        int numdays = 20;
+        int numdays = 365 * 2;
         LocalDateTime begin = LocalDateTime.now().minusDays(numdays);
         for (int i = 1; i <= numdays; i++) {
             LocalDateTime theDay = begin.plusDays(i);
-            addHistoricalPrice(i*6-5, assetDev1.getId(), adminDev.getUsername(), 10, theDay);
-            addHistoricalPrice(i*6-4, assetDev1.getId(), adminDev.getUsername(), 15, theDay);
-            addHistoricalPrice(i*6-3, assetDev1.getId(), adminDev.getUsername(), 20, theDay);
-            addHistoricalPrice(i*6-2, assetDev2.getId(), adminDev.getUsername(), 10, theDay);
-            addHistoricalPrice(i*6-1, assetDev2.getId(), adminDev.getUsername(), 30, theDay);
-            addHistoricalPrice(i*6, assetDev2.getId(), adminDev.getUsername(), 50, theDay);
+            addHistoricalPrice(i*6-5, assetDev1.getId(), unitDev.getName(), 10, theDay);
+            addHistoricalPrice(i*6-4, assetDev1.getId(), unitDev.getName(), 15, theDay);
+            addHistoricalPrice(i*6-3, assetDev1.getId(), unitDev.getName(), 20, theDay);
+            addHistoricalPrice(i*6-2, assetDev2.getId(), unitDev.getName(), 10, theDay);
+            addHistoricalPrice(i*6-1, assetDev2.getId(), unitDev.getName(), 30, theDay);
+            addHistoricalPrice(i*6, assetDev2.getId(), unitDev.getName(), 50, theDay);
         }
     }
 
@@ -83,8 +83,8 @@ class TradingAppData {
         dataSource.insertAsset(assetDev2);
         dataSource.insertOrUpdateInventory(new InventoryRecord(unitDev.getName(), assetDev1.getId(), 500));
         dataSource.insertOrUpdateInventory(new InventoryRecord(unitDev.getName(), assetDev2.getId(), 3500));
-        testBuyOrder = new BuyOrder(userDev, assetDev1, 20, 13);
-        testSellOrder = new SellOrder(userDev, assetDev1, 6, 47);
+        testBuyOrder = new BuyOrder(unitDev, assetDev1, 20, 13);
+        testSellOrder = new SellOrder(unitDev, assetDev1, 6, 47);
         placeBuyOrder(testBuyOrder);
         placeSellOrder(testSellOrder);
     }
@@ -117,9 +117,9 @@ class TradingAppData {
     ArrayList<BuyOrder> getAllBuys() { return dataSource.allBuyOrders();}
     ArrayList<SellOrder> getAllSells() {return dataSource.allSellOrders();}
 
-    ArrayList<Order> getOrdersForTable(String username, boolean justMine, boolean isBuy, boolean resolvedFlag) {
-        if (justMine && isBuy) return (ArrayList) dataSource.buyOrdersByUser(username,resolvedFlag);
-        else if (justMine) return (ArrayList) dataSource.sellOrdersByUser(username,resolvedFlag);
+    ArrayList<Order> getOrdersForTable(String unitName, boolean justMine, boolean isBuy, boolean resolvedFlag) {
+        if (justMine && isBuy) return (ArrayList) dataSource.buyOrdersByUnit(unitName,resolvedFlag);
+        else if (justMine) return (ArrayList) dataSource.sellOrdersByUnit(unitName,resolvedFlag);
         else if (isBuy) return (ArrayList) dataSource.allBuyOrders(resolvedFlag);
         else return (ArrayList) dataSource.allSellOrders(resolvedFlag);
     }
@@ -217,9 +217,13 @@ class TradingAppData {
         return dataSource.buyOrdersByAsset(assetID, false);
     }
 
-    ArrayList<BuyOrder> getBuysByUser(String username) throws DoesNotExist {
-        getUserByKey(username);
-        return dataSource.buyOrdersByUser(username, null);
+    ArrayList<BuyOrder> getBuysByUnit(String unitName) throws DoesNotExist {
+        getUnitByKey(unitName); //throws DoesNotExist
+        return dataSource.buyOrdersByUnit(unitName, null);
+    }
+    ArrayList<SellOrder> getSellsByUnit(String unitName) throws DoesNotExist {
+        getUnitByKey(unitName); //throws DoesNotExist
+        return dataSource.sellOrdersByUnit(unitName, null);
     }
 
     //TODO: methods to get the buys resolved in the last session
@@ -229,45 +233,34 @@ class TradingAppData {
     //DELETE METHODS
 
 
-    void deleteAsset(int id) throws DoesNotExist, ConstraintException {
+    void deleteAsset(int id) throws DoesNotExist {
         int i = dataSource.deleteAsset(id);
         if (i == 0) throw new DoesNotExist("Asset '%s' not found", id);
-        else if (i == -1) throw new ConstraintException("Asset '%s' could not be safely deleted. "
-                + "Delete all resolved transactions involving the asset and try again.", id);
     }
 
-    void deleteUser(String name) throws DoesNotExist, ConstraintException {
+    void deleteUser(String name) throws DoesNotExist {
         int i = dataSource.deleteUser(name);
         if (i == 0) throw new DoesNotExist("User '%s' not found", name);
-        else if (i == -1) throw new ConstraintException("User '%s' could not be safely deleted. "
-                + "Delete all buy and sell orders placed by the user and try again", name);
     }
 
-    void deleteUnit(String name) throws DoesNotExist, ConstraintException {
+    void deleteUnit(String name) throws DoesNotExist {
         int i = dataSource.deleteUnit(name);
         if (i == 0) throw new DoesNotExist("Unit '%s' not found", name);
-        else if (i == -1) throw new ConstraintException("Unit '%s' could not be safely deleted."
-                + "Delete all buy and sell orders placed by members of the unit and try again", name);
-
     }
 
-    void cancelSellOrder(int id) throws ConstraintException, DoesNotExist {
+    void cancelSellOrder(int id) throws DoesNotExist {
         SellOrder s = getSellByKey(id); //this throws the doesnotexist if needed
-        String unitToReturn = getUserByKey(s.getUser()).getUnit();
+        String unitToReturn = s.getUnit();
         int i = dataSource.deleteSellOrder(id);
-        if (i == -1) throw new ConstraintException("Sell order '%i' could not be safely deleted."
-                + "Delete any buy orders which have been reconciled with the order and try again", id);
         if (s.getDateResolved() == null) adjustInventory(unitToReturn, s.getAsset(), s.getQty());
         //return the assets if it's unresolved
     }
 
     void cancelBuyOrder(int id) throws DoesNotExist, InvalidAmount {
         BuyOrder b = getBuyByKey(id);
-        String unitToReturn = getUserByKey(b.getUser()).getUnit();
-
+        String unitToReturn = b.getUnit();
         dataSource.deleteBuyOrder(id);
         if (b.getDateResolved() == null) adjustUnitBalance(unitToReturn, b.getPrice()*b.getQty());
-        //if (dataSource.deleteBuyOrder(id) == 0) throw new DoesNotExist("Buy order '%s' not found", id);
     }
 
     void deleteInventoryRecord(String unit, int asset) throws DoesNotExist {
@@ -280,8 +273,7 @@ class TradingAppData {
 
     void placeSellOrder(SellOrder s) throws OrderException, DoesNotExist, InvalidAmount {
         //OrgUnit unitInQuestion = dataSource.unitByKey(dataSource.userByKey(s.getUsername()).getUnit());
-        InventoryRecord inventoryRecord = getInv(
-                getUserByKey(s.getUser()).getUnit(), s.getAsset());
+        InventoryRecord inventoryRecord = getInv(s.getUnit(), s.getAsset());
         int quantity = inventoryRecord.getQuantity();
         if (s.getQty() <= 0) throw new InvalidAmount("Quantity %d is invalid; must be greater than 0", s.getQty());
         if (s.getPrice() <= 0) throw new InvalidAmount("Price %d is invalid; must be greater than 0", s.getPrice());
@@ -296,7 +288,7 @@ class TradingAppData {
     }
 
     void placeBuyOrder(BuyOrder s) throws OrderException, InvalidAmount {
-        OrgUnit unitInQuestion = dataSource.unitByKey(dataSource.userByKey(s.getUser()).getUnit());
+        OrgUnit unitInQuestion = dataSource.unitByKey(s.getUnit());
         int neededCredits = s.getQty() * s.getPrice();
         if (s.getQty() <= 0) throw new InvalidAmount("Quantity %d is invalid; must be greater than 0", s.getQty());
         if (s.getPrice() <= 0) throw new InvalidAmount("Price %d is invalid; must be greater than 0", s.getPrice());
@@ -346,11 +338,7 @@ class TradingAppData {
     void updateUser(User u) throws DoesNotExist, ConstraintException {
         int result = dataSource.updateUser(u);
         if (result == 0) throw new DoesNotExist("User '%s' not found.", u.getUsername());
-        else if (result == -1) {
-            if (u.getUnit()!=null) throw new DoesNotExist("Unit %s not found.", u.getUnit());
-            else throw new ConstraintException("Cannot remove a user from their unit if the user has any buy or sell " +
-                    "orders to their name. Manually delete all their orders and try again.");
-        }
+        else if (result == -1) throw new DoesNotExist("Unit %s not found.", u.getUnit());
     }
 
     void updateUnit(OrgUnit u) throws DoesNotExist {
@@ -364,13 +352,13 @@ class TradingAppData {
     void updateBuyOrder(BuyOrder o) throws DoesNotExist {
         int result = dataSource.updateBuyOrder(o);
         if (result == 0) throw new DoesNotExist("Buy order '%i' not found.", o.getId());
-        else if (result == -1) throw new DoesNotExist("User and/or asset not found.");
+        else if (result == -1) throw new DoesNotExist("Unit and/or asset not found.");
     }
 
     void updateSellOrder(SellOrder o) throws DoesNotExist {
         int result = dataSource.updateSellOrder(o);
         if (result == 0) throw new DoesNotExist("Sell order '%i' not found.", o.getId());
-        else if (result == -1) throw new DoesNotExist("User and/or asset not found.");
+        else if (result == -1) throw new DoesNotExist("Unit and/or asset not found.");
     }
 
     void setUnitBalance(String unitName, int newBalance) throws DoesNotExist, InvalidAmount {

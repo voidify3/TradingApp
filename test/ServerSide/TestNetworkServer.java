@@ -11,6 +11,7 @@ import static org.junit.jupiter.api.Assertions.*;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.sql.SQLException;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.TreeMap;
 
@@ -29,7 +30,7 @@ public class TestNetworkServer {
     private static NetworkServer server;
     ByteArrayOutputStream outputStream;
     @BeforeEach
-    void setupAndSuccessInsert() throws SQLException, IOException {
+    void setupAndSuccessInsert() {
         server = new NetworkServer();
         assertAll(
                 ()->assertEquals(1, server.simulateNonselect(INSERT,
@@ -53,19 +54,24 @@ public class TestNetworkServer {
         );
         //server.start();
     }
+    @AfterEach
+    void done() throws SQLException, IOException {
+        server.resetEverything();
+        //server.shutdown();
+    }
     @Test
-    void failInsert() throws IOException, SQLException, IllegalString {
+    void failInsert() throws SQLException, IllegalString {
         assertEquals(0, server.simulateNonselect(INSERT,
                 new DataPacket(UNIT, null, new OrgUnit(TEST_ORG_1), false)));
         //should give 0
     }
     @Test
-    void constrainedInsert() throws IOException, IllegalString, SQLException {
+    void constrainedInsert() throws IllegalString, SQLException {
         //test that you can't insert a row with a FK value that points nowhere
         assertEquals(-1, server.simulateNonselect(INSERT,
                 new DataPacket(USER, null,
                         new User("testUserThree", "password", false, "aaa"), false)));
-        //should give 0
+
     }
     @Test
     void oneRowInsertUOD() throws SQLException {
@@ -106,24 +112,12 @@ public class TestNetworkServer {
                 new DataPacket(ASSET, null, new Asset(4, TEST_ASSET_3), null)));
     }
     @Test
-    void constrainedUpdate() throws SQLException, IllegalString {
-        //test that you can't update any of the FKs to point nowhere
-        //or update a user with orders to have null unit
-        server.simulateNonselect(INSERT,
-                new DataPacket(SELL, null,
-                        new SellOrder(TEST_USER, 1, 10, 5), false));
-        server.simulateNonselect(INSERT,
-                new DataPacket(BUY, null,
-                        new BuyOrder(TEST_USER_2, 1, 10, 5), false));
+    void constrainedUpdate() {
+        //test that you can't update a FK to point nowhere
+        //(user unit is the only fk that can be directly edited by a client request)
         assertAll(
                 ()-> assertEquals(-1, server.simulateNonselect(UPDATE,
-                        new DataPacket(USER, null, new User(TEST_USER, "password", false, "aaa"), null))),
-
-                ()-> assertEquals(-1, server.simulateNonselect(UPDATE,
-                        new DataPacket(USER, null, new User(TEST_USER, "password", false, null), null))),
-                ()-> assertEquals(-1, server.simulateNonselect(UPDATE,
-                        new DataPacket(USER, null, new User(TEST_USER_2, "password", false, null), null)))
-
+                        new DataPacket(USER, null, new User(TEST_USER, "password", false, "aaa"), null)))
                 );
     }
     @Test
@@ -139,10 +133,16 @@ public class TestNetworkServer {
     @Test
     void applyConstraintsUnit() throws SQLException {
         //Test to make sure the OrgUnit FK in User is ON DELETE SET NULL
-        // and the one in Inventories is ON DELETE CASCADE
+        // and the ones in Inventories, BuyOrder and SellOrder are all ON DELETE CASCADE
         server.simulateNonselect(INSERT,
                 new DataPacket(INV, null,
                         new InventoryRecord(TEST_ORG_1, 1, 0), true));
+        server.simulateNonselect(INSERT,
+                new DataPacket(BUY, null,
+                        new BuyOrder(TEST_ORG_1, 1, 10, 5), false));
+        server.simulateNonselect(INSERT,
+                new DataPacket(SELL, null,
+                        new SellOrder(TEST_ORG_1, 1, 10, 5), false));
         String filterpart = "='" + TEST_ORG_1 + "'";
         assertAll(()->assertEquals(1, server.simulateNonselect(DELETE, new DataPacket(UNIT,
                         UNIT.getColumns()[0] + filterpart, null, null))),
@@ -151,34 +151,13 @@ public class TestNetworkServer {
                 ()-> assertNull(((User) server.simulateSelect(new DataPacket(USER, UNIT.getColumns()[0]
                         + "='" + TEST_USER + "'", null, null)).get(0)).getUnit()),
                 ()-> assertTrue(server.simulateSelect(new DataPacket(INV, INV.getColumns()[0] + filterpart,
-                        null, null)).isEmpty())
+                        null, null)).isEmpty()),
+                ()-> assertEquals(0, server.simulateSelect(new DataPacket(SELL, SELL.getColumns()[1] + filterpart,
+                        null, null)).size()),
+                ()-> assertEquals(0, server.simulateSelect(new DataPacket(BUY, BUY.getColumns()[1] + filterpart,
+                        null, null)).size())
         );
         //the delete will succeed, but the user's unit will be set null and the inventory record will be deleted
-    }
-    @Test
-    void indirectRestrict() throws SQLException {
-        //Test to ensure that you can't delete a unit which has members with buy or sell orders
-        server.simulateNonselect(INSERT,
-                new DataPacket(SELL, null,
-                        new SellOrder(TEST_USER, 1, 10, 5), false));
-        server.simulateNonselect(INSERT,
-                new DataPacket(BUY, null,
-                        new BuyOrder(TEST_USER_2, 1, 10, 5), false));
-        String filterpart = "='" + TEST_ORG_1 + "'";
-        String filterpart2 = "='" + TEST_ORG_2 + "'";
-        assertAll(()->assertEquals(-1, server.simulateNonselect(DELETE, new DataPacket(UNIT,
-                        UNIT.getColumns()[0] + filterpart, null, null))),
-                ()->assertEquals(-1, server.simulateNonselect(DELETE, new DataPacket(UNIT,
-                        UNIT.getColumns()[0] + filterpart2, null, null))),
-                ()-> assertEquals(1, server.simulateSelect(new DataPacket(UNIT, UNIT.getColumns()[0]
-                        + filterpart, null, null)).size()),
-                ()-> assertEquals(1, server.simulateSelect(new DataPacket(UNIT, UNIT.getColumns()[0]
-                        + filterpart2, null, null)).size()),
-                ()-> assertNotNull(((User) server.simulateSelect(new DataPacket(USER, UNIT.getColumns()[0]
-                        + "='" + TEST_USER + "'", null, null)).get(0)).getUnit()),
-                ()-> assertNotNull(((User) server.simulateSelect(new DataPacket(USER, UNIT.getColumns()[0]
-                        + "='" + TEST_USER_2 + "'", null, null)).get(0)).getUnit())
-        );
     }
     @Test
     void applyConstraintsAsset() throws SQLException {
@@ -205,29 +184,26 @@ public class TestNetworkServer {
                         null, null)).isEmpty())
         );
     }
-    @Test
-    void applyConstraintsUser() throws SQLException {
-        //Test to make sure the User FKs in BuyOrder and SellOrder are both ON DELETE RESTRICT
-        server.simulateNonselect(INSERT,
-                new DataPacket(BUY, null,
-                        new BuyOrder(TEST_USER, 1, 10, 5), false));
-        server.simulateNonselect(INSERT,
-                new DataPacket(SELL, null,
-                        new SellOrder(TEST_USER, 1, 10, 5), false));
-        String filterpart = "= '" + TEST_USER + "'";
-        assertAll(()->assertEquals(-1, server.simulateNonselect(DELETE, new DataPacket(USER,
-                        USER.getColumns()[0] + filterpart, null, null))),
-                ()-> assertEquals(1, server.simulateSelect(new DataPacket(USER, USER.getColumns()[0]
-                        + filterpart, null, null)).size()),
-                ()-> assertEquals(1, server.simulateSelect(new DataPacket(SELL, SELL.getColumns()[1] + filterpart,
-                        null, null)).size()),
-                ()-> assertEquals(1, server.simulateSelect(new DataPacket(BUY, BUY.getColumns()[1] + filterpart,
-                        null, null)).size())
-        );
-    }
+
     @Test
     void applyConstraintSellOrder() throws SQLException {
-        //Test to make sure BoughtFrom is ON DELETE RESTRICT
+        //test that BoughtFrom is ON DELETE CASCADE
+        server.simulateNonselect(INSERT,
+                new DataPacket(SELL, null,
+                        new SellOrder(TEST_ORG_1, 1, 10, 5), false));
+        server.simulateNonselect(INSERT,
+                new DataPacket(BUY, null,
+                        new BuyOrder(1, TEST_ORG_2, 1, 10, 5, LocalDateTime.now(), LocalDateTime.now(), 1),
+                        false));
+        assertAll(()-> assertEquals(1, server.simulateSelect(new DataPacket(BUY, BUY.getColumns()[7] +
+                        "= 1", null, null)).size()),
+                ()->assertEquals(1, server.simulateNonselect(DELETE, new DataPacket(SELL,
+                        SELL.getColumns()[0] + "= 1", null, null))),
+                ()-> assertEquals(0, server.simulateSelect(new DataPacket(SELL, SELL.getColumns()[0] +
+                        "= 1", null, null)).size()),
+                ()-> assertEquals(0, server.simulateSelect(new DataPacket(BUY, BUY.getColumns()[7] +
+                        "= 1", null, null)).size())
+        );
     }
     @Test
     void successSelectBlankFilter() throws SQLException {
@@ -259,10 +235,10 @@ public class TestNetworkServer {
     void tradeRecNoMatches() throws SQLException {
         server.simulateNonselect(INSERT,
                 new DataPacket(SELL, null,
-                        new SellOrder(TEST_USER, 2, 10, 5), false));
+                        new SellOrder(TEST_ORG_1, 2, 10, 5), false));
         server.simulateNonselect(INSERT,
                 new DataPacket(BUY, null,
-                        new BuyOrder(TEST_USER_2, 3, 10, 5), false));
+                        new BuyOrder(TEST_ORG_2, 3, 10, 5), false));
         //no sellorder buyorder pairs with the same asset exist
         server.reconcileTrades();
         //reconcile and run a select query
@@ -288,13 +264,13 @@ public class TestNetworkServer {
     void tradeRecTrivialCase() throws SQLException {
         server.simulateNonselect(INSERT,
                 new DataPacket(SELL, null,
-                        new SellOrder(TEST_USER, 2, 10, 5), false));
+                        new SellOrder(TEST_ORG_1, 2, 10, 5), false));
         server.simulateNonselect(INSERT,
                 new DataPacket(BUY, null,
-                        new BuyOrder(TEST_USER_2, 3, 10, 5), false));
+                        new BuyOrder(TEST_ORG_2, 3, 10, 5), false));
         server.simulateNonselect(INSERT,
                 new DataPacket(SELL, null,
-                        new SellOrder(TEST_USER, 3, 10, 5), false));
+                        new SellOrder(TEST_ORG_1, 3, 10, 5), false));
         //there now exists a pair with equal qty and equal price
         server.reconcileTrades();
         //reconcile and run a select query
@@ -307,8 +283,8 @@ public class TestNetworkServer {
                 ()->assertEquals(1, resolvedBuys.size()),
                 ()->assertTrue(resolvedBuys.get(0) instanceof BuyOrder),
                 ()->assertTrue(resolvedSells.get(0) instanceof SellOrder),
-                ()->assertEquals(TEST_USER, ((SellOrder)resolvedSells.get(0)).getUser()),
-                ()->assertEquals(TEST_USER_2, ((BuyOrder)resolvedBuys.get(0)).getUser()),
+                ()->assertEquals(TEST_ORG_1, ((SellOrder)resolvedSells.get(0)).getUnit()),
+                ()->assertEquals(TEST_ORG_2, ((BuyOrder)resolvedBuys.get(0)).getUnit()),
                 ()->assertEquals(((SellOrder) resolvedSells.get(0)).getId(), ((BuyOrder) resolvedBuys.get(0)).getBoughtFrom()),
                 ()->assertEquals(((SellOrder) resolvedSells.get(0)).getDateResolved(),
                         ((BuyOrder) resolvedBuys.get(0)).getDateResolved()),
@@ -324,16 +300,16 @@ public class TestNetworkServer {
     void tradeRecPriceDifference() throws SQLException {
         server.simulateNonselect(INSERT,
                 new DataPacket(SELL, null,
-                        new SellOrder(TEST_USER, 2, 10, 5), false));
+                        new SellOrder(TEST_ORG_1, 2, 10, 5), false));
         server.simulateNonselect(INSERT,
                 new DataPacket(BUY, null,
-                        new BuyOrder(TEST_USER_2, 2, 10, 4), false));
+                        new BuyOrder(TEST_ORG_2, 2, 10, 4), false));
         server.simulateNonselect(INSERT,
                 new DataPacket(SELL, null,
-                        new SellOrder(TEST_USER_2, 3, 10, 6), false));
+                        new SellOrder(TEST_ORG_2, 3, 10, 6), false));
         server.simulateNonselect(INSERT,
                 new DataPacket(BUY, null,
-                        new BuyOrder(TEST_USER, 3, 10, 7), false));
+                        new BuyOrder(TEST_ORG_1, 3, 10, 7), false));
         //now there's 2 pairs equal qty: sellPrice=buyPrice+1 for asset 2 and sellPrice=buyPrice-1 for asset 3
         server.reconcileTrades();
         //get unresolved orders
@@ -346,8 +322,8 @@ public class TestNetworkServer {
                 ()->assertEquals(1, resolvedBuys.size()),
                 ()->assertTrue(resolvedBuys.get(0) instanceof BuyOrder),
                 ()->assertTrue(resolvedSells.get(0) instanceof SellOrder),
-                ()->assertEquals(TEST_USER_2, ((SellOrder)resolvedSells.get(0)).getUser()),
-                ()->assertEquals(TEST_USER, ((BuyOrder)resolvedBuys.get(0)).getUser()),
+                ()->assertEquals(TEST_ORG_2, ((SellOrder)resolvedSells.get(0)).getUnit()),
+                ()->assertEquals(TEST_ORG_1, ((BuyOrder)resolvedBuys.get(0)).getUnit()),
                 ()->assertEquals(((SellOrder) resolvedSells.get(0)).getId(), ((BuyOrder) resolvedBuys.get(0)).getBoughtFrom()),
                 ()->assertEquals(((SellOrder) resolvedSells.get(0)).getDateResolved(),
                         ((BuyOrder) resolvedBuys.get(0)).getDateResolved()),
@@ -366,16 +342,16 @@ public class TestNetworkServer {
     void tradeRecQtyDifference() throws SQLException {
         server.simulateNonselect(INSERT,
                 new DataPacket(SELL, null,
-                        new SellOrder(TEST_USER, 2, 11, 4), false));
+                        new SellOrder(TEST_ORG_1, 2, 11, 4), false));
         server.simulateNonselect(INSERT,
                 new DataPacket(BUY, null,
-                        new BuyOrder(TEST_USER_2, 2, 10, 4), false));
+                        new BuyOrder(TEST_ORG_2, 2, 10, 4), false));
         server.simulateNonselect(INSERT,
                 new DataPacket(SELL, null,
-                        new SellOrder(TEST_USER_2, 3, 15, 5), false));
+                        new SellOrder(TEST_ORG_2, 3, 15, 5), false));
         server.simulateNonselect(INSERT,
                 new DataPacket(BUY, null,
-                        new BuyOrder(TEST_USER, 3, 16, 5), false));
+                        new BuyOrder(TEST_ORG_1, 3, 16, 5), false));
         //now there's 2 pairs equal price: sellQty=buyQty+1 for asset 2 and sellQty=buyQty-1 for asset 3
         server.reconcileTrades();
         //get unresolved orders
@@ -388,7 +364,7 @@ public class TestNetworkServer {
                 ()->assertTrue(resolvedSells.isEmpty()),
                 ()->assertEquals(1, resolvedBuys.size()),
                 ()->assertTrue(resolvedBuys.get(0) instanceof BuyOrder),
-                ()->assertEquals(TEST_USER_2, ((BuyOrder)resolvedBuys.get(0)).getUser()),
+                ()->assertEquals(TEST_ORG_2, ((BuyOrder)resolvedBuys.get(0)).getUnit()),
                 ()->assertEquals(1, ((SellOrder) sellsFor2.get(0)).getQty()),
                 ()->assertEquals(((SellOrder) sellsFor2.get(0)).getId(), ((BuyOrder) resolvedBuys.get(0)).getBoughtFrom()),
                 ()-> assertNull(((SellOrder) sellsFor2.get(0)).getDateResolved()),
@@ -404,17 +380,17 @@ public class TestNetworkServer {
     @Test
     void tradeRecMultiMatch() throws SQLException {
         server.simulateNonselect(INSERT, new DataPacket(SELL, null,
-                new SellOrder(TEST_USER, 1, 10, 5), false));
+                new SellOrder(TEST_ORG_1, 1, 10, 5), false));
         server.simulateNonselect(INSERT, new DataPacket(SELL, null,
-                new SellOrder(TEST_USER, 1, 15, 5), false));
+                new SellOrder(TEST_ORG_1, 1, 15, 5), false));
         server.simulateNonselect(INSERT, new DataPacket(BUY, null,
-                new BuyOrder(TEST_USER_2, 1, 3, 5), false));
+                new BuyOrder(TEST_ORG_2, 1, 3, 5), false));
         server.simulateNonselect(INSERT, new DataPacket(BUY, null,
-                new BuyOrder(TEST_USER_2, 1, 8, 5), false));
+                new BuyOrder(TEST_ORG_2, 1, 8, 5), false));
         server.simulateNonselect(INSERT, new DataPacket(BUY, null,
-                new BuyOrder(TEST_USER_2, 1, 7, 5), false));
+                new BuyOrder(TEST_ORG_2, 1, 7, 5), false));
         server.simulateNonselect(INSERT, new DataPacket(BUY, null,
-                new BuyOrder(TEST_USER_2, 1, 8, 5), false));
+                new BuyOrder(TEST_ORG_2, 1, 8, 5), false));
 
         //now asset 1 has these sells from oldest to newest: 1) qty 10, 2) qty 15
         //and these buys from oldest to newest (price immaterial): 1) qty 3, 2) qty 8, 3) qty 7, 4) qty 8
@@ -462,11 +438,7 @@ public class TestNetworkServer {
         );
         //assert: sell 2 & buy 4 remain unresolved, buys 1&3 bought from sell 1, buy 2 bought from sell 2
     }
-    @AfterEach
-    void done() throws SQLException, IOException {
-        server.resetEverything();
-        //server.shutdown();
-    }
+
 
 
 }

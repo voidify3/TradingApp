@@ -57,7 +57,6 @@ class NetworkDataSource extends TradingAppDataSource {
         } catch (IOException | ClassNotFoundException e) {
             e.printStackTrace();
             return new ArrayList<>();
-            //TODO: do something better to signal the server is down
         }
     }
 
@@ -89,7 +88,6 @@ class NetworkDataSource extends TradingAppDataSource {
         } catch (IOException | ClassNotFoundException e) {
             e.printStackTrace();
             return 0;
-            //TODO: do something better to signal the server is down
         }
     }
     //--------------QUERY TYPE HELPERS-----------------
@@ -236,9 +234,9 @@ class NetworkDataSource extends TradingAppDataSource {
     }
 
     @Override
-    ArrayList<SellOrder> sellOrdersByUser(String username, Boolean resolved) {
+    ArrayList<SellOrder> sellOrdersByUnit(String unitName, Boolean resolved) {
         return (ArrayList) select(SELL,
-                filterEquals(SELL.getColumns()[1], sqlFriendlyString(username)) + orderResolvedFilter(resolved)); }
+                filterEquals(SELL.getColumns()[1], sqlFriendlyString(unitName)) + orderResolvedFilter(resolved)); }
     @Override
     ArrayList<SellOrder> sellOrdersByAsset(int assetID, Boolean resolved) {
         return (ArrayList) select(SELL,
@@ -257,9 +255,9 @@ class NetworkDataSource extends TradingAppDataSource {
         return (ArrayList) select(SELL, SELL.getColumns()[0] + "IN" + innerQuery(BUY.getName(), BUY.getColumns()[7],
                 filterBetween(BUY.getColumns()[6], sqlFriendlyString(start), sqlFriendlyString(end)))); }
     @Override
-    ArrayList<BuyOrder> buyOrdersByUser(String username, Boolean resolved) {
+    ArrayList<BuyOrder> buyOrdersByUnit(String unitName, Boolean resolved) {
         return (ArrayList) select(BUY,
-                filterEquals(BUY.getColumns()[1], sqlFriendlyString(username))
+                filterEquals(BUY.getColumns()[1], sqlFriendlyString(unitName))
                         + orderResolvedFilter(resolved)); }
     @Override
     ArrayList<BuyOrder> buyOrdersByAsset(int assetID, Boolean resolved) {

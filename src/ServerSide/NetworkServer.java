@@ -72,37 +72,37 @@ class NetworkServer {
     static final String CREATE_TABLE_SELL =
             "CREATE TABLE IF NOT EXISTS " + SELL.getName() + " ("
                     + SELL.getColumns()[0] + " INTEGER PRIMARY KEY /*!40101 AUTO_INCREMENT */ NOT NULL UNIQUE,"
-                    + SELL.getColumns()[1] + " VARCHAR(30) NOT NULL," //user
+                    + SELL.getColumns()[1] + " VARCHAR(30) NOT NULL," //unit
                     + SELL.getColumns()[2] + " INTEGER NOT NULL," //asset
                     + SELL.getColumns()[3] + " INTEGER NOT NULL," //quantity
                     + SELL.getColumns()[4] + " INTEGER NOT NULL," //price
                     + SELL.getColumns()[5] + " DATETIME NOT NULL," //datePlaced
                     + SELL.getColumns()[6] + " DATETIME," //dateResolved
-                    + "CONSTRAINT fk_sell_user FOREIGN KEY (" + SELL.getColumns()[1]
-                    + ") REFERENCES " + USER.getName() + " (" + USER.getColumns()[0]
-                    + ") ON DELETE RESTRICT ON UPDATE CASCADE,"
+                    + "CONSTRAINT fk_sell_unit FOREIGN KEY (" + SELL.getColumns()[1]
+                    + ") REFERENCES " + UNIT.getName() + " (" + UNIT.getColumns()[0]
+                    + ") ON DELETE CASCADE ON UPDATE CASCADE,"
                     + "CONSTRAINT fk_sell_asset FOREIGN KEY (" + SELL.getColumns()[2]
                     + ") REFERENCES " + ASSET.getName() + " (" + ASSET.getColumns()[0]
                     + ") ON DELETE CASCADE ON UPDATE CASCADE" + ");";
     static final String CREATE_TABLE_BUY =
             "CREATE TABLE IF NOT EXISTS " + BUY.getName() + " ("
                     + BUY.getColumns()[0] + " INTEGER PRIMARY KEY /*!40101 AUTO_INCREMENT */ NOT NULL UNIQUE,"
-                    + BUY.getColumns()[1] + " VARCHAR(30) NOT NULL," //user
+                    + BUY.getColumns()[1] + " VARCHAR(30) NOT NULL," //unit
                     + BUY.getColumns()[2] + " INTEGER NOT NULL," //asset
                     + BUY.getColumns()[3] + " INTEGER NOT NULL," //quantity
                     + BUY.getColumns()[4] + " INTEGER NOT NULL," //price
                     + BUY.getColumns()[5] + " DATETIME NOT NULL," //datePlaced
                     + BUY.getColumns()[6] + " DATETIME," //dateResolved
                     + BUY.getColumns()[7] + " INTEGER," //boughtFrom
-                    + "CONSTRAINT fk_buy_user FOREIGN KEY (" + BUY.getColumns()[1]
-                    + ") REFERENCES " + USER.getName() + " (" + USER.getColumns()[0]
-                    + ") ON DELETE RESTRICT ON UPDATE CASCADE,"
+                    + "CONSTRAINT fk_buy_unit FOREIGN KEY (" + BUY.getColumns()[1]
+                    + ") REFERENCES " + UNIT.getName() + " (" + UNIT.getColumns()[0]
+                    + ") ON DELETE CASCADE ON UPDATE CASCADE,"
                     + "CONSTRAINT fk_buy_asset FOREIGN KEY (" + BUY.getColumns()[2]
                     + ") REFERENCES " + ASSET.getName() + " (" + ASSET.getColumns()[0]
                     + ") ON DELETE CASCADE ON UPDATE CASCADE,"
                     + "CONSTRAINT fk_buy_sell FOREIGN KEY (" + BUY.getColumns()[7]
                     + ") REFERENCES " + SELL.getName() + " (" + SELL.getColumns()[0]
-                    + ") ON DELETE RESTRICT ON UPDATE CASCADE" + ");";
+                    + ") ON DELETE CASCADE ON UPDATE CASCADE" + ");";
     /*
         static final String CREATE_TABLES = CREATE_TABLE_UNIT + CREATE_TABLE_ASSET + CREATE_TABLE_USER +
                 CREATE_TABLE_INV + CREATE_TABLE_SELL + CREATE_TABLE_BUY;
@@ -115,16 +115,12 @@ class NetworkServer {
 
     private static final String GET_ASSETS = "SELECT * FROM asset;";
     private static final String RECONCILIATION_GET_SELLS =
-            "SELECT sellorder.*, user.orgunit FROM sellorder " +
-                    "LEFT JOIN user ON sellorder.user = user.name " +
+            "SELECT * FROM sellorder " +
                     "WHERE dateResolved IS NULL AND asset=? " +
-                    "AND user.orgunit IS NOT NULL " +
                     "ORDER BY datePlaced, idx;";
     private static final String RECONCILIATION_GET_BUYS =
-            "SELECT buyorder.*, user.orgunit FROM buyorder " +
-                    "LEFT JOIN user ON buyorder.user = user.name " +
+            "SELECT * FROM buyorder " +
                     "WHERE dateResolved IS NULL AND asset=? " +
-                    "AND user.orgunit IS NOT NULL " +
                     "ORDER BY datePlaced, idx;";
     private static final String RECONCILIATION_RESOLVE_BUY =
             "UPDATE buyorder " +
@@ -226,25 +222,31 @@ class NetworkServer {
 
                 handleRequest(command, info, objectOutputStream);
             }
-            catch (SQLException | IllegalString e) {
+            catch (SQLException e) {
                 e.printStackTrace();
             }
 
         }
     }
 
-    private void handleRequest(ProtocolKeywords keyword, DataPacket info, ObjectOutputStream out) throws IOException, SQLException, IllegalString {
+    private void handleRequest(ProtocolKeywords keyword, DataPacket info, ObjectOutputStream out) throws IOException, SQLException {
         if (keyword == ProtocolKeywords.SELECT) out.writeObject(handleSelect(info));
         else out.writeObject(handleNonselect(keyword, info));
     }
 
-    private ArrayList<DataObject> handleSelect(DataPacket info) throws SQLException, IllegalString {
+    private ArrayList<DataObject> handleSelect(DataPacket info) throws SQLException {
         ArrayList results = new ArrayList<>();
         String queryString = String.format(GENERIC_SELECT, info.table.getName(), info.filter,
                 info.table.getColumns()[0], info.table.getColumns()[1]);
         ResultSet queryResults = executeSelectQuery(connection.prepareStatement(queryString));
         switch(info.table) {
-            case UNIT -> results = populateUnits(queryResults);
+            case UNIT -> {
+                try {
+                    results = populateUnits(queryResults);
+                } catch (IllegalString illegalString) {
+                    illegalString.printStackTrace();
+                }
+            }
             case ASSET -> results = populateAssets(queryResults);
             case INV -> results = populateInv(queryResults);
             case USER -> results = populateUsers(queryResults);
@@ -331,22 +333,6 @@ class NetworkServer {
         }
         else if (keyword == DELETE) {
             statement = connection.prepareStatement(String.format(GENERIC_DELETE, info.table.getName(), info.filter));
-            if (info.table == UNIT) {
-                //here, we need to use an indirect check to avoid situations where a user with null unit
-                // has active orders. so attempt and then roll back a USER delete on all members of would-be-deleted units
-                // and if an exception was thrown some users have buy/sell orders so cancel the whole deletion
-                try {
-                    String query = String.format(GENERIC_DELETE, USER.getName(), USER.getColumns()[3] +
-                            " IN (" + String.format(GENERIC_SELECT, UNIT.getName(), info.filter, UNIT.getColumns()[0], UNIT.getColumns()[1])
-                            .replace(";", "") + ")").replace("*", UNIT.getColumns()[0]);
-                    //System.out.println(query);
-                    connection.prepareStatement(query).executeUpdate();
-                    connection.rollback();
-                }
-                catch (SQLIntegrityConstraintViolationException e) {
-                    return -1;
-                }
-            }
         }
         else {
             if (keyword == INSERT) {
@@ -383,18 +369,7 @@ class NetworkServer {
                     statement.setString(3,x.getSalt());
                     String unit = x.getUnit();
                     if (unit != null) statement.setString(4, unit);
-                    else {
-                        statement.setNull(4, Types.VARCHAR);
-                        //here, we need to use an indirect check to avoid situations where a user with null unit
-                        // has active orders. Get the number of
-                        if (isUpdate) {
-                            int orderCount = totalRecordCount(new String[]{
-                                    BUY.getName() + " WHERE " + BUY.getColumns()[1] + "= '" + x.getUsername() + "'",
-                                    SELL.getName() + " WHERE " + SELL.getColumns()[1] + "= '" + x.getUsername() + "'",
-                            });
-                            if (orderCount > 0) return -1;
-                        }
-                    }
+                    else statement.setNull(4, Types.VARCHAR);
                     statement.setBoolean(5, x.getAdminAccess());
                     if (isUpdate) statement.setString(6, x.getUsername());
                 }
@@ -407,7 +382,7 @@ class NetworkServer {
                 }
                 case SELL -> {
                     SellOrder x = (SellOrder) info.object;
-                    statement.setString(1,x.getUser());
+                    statement.setString(1,x.getUnit());
                     statement.setInt(2,x.getAsset());
                     statement.setInt(3,x.getQty());
                     statement.setInt(4,x.getPrice());
@@ -420,7 +395,7 @@ class NetworkServer {
                 }
                 case BUY -> {
                     BuyOrder x = (BuyOrder) info.object;
-                    statement.setString(1,x.getUser());
+                    statement.setString(1,x.getUnit());
                     statement.setInt(2,x.getAsset());
                     statement.setInt(3,x.getQty());
                     statement.setInt(4,x.getPrice());
@@ -441,7 +416,7 @@ class NetworkServer {
         }
         catch (SQLIntegrityConstraintViolationException i) {
             //if this exception was thrown, either this is an insert query that hit a duplicate key (we want 0)
-            //or the query was stopped by a FK constraint (for all types of this we want -1)
+            //or an insert/update that was stopped by a FK constraint (we want -1)
             String message = i.getMessage();
             //System.err.println(message);
             if (message.contains("Duplicate")) return 0;
@@ -497,6 +472,7 @@ class NetworkServer {
      * Requests the server to shut down
      */
     void shutdown() {
+        System.out.println("Shutting down server");
         //Stop firing trade reconciliation
         tradeReconciliation.cancel();
         //Close the database connection
@@ -540,13 +516,13 @@ class NetworkServer {
                     int sellID = sells.getInt(1);
                     int sellQty = sells.getInt(4);
                     int sellPrice = sells.getInt(5);
-                    String sellUnit = sells.getString(8);
+                    String sellUnit = sells.getString(2);
                     while (buys.next()) {
                         int buyID = buys.getInt(1);
                         if (ignoredBuys.contains(buyID)) continue;
                         int buyQty = buys.getInt(4);
                         int buyPrice = buys.getInt(5);
-                        String buyUnit = buys.getString(9);
+                        String buyUnit = buys.getString(2);
                         System.out.printf("Comparing sell order %d (%d, $%d) and buy order %d (%d, $%d)...",
                                 sellID, sellQty, sellPrice, buyID, buyQty, buyPrice);
                         if (buyQty <= sellQty && buyPrice >= sellPrice) {
@@ -588,7 +564,7 @@ class NetworkServer {
                             resolutionCount++;
                         }
                         else {
-                            System.out.println(" Failed to resolve.");
+                            System.out.println(" Didn't resolve.");
                         }
                         if (sellQty == 0) break;
                     }
@@ -635,7 +611,7 @@ class NetworkServer {
      * @param info DataPacket of query
      * @return ArrayList of results
      */
-    ArrayList<DataObject> simulateSelect(DataPacket info) throws SQLException, IllegalString {
+    ArrayList<DataObject> simulateSelect(DataPacket info) throws SQLException {
         return handleSelect(info);
     }
 

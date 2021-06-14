@@ -14,8 +14,8 @@ public class BuyOrder extends Order {
 
     private Integer boughtFrom = null;
 
-    public BuyOrder(User user, Asset asset, int qty, int price) {
-        super(user, asset, qty, price);
+    public BuyOrder(OrgUnit unit, Asset asset, int qty, int price) {
+        super(unit, asset, qty, price);
     }
 
     /**

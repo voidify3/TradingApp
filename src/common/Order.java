@@ -8,7 +8,7 @@ import java.util.Objects;
  */
 public class Order extends DataObject implements Comparable<Order> {
     private int id = 0;
-    private String user;
+    private String unit;
     private int asset;
     private LocalDateTime datePlaced;
     private LocalDateTime dateResolved;
@@ -17,22 +17,22 @@ public class Order extends DataObject implements Comparable<Order> {
 
     /**
      * This constructor sets the trade ID of the order and adds the trade specific information to the object.
-     * @param user User object that placed the trade
+     * @param unit OrgUnit object that placed the trade
      * @param asset Asset that is being traded
      * @param qty Amount of the asset that is being traded
      * @param price Price at which the asset is being traded
      */
-    public Order(User user, Asset asset, int qty, int price) {
-        this(user.getUsername(), asset.getId(), qty,price);
+    public Order(OrgUnit unit, Asset asset, int qty, int price) {
+        this(unit.getName(), asset.getId(), qty,price);
     }
-    public Order(String user, int asset, int qty, int price) {
+    public Order(String unit, int asset, int qty, int price) {
 
         // Set the time that the order was created.
         this.setDatePlaced(LocalDateTime.now());
         this.setDateResolved(null);
 
         // Update trade specific data
-        this.setUser(user);
+        this.setUnit(unit);
         this.setAsset(asset);
         this.setQty(qty);
         this.setPrice(price);
@@ -41,15 +41,15 @@ public class Order extends DataObject implements Comparable<Order> {
     /**
      * Constructor for objects retrieved from the database
      * @param id ID
-     * @param user user name who placed it
+     * @param unit unit name who placed it
      * @param asset asset ID
      * @param qty quantity
      * @param price price
      * @param placed date placed
      * @param resolved date resolved
      */
-    public Order(int id, String user, int asset, int qty, int price, LocalDateTime placed, LocalDateTime resolved) {
-        this(user,asset,qty,price);
+    public Order(int id, String unit, int asset, int qty, int price, LocalDateTime placed, LocalDateTime resolved) {
+        this(unit,asset,qty,price);
         // Set the ID
         this.setId(id);
         // Set the date fields
@@ -81,12 +81,12 @@ public class Order extends DataObject implements Comparable<Order> {
         if (this == o) return true;
         if (!(o instanceof Order)) return false;
         Order order = (Order) o;
-        return id == order.id && asset == order.asset && qty == order.qty && price == order.price && user.equals(order.user) && datePlaced.equals(order.datePlaced) && Objects.equals(dateResolved, order.dateResolved);
+        return id == order.id && asset == order.asset && qty == order.qty && price == order.price && unit.equals(order.unit) && datePlaced.equals(order.datePlaced) && Objects.equals(dateResolved, order.dateResolved);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(id, user, asset, datePlaced, dateResolved, qty, price);
+        return Objects.hash(id, unit, asset, datePlaced, dateResolved, qty, price);
     }
 
     public int getQty() {
@@ -113,12 +113,12 @@ public class Order extends DataObject implements Comparable<Order> {
         this.id = id;
     }
 
-    public String getUser() {
-        return user;
+    public String getUnit() {
+        return unit;
     }
 
-    public void setUser(String user) {
-        this.user = user;
+    public void setUnit(String unit) {
+        this.unit = unit;
     }
 
     public int getAsset() {

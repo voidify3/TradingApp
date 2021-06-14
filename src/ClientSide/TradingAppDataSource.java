@@ -56,13 +56,13 @@ abstract class TradingAppDataSource {
     abstract ArrayList<BuyOrder> allBuyOrders(Boolean resolved);
     /**
      *
-     * @param username a username
+     * @param unitName a username
      * @param resolved Flag describing resolvedness filter:
      *                 true for "resolved orders only", false for "unresolved orders only",
      *                 null for "include both resolved and unresolved orders"
-     * @return ArrayList of all sell orders placed by the requested user that meet the resolvedness filter
+     * @return ArrayList of all sell orders placed by members of the requested unit that meet the resolvedness filter
      */
-    abstract ArrayList<SellOrder> sellOrdersByUser(String username, Boolean resolved);
+    abstract ArrayList<SellOrder> sellOrdersByUnit(String unitName, Boolean resolved);
 
     /**
      *
@@ -106,13 +106,13 @@ abstract class TradingAppDataSource {
 
     /**
      *
-     * @param username a username
+     * @param unitName the name of an organisational unit
      * @param resolved Flag describing resolvedness filter:
      *                 true for "resolved orders only", false for "unresolved orders only",
      *                 null for "include both resolved and unresolved orders"
-     * @return ArrayList of all buy orders placed by the requested user that meet the resolvedness filter
+     * @return ArrayList of all buy orders placed by members of the requested unit that meet the resolvedness filter
      */
-    abstract ArrayList<BuyOrder> buyOrdersByUser(String username, Boolean resolved);
+    abstract ArrayList<BuyOrder> buyOrdersByUnit(String unitName, Boolean resolved);
 
     /**
      *
@@ -152,7 +152,6 @@ abstract class TradingAppDataSource {
      */
     abstract ArrayList<BuyOrder> buyOrdersResolvedBetween(Timestamp start, Timestamp end);
 
-    //--Calling selectByValue
     abstract ArrayList<User> usersByUnit(String unit);
 
     abstract ArrayList<InventoryRecord> inventoriesByUnit(String unit);
@@ -161,7 +160,6 @@ abstract class TradingAppDataSource {
 
     abstract ArrayList<BuyOrder> buyOrdersByBoughtFrom(int sellOrderID);
 
-    //--Calling selectByKey
     abstract User userByKey(String name);
 
     abstract OrgUnit unitByKey(String name);
@@ -208,7 +206,7 @@ abstract class TradingAppDataSource {
      *
      * @param s sellorder object to send
      * @return 1 if insert succeeded, 0 if insert failed due to duplicate key (should never happen though),
-     * -1 if insert failed due to nonexistence of asset or user
+     * -1 if insert failed due to nonexistence of asset or unit
      */
     abstract int insertSellOrder(SellOrder s);
 
@@ -216,7 +214,7 @@ abstract class TradingAppDataSource {
      *
      * @param b buyorder object to send
      * @return 1 if insert succeeded, 0 if insert failed (should never happen though),
-     * -1 if insert failed due to nonexistence of asset or user
+     * -1 if insert failed due to nonexistence of asset or unit
      */
     abstract int insertBuyOrder(BuyOrder b);
 
@@ -226,7 +224,7 @@ abstract class TradingAppDataSource {
      *
      * @param u user object to send
      * @return 1 if update succeeded, 0 if update failed due to nonexistent key,
-     * -1 if update failed due to nonexistence of unit, or an attempt to set the unit null when orders exist
+     * -1 if update failed due to nonexistence of unit
      */
     abstract int updateUser(User u);
 
@@ -248,7 +246,7 @@ abstract class TradingAppDataSource {
      *
      * @param s sellorder object to send
      * @return 1 if update succeeded, 0 if update failed due to nonexistent key,
-     * -1 if update failed due to nonexistence of asset or user
+     * -1 if update failed due to nonexistence of asset or unit
      */
     abstract int updateSellOrder(SellOrder s);
 
@@ -256,7 +254,7 @@ abstract class TradingAppDataSource {
      *
      * @param b buyorder object to send
      * @return 1 if update succeeded, 0 if update failed due to nonexistent key,
-     *  -1 if update failed due to nonexistence of asset or user or BoughtFrom sell order
+     *  -1 if update failed due to nonexistence of asset or unit or BoughtFrom sell order
      */
     abstract int updateBuyOrder(BuyOrder b);
 
@@ -283,27 +281,21 @@ abstract class TradingAppDataSource {
     /**
      *
      * @param key username to delete
-     * @return 1 if deletion succeeded, 0 if deletion failed due to nonexistent key,
-     * -1 if deletion was prevented by constraints
-     * (i.e. if buy orders or sell orders placed by the user exist)
+     * @return 1 if deletion succeeded, 0 if deletion failed due to nonexistent key
      */
     abstract int deleteUser(String key);
 
     /**
      *
      * @param key name to delete
-     * @return 1 if deletion succeeded, 0 if deletion failed due to nonexistent key,
-     * -1 if deletion was prevented by constraints
-     * (i.e. if any members of the unit have buy orders or sell orders)
+     * @return 1 if deletion succeeded, 0 if deletion failed
      */
     abstract int deleteUnit(String key);
 
     /**
      *
      * @param key asset ID to delete
-     * @return 1 if deletion succeeded, 0 if deletion failed due to nonexistent key,
-     * -1 if deletion was prevented by constraints
-     * (i.e. if the deletion of any SellOrders for this asset was prevented by constraints)
+     * @return 1 if deletion succeeded, 0 if deletion failed
      */
     abstract int deleteAsset(int key);
 
@@ -317,9 +309,7 @@ abstract class TradingAppDataSource {
     /**
      *
      * @param key order ID to delete
-     * @return 1 if deletion succeeded, 0 if deletion failed due to nonexistent key,
-     * -1 if deletion was prevented by constraints
-     * (i.e. if any BuyOrders reference this SellOrder as BoughtFrom)
+     * @return 1 if deletion succeeded, 0 if deletion failed due to nonexistent key
      */
     abstract int deleteSellOrder(int key);
 

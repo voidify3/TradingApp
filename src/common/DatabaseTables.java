@@ -8,9 +8,9 @@ public enum DatabaseTables {
     ASSET("asset", new String[]{"idx", "description"}),
     USER("user", new String[]{"name", "passhash", "salt", "orgunit", "adminAccess"}),
     INV("inventories", new String[]{"orgunit", "asset", "quantity"}),
-    SELL("sellorder", new String[]{"idx","user","asset","quantity","price","datePlaced","dateResolved"}),
+    SELL("sellorder", new String[]{"idx","unit","asset","quantity","price","datePlaced","dateResolved"}),
     BUY("buyorder",
-            new String[]{"idx","user","asset","quantity","price","datePlaced","dateResolved","boughtFrom"});
+            new String[]{"idx","unit","asset","quantity","price","datePlaced","dateResolved","boughtFrom"});
 
     DatabaseTables(String name, String[] columns) {
         this.name = name;
