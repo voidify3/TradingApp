@@ -206,7 +206,7 @@ For this assignment a MariaDB database will be used to store six tables of data:
 
 The relationships between these tables can be seen in the below ERD diagram.
 
-![image](Diagrams/DatabaseERD2.png)
+![image](Diagrams/DatabaseERD.png)
 
 The line types encode this information about the relations in the database:
 - All relations are 1-M (a PK value may have arbitrarily many FK references)
