@@ -952,11 +952,7 @@ public class NewTradingAppGUI {
             super((seed == null));
             if (seed != null) {
                 deletePromptText = "Are you sure you want to delete "
-                        + seed + "?<br/>If the deletion succeeds, it will permanently delete all " +
-                        "buy and sell orders placed by the user. " +
-                        "<br/>Please note that the orders will be deleted, not cancelled; i.e. credits held in outstanding " +
-                        "buy orders will NOT be returned to the appropriate organisational units by this operation. " +
-                        "Manually cancel the orders before deleting this user to return the credits. ";
+                        + seed + "?<br/>This operation cannot be undone.";
                 old = data.getUserByKey(seed);
                 infoLabel.setText("Editing user with username:");
                 passwordLabel.setText("New password (leave blank to keep old password):");
