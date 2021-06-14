@@ -357,7 +357,7 @@ NetworkDataSource has the following public methods, which are used by TradingApp
   - [x] place order page (asset dropdown, quantity spinner, price spinner)
   - [x] place sell order page
   - [x] convert home page 
-  - [ ] branch off for GUI changes
+  - [x] branch off for GUI changes
   - [x] order list page
     - [ ] order list toggles
     - [ ] order list clickthrough
