@@ -1,4 +1,4 @@
-package ServerSide;
+package ClientSide;
 
 import common.*;
 
@@ -7,7 +7,7 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 
 @Deprecated
-public class MockDatabase {
+class MockDatabase {
     //Stub data structures
     private ArrayList<User> allUsers = new ArrayList<>();
     //ArrayList of all Units (Objects)
@@ -30,16 +30,16 @@ public class MockDatabase {
                 && (inQuestion.isBefore(end) || inQuestion.isEqual(end)));
     }
 
-    public MockDatabase() {
+    MockDatabase() {
         nextAssetID = 1;
         nextBuyID = 1;
         nextSellID = 1;
     }
 
-    public void close() {
+    void close() {
 
     }
-    public int deleteEverything() {
+    int deleteEverything() {
         int result = allUnits.size() + allAssets.size() + allUsers.size() + inventories.size() + sellOrders.size() + buyOrders.size();
         allUsers = new ArrayList<>();
         allUnits = new ArrayList<>();
@@ -52,7 +52,7 @@ public class MockDatabase {
         nextSellID = 1;
         return result;
     }
-    public int addUser(User data) {
+    int addUser(User data) {
         //FK check
         if (data.getUnit() != null && getUnit(data.getUnit()) == null) return -1;
         //Check for duplicates
@@ -65,7 +65,7 @@ public class MockDatabase {
         allUsers.add(data);
         return 1;
     }
-    public int addUnit(OrgUnit data) {
+    int addUnit(OrgUnit data) {
         //Check for duplicates
         for (OrgUnit unit : allUnits) {
             if (unit.getName().equalsIgnoreCase(data.getName())) {
@@ -76,12 +76,12 @@ public class MockDatabase {
         return 1;
     }
 
-    public int addAsset(Asset data) {
+    int addAsset(Asset data) {
         allAssets.add(new Asset(nextAssetID++, data.getDescription()));
         return 1;
     }
 
-    public int addSellOrder(SellOrder order) {
+    int addSellOrder(SellOrder order) {
         //Check that the FK values exist
         if (getAsset(order.getAsset()) == null || getUser(order.getUser()) == null) return -1;
 
@@ -90,7 +90,7 @@ public class MockDatabase {
         return 1;
     }
 
-    public int addBuyOrder(BuyOrder order) {
+    int addBuyOrder(BuyOrder order) {
         //Check that the FK values exist
         if (getAsset(order.getAsset()) == null || getUser(order.getUser()) == null ||
                 (order.getBoughtFrom() != null && getSell(order.getBoughtFrom()) == null)) return -1;
@@ -101,7 +101,7 @@ public class MockDatabase {
     }
 
 
-    public int addOrReplaceInventory(InventoryRecord data) {
+    int addOrReplaceInventory(InventoryRecord data) {
         //FK checks
         if (getAsset(data.getAssetID()) == null || getUnit(data.getUnitName()) == null) return -1;
 
@@ -117,7 +117,7 @@ public class MockDatabase {
 
     }
 
-    public int replaceUser(User u) {
+    int replaceUser(User u) {
         //constraint checks
         if ((u.getUnit() != null && getUnit(u.getUnit()) == null) || //the unit does not exist
                 (u.getUnit() == null && //OR the unit is null and the user has orders
@@ -131,7 +131,7 @@ public class MockDatabase {
         }
         return 0;
     }
-    public int replaceUnit(OrgUnit u) {
+    int replaceUnit(OrgUnit u) {
         for (int i = 0; i < allUnits.size(); i++) {
             if (allUnits.get(i).getName().equalsIgnoreCase(u.getName())) {
                 allUnits.set(i, u);
@@ -140,7 +140,7 @@ public class MockDatabase {
         }
         return 0;
     }
-    public int replaceAsset(Asset a ) {
+    int replaceAsset(Asset a ) {
         for (int i = 0; i < allAssets.size(); i++) {
             if (allAssets.get(i).getId() == a.getId()) {
                 allAssets.set(i, a);
@@ -149,7 +149,7 @@ public class MockDatabase {
         }
         return 0;
     }
-    public int replaceSellOrder(SellOrder s) {
+    int replaceSellOrder(SellOrder s) {
         //FK checks
         if (getAsset(s.getAsset()) == null || getUser(s.getUser()) == null) return -1;
 
@@ -161,7 +161,7 @@ public class MockDatabase {
         }
         return 0;
     }
-    public int replaceBuyOrder(BuyOrder b) {
+    int replaceBuyOrder(BuyOrder b) {
         //FK checks
         if (getAsset(b.getAsset()) == null || getUser(b.getUser()) == null ||
                 (b.getBoughtFrom() != null && getSell(b.getBoughtFrom()) == null)) return -1;
@@ -176,7 +176,7 @@ public class MockDatabase {
     }
 
     //DELETE METHODS---------------------------------------------
-    public int deleteUser(String user) {
+    int deleteUser(String user) {
         User toDelete = getUser(user);
         if (toDelete == null) return 0;
         //obey dependencies: if any buy or sell orders, cancel deletion
@@ -189,7 +189,7 @@ public class MockDatabase {
         return 1;
     }
 
-    public int deleteUnit(String unit) {
+    int deleteUnit(String unit) {
         OrgUnit toDelete = getUnit(unit);
         if (toDelete == null) return 0;
         //obey dependencies: set user values null but cancel if any have orders, delete inventory records
@@ -211,7 +211,7 @@ public class MockDatabase {
         }
         return 1;
     }
-    public int deleteAsset(int asset) {
+    int deleteAsset(int asset) {
         Asset toDelete = getAsset(asset);
         if (toDelete == null) return 0;
         //obey dependencies: delete inventory records and orders, but cancel the deletion entirely before
@@ -230,7 +230,7 @@ public class MockDatabase {
         }
         return 1;
     }
-    public int deleteInv(String orgunit, int asset) {
+    int deleteInv(String orgunit, int asset) {
         InventoryRecord toDelete = getInv(orgunit, asset);
         if (toDelete == null) return 0;
         while (inventories.contains(toDelete)) {
@@ -238,7 +238,7 @@ public class MockDatabase {
         }
         return 1;
     }
-    public int cancelSellOrder(int orderID) {
+    int cancelSellOrder(int orderID) {
         SellOrder toDelete = getSell(orderID);
         if (toDelete == null) return 0;
         //obey dependencies: if this sell order is referenced by any buy orders, do not delete
@@ -248,7 +248,7 @@ public class MockDatabase {
         }
         return 1;
     }
-    public int cancelBuyOrder(int orderID) {
+    int cancelBuyOrder(int orderID) {
         BuyOrder toDelete = getBuy(orderID);
         if (toDelete == null) return 0;
         while (buyOrders.contains(toDelete)) {
@@ -261,7 +261,7 @@ public class MockDatabase {
 
     //SELECT METHODS-----------------------------------------------------
 
-    public ArrayList<SellOrder> sellOrdersByUser(String username, Boolean resolved) {
+    ArrayList<SellOrder> sellOrdersByUser(String username, Boolean resolved) {
         ArrayList<SellOrder> output = new ArrayList<>();
         for (SellOrder s : sellOrders) {
             if ((resolved == null ||  (resolved == (s.getDateResolved() != null)))  //resolved matches the truth value of `s.dateResolved != null`
@@ -272,7 +272,7 @@ public class MockDatabase {
         return output;
     }
 
-    public ArrayList<SellOrder> sellOrdersByAsset(int assetID, Boolean resolved) {
+    ArrayList<SellOrder> sellOrdersByAsset(int assetID, Boolean resolved) {
         ArrayList<SellOrder> output = new ArrayList<>();
         for (SellOrder s : sellOrders) {
             if ((resolved == null ||  (resolved == (s.getDateResolved() != null)))  //resolved matches the truth value of `s.dateResolved != null`
@@ -282,7 +282,7 @@ public class MockDatabase {
         }
         return output;
     }
-    public ArrayList<SellOrder> sellOrdersPlacedBetween(Timestamp start, Timestamp end, Boolean resolved) {
+    ArrayList<SellOrder> sellOrdersPlacedBetween(Timestamp start, Timestamp end, Boolean resolved) {
         ArrayList<SellOrder> output = new ArrayList<>();
         for (SellOrder s : sellOrders) {
             if ((resolved == null ||  (resolved == (s.getDateResolved() != null)))  //resolved matches the truth value of `s.dateResolved != null`
@@ -292,7 +292,7 @@ public class MockDatabase {
         }
         return output;
     }
-    public ArrayList<SellOrder> sellOrdersResolvedBetween(Timestamp start, Timestamp end) {
+    ArrayList<SellOrder> sellOrdersResolvedBetween(Timestamp start, Timestamp end) {
         ArrayList<SellOrder> output = new ArrayList<>();
         for (SellOrder s : sellOrders) {
             if (isBetween(s.getDateResolved(), start.toLocalDateTime(), end.toLocalDateTime())) {
@@ -302,7 +302,7 @@ public class MockDatabase {
         return output;
     }
 
-    public ArrayList<BuyOrder> buyOrdersByUser(String username, Boolean resolved) {
+    ArrayList<BuyOrder> buyOrdersByUser(String username, Boolean resolved) {
         ArrayList<BuyOrder> output = new ArrayList<>();
         for (BuyOrder s : buyOrders) {
             if ((resolved == null ||  (resolved == (s.getDateResolved() != null)))  //resolved matches the truth value of `s.dateResolved != null`
@@ -313,7 +313,7 @@ public class MockDatabase {
         return output;
     }
 
-    public ArrayList<BuyOrder> buyOrdersByAsset(int assetID, Boolean resolved) {
+    ArrayList<BuyOrder> buyOrdersByAsset(int assetID, Boolean resolved) {
         ArrayList<BuyOrder> output = new ArrayList<>();
         for (BuyOrder s : buyOrders) {
             if ((resolved == null ||  (resolved == (s.getDateResolved() != null)))  //resolved matches the truth value of `s.dateResolved != null`
@@ -324,7 +324,7 @@ public class MockDatabase {
         return output;
     }
 
-    public ArrayList<BuyOrder> buyOrdersByAssetResolvedBetween(int assetID, Timestamp start, Timestamp end) {
+    ArrayList<BuyOrder> buyOrdersByAssetResolvedBetween(int assetID, Timestamp start, Timestamp end) {
         ArrayList<BuyOrder> output = new ArrayList<>();
         for (BuyOrder s : buyOrders) {
             if (isBetween(s.getDateResolved(), start.toLocalDateTime(), end.toLocalDateTime())
@@ -335,7 +335,7 @@ public class MockDatabase {
         return output;
     }
 
-    public ArrayList<BuyOrder> buyOrdersPlacedBetween(Timestamp start, Timestamp end, Boolean resolved) {
+    ArrayList<BuyOrder> buyOrdersPlacedBetween(Timestamp start, Timestamp end, Boolean resolved) {
         ArrayList<BuyOrder> output = new ArrayList<>();
         for (BuyOrder s : buyOrders) {
             if ((resolved == null ||  (resolved == (s.getDateResolved() != null))) //resolved matches the truth value of `s.dateResolved != null`
@@ -346,7 +346,7 @@ public class MockDatabase {
         return output;
     }
 
-    public ArrayList<BuyOrder> buyOrdersResolvedBetween(Timestamp start, Timestamp end) {
+    ArrayList<BuyOrder> buyOrdersResolvedBetween(Timestamp start, Timestamp end) {
         ArrayList<BuyOrder> output = new ArrayList<>();
         for (BuyOrder s : buyOrders) {
             if (isBetween(s.getDateResolved(), start.toLocalDateTime(), end.toLocalDateTime())) {
@@ -356,7 +356,7 @@ public class MockDatabase {
         return output;
     }
 
-    public ArrayList<User> unitMembers(String unitName) {
+    ArrayList<User> unitMembers(String unitName) {
         ArrayList<User> results = new ArrayList<>();
         for (User current : allUsers) {
             if (current.getUnit().equalsIgnoreCase(unitName)) {
@@ -366,7 +366,7 @@ public class MockDatabase {
         return results;
     }
 
-    public ArrayList<InventoryRecord> unitInventory(String unitName) {
+    ArrayList<InventoryRecord> unitInventory(String unitName) {
         ArrayList<InventoryRecord> results = new ArrayList<>();
         for (InventoryRecord current : inventories) {
             if (current.getUnitName() == unitName) {
@@ -376,7 +376,7 @@ public class MockDatabase {
         return results;
     }
 
-    public ArrayList<InventoryRecord> assetInventory(int assetID) {
+    ArrayList<InventoryRecord> assetInventory(int assetID) {
         ArrayList<InventoryRecord> results = new ArrayList<>();
         for (InventoryRecord current : inventories) {
             if (current.getAssetID() == assetID) {
@@ -386,7 +386,7 @@ public class MockDatabase {
         return results;
     }
 
-    public ArrayList<BuyOrder> customersOf(int sellOrderID) {
+    ArrayList<BuyOrder> customersOf(int sellOrderID) {
         ArrayList<BuyOrder> results = new ArrayList<>();
         for (BuyOrder current : buyOrders) {
             if (current.getBoughtFrom() != null && current.getBoughtFrom() == sellOrderID) {
@@ -401,7 +401,7 @@ public class MockDatabase {
      * @param name
      * @return
      */
-    public OrgUnit getUnit(String name) {
+    OrgUnit getUnit(String name) {
         for (OrgUnit current : allUnits) {
             if (current.getName().equalsIgnoreCase(name)) {
                 return current;
@@ -409,7 +409,7 @@ public class MockDatabase {
         }
         return null;
     }
-    public User getUser(String name) {
+    User getUser(String name) {
         for (User current : allUsers) {
             if (current.getUsername().equalsIgnoreCase(name)) {
                 return current;
@@ -417,7 +417,7 @@ public class MockDatabase {
         }
         return null;
     }
-    public Asset getAsset(int assetID) {
+    Asset getAsset(int assetID) {
         for (Asset current : allAssets) {
             if (current.getId() == assetID) {
                 return current;
@@ -426,7 +426,7 @@ public class MockDatabase {
         return null;
     }
 
-    public InventoryRecord getInv(String unit, int asset) {
+    InventoryRecord getInv(String unit, int asset) {
         for (InventoryRecord x : inventories) {
             if (x.getUnitName().equalsIgnoreCase(unit) && x.getAssetID() == asset) {
                 return x;
@@ -435,7 +435,7 @@ public class MockDatabase {
         return null;
     }
 
-    public SellOrder getSell(int ID) {
+    SellOrder getSell(int ID) {
         for (SellOrder o : sellOrders) {
             if (o.getId() == ID) {
                 return o;
@@ -444,7 +444,7 @@ public class MockDatabase {
         return null;
     }
 
-    public BuyOrder getBuy(int ID) {
+    BuyOrder getBuy(int ID) {
         for (BuyOrder o : buyOrders) {
             if (o.getId() == ID) {
                 return o;
@@ -453,26 +453,26 @@ public class MockDatabase {
         return null;
     }
 
-    public ArrayList<OrgUnit> getAllUnits() {
+    ArrayList<OrgUnit> getAllUnits() {
         return allUnits;
     }
 
-    public ArrayList<User> getAllUsers() {
+    ArrayList<User> getAllUsers() {
         return allUsers;
     }
 
-    public ArrayList<Asset> getAllAssets() {
+    ArrayList<Asset> getAllAssets() {
         return allAssets;
     }
 
-    public ArrayList<InventoryRecord> getInventories() {
+    ArrayList<InventoryRecord> getInventories() {
         return inventories;
     }
-    public ArrayList<SellOrder> getSellOrders() {
+    ArrayList<SellOrder> getSellOrders() {
         return sellOrders;
     }
 
-    public ArrayList<BuyOrder> getBuyOrders() {
+    ArrayList<BuyOrder> getBuyOrders() {
         return buyOrders;
     }
 

@@ -28,7 +28,7 @@ import static java.lang.Integer.parseInt;
  * Sophia Walsh Long (all other code and the fact that the members aren't static;
  * above methods have also been refactored)
  */
-public class NewTradingAppGUI {
+class NewTradingAppGUI {
 
     // Logged in user for the session
     private User user = null;

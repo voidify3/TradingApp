@@ -16,13 +16,13 @@ import static java.lang.String.valueOf;
 //Please ignore all the hideous ArrayList downcasts, I promise it's fine, server-side logic handles it so that
 //all of these downcasts must be possible in the circumstances that they're attempted
 
-public class NetworkDataSource implements TradingAppDataSource {
+class NetworkDataSource extends TradingAppDataSource {
     private static final String HOSTNAME = "127.0.0.1";
     private static final int PORT = 10000;
-    public static final String BLANK_FILTER = "1=1";
+    static final String BLANK_FILTER = "1=1";
 
 
-    public NetworkDataSource() {
+    NetworkDataSource() {
         //Send special request type 3
         //Save the number
     }
@@ -192,211 +192,211 @@ public class NetworkDataSource implements TradingAppDataSource {
         else return a.get(0);
     }
 
-    //--------------------PUBLIC METHODS---------------------------------
+    //--------------------METHODS---------------------------------
     //---SELECT---
 
     //--Calling select
 
     @Override
-    public ArrayList<User> allUsers() {
+    ArrayList<User> allUsers() {
         return (ArrayList) select(DatabaseTables.USER, BLANK_FILTER);
     }
     @Override
-    public ArrayList<OrgUnit> allOrgUnits() {
+    ArrayList<OrgUnit> allOrgUnits() {
         return (ArrayList) select(UNIT, BLANK_FILTER);
     }
     @Override
-    public ArrayList<Asset> allAssets() {
+    ArrayList<Asset> allAssets() {
         return (ArrayList) select(ASSET, BLANK_FILTER);
     }
     @Override
-    public ArrayList<InventoryRecord> inventoryList() {
+    ArrayList<InventoryRecord> inventoryList() {
         return  (ArrayList) select(INV, BLANK_FILTER);
     }
     @Override
-    public ArrayList<SellOrder> allSellOrders() { return allSellOrders(null); }
+    ArrayList<SellOrder> allSellOrders() { return allSellOrders(null); }
     @Override
-    public ArrayList<BuyOrder> allBuyOrders() { return allBuyOrders(null); }
+    ArrayList<BuyOrder> allBuyOrders() { return allBuyOrders(null); }
 
     @Override
-    public InventoryRecord inventoryRecordByKeys(String unit, int asset) {
+    InventoryRecord inventoryRecordByKeys(String unit, int asset) {
         ArrayList<DataObject> results = select(INV,
                 filterEquals(INV.getColumns()[0], sqlFriendlyString(unit)) +
                         " AND " + filterEquals(INV.getColumns()[1], valueOf(asset)));
         return (InventoryRecord) extractElement(results); }
 
     @Override
-    public ArrayList<SellOrder> allSellOrders(Boolean resolved) {
+    ArrayList<SellOrder> allSellOrders(Boolean resolved) {
         return (ArrayList) select(SELL, BLANK_FILTER + orderResolvedFilter(resolved));
     }
 
     @Override
-    public ArrayList<BuyOrder> allBuyOrders(Boolean resolved) {
+    ArrayList<BuyOrder> allBuyOrders(Boolean resolved) {
         return (ArrayList) select(BUY, BLANK_FILTER + orderResolvedFilter(resolved));
     }
 
     @Override
-    public ArrayList<SellOrder> sellOrdersByUser(String username, Boolean resolved) {
+    ArrayList<SellOrder> sellOrdersByUser(String username, Boolean resolved) {
         return (ArrayList) select(SELL,
                 filterEquals(SELL.getColumns()[1], sqlFriendlyString(username)) + orderResolvedFilter(resolved)); }
     @Override
-    public ArrayList<SellOrder> sellOrdersByAsset(int assetID, Boolean resolved) {
+    ArrayList<SellOrder> sellOrdersByAsset(int assetID, Boolean resolved) {
         return (ArrayList) select(SELL,
                 filterEquals(SELL.getColumns()[2], valueOf(assetID)) + orderResolvedFilter(resolved)); }
     @Override
-    public ArrayList<SellOrder> sellOrdersPlacedBetween(Timestamp start, Timestamp end, Boolean resolved) {
+    ArrayList<SellOrder> sellOrdersPlacedBetween(Timestamp start, Timestamp end, Boolean resolved) {
         return (ArrayList) select(SELL,
                 filterBetween(SELL.getColumns()[5], sqlFriendlyString(start), sqlFriendlyString(end))
                         + orderResolvedFilter(resolved)); }
     @Override
-    public ArrayList<SellOrder> sellOrdersResolvedBetween(Timestamp start, Timestamp end) {
+    ArrayList<SellOrder> sellOrdersResolvedBetween(Timestamp start, Timestamp end) {
         return (ArrayList) select(SELL,
                 filterBetween(SELL.getColumns()[6], sqlFriendlyString(start), sqlFriendlyString(end))); }
     @Override
-    public ArrayList<SellOrder> sellOrdersReconciledBetween(Timestamp start, Timestamp end) {
+    ArrayList<SellOrder> sellOrdersReconciledBetween(Timestamp start, Timestamp end) {
         return (ArrayList) select(SELL, SELL.getColumns()[0] + "IN" + innerQuery(BUY.getName(), BUY.getColumns()[7],
                 filterBetween(BUY.getColumns()[6], sqlFriendlyString(start), sqlFriendlyString(end)))); }
     @Override
-    public ArrayList<BuyOrder> buyOrdersByUser(String username, Boolean resolved) {
+    ArrayList<BuyOrder> buyOrdersByUser(String username, Boolean resolved) {
         return (ArrayList) select(BUY,
                 filterEquals(BUY.getColumns()[1], sqlFriendlyString(username))
                         + orderResolvedFilter(resolved)); }
     @Override
-    public ArrayList<BuyOrder> buyOrdersByAsset(int assetID, Boolean resolved) {
+    ArrayList<BuyOrder> buyOrdersByAsset(int assetID, Boolean resolved) {
         return (ArrayList) select(BUY,
                 filterEquals(BUY.getColumns()[2], valueOf(assetID)) + orderResolvedFilter(resolved)); }
     @Override
-    public ArrayList<BuyOrder> buyOrdersByAssetResolvedBetween(int assetID, Timestamp start, Timestamp end) {
+    ArrayList<BuyOrder> buyOrdersByAssetResolvedBetween(int assetID, Timestamp start, Timestamp end) {
         return (ArrayList) select(BUY,
                 filterEquals(BUY.getColumns()[2], valueOf(assetID)) + " AND "
                         + filterBetween(BUY.getColumns()[6], sqlFriendlyString(start), sqlFriendlyString(end))); }
     @Override
-    public ArrayList<BuyOrder> buyOrdersPlacedBetween(Timestamp start, Timestamp end, Boolean resolved) {
+    ArrayList<BuyOrder> buyOrdersPlacedBetween(Timestamp start, Timestamp end, Boolean resolved) {
         return (ArrayList) select(BUY,
                 filterBetween(BUY.getColumns()[5], sqlFriendlyString(start), sqlFriendlyString(end))
                         + orderResolvedFilter(resolved)); }
     @Override
-    public ArrayList<BuyOrder> buyOrdersResolvedBetween(Timestamp start, Timestamp end) {
+    ArrayList<BuyOrder> buyOrdersResolvedBetween(Timestamp start, Timestamp end) {
         return (ArrayList) select(BUY,
                 filterBetween(BUY.getColumns()[6], sqlFriendlyString(start), sqlFriendlyString(end))); }
 
     //--Calling selectByValue
     @Override
-    public ArrayList<User> usersByUnit(String unit) {
+    ArrayList<User> usersByUnit(String unit) {
         return (ArrayList) selectByValue(USER, USER.getColumns()[3], unit); }
     @Override
-    public ArrayList<InventoryRecord> inventoriesByUnit(String unit) {
+    ArrayList<InventoryRecord> inventoriesByUnit(String unit) {
         return (ArrayList) selectByValue(INV, INV.getColumns()[0], unit); }
     @Override
-    public ArrayList<InventoryRecord> inventoriesByAsset(int asset) {
+    ArrayList<InventoryRecord> inventoriesByAsset(int asset) {
         return (ArrayList) selectByValue(INV, INV.getColumns()[1], asset); }
     @Override
-    public ArrayList<BuyOrder> buyOrdersByBoughtFrom(int sellOrderID) {
+    ArrayList<BuyOrder> buyOrdersByBoughtFrom(int sellOrderID) {
         return (ArrayList) selectByValue(BUY, BUY.getColumns()[7], sellOrderID); }
 
     //--Calling selectByKey
     @Override
-    public User userByKey(String name) {
+    User userByKey(String name) {
         return (User) selectByKey(USER, name);
     }
     @Override
-    public OrgUnit unitByKey(String name) {
+    OrgUnit unitByKey(String name) {
         return (OrgUnit) selectByKey(UNIT, name);
     }
     @Override
-    public Asset assetByKey(int ID) {
+    Asset assetByKey(int ID) {
         return (Asset) selectByKey(ASSET, ID);
     }
     @Override
-    public SellOrder sellOrderByKey(int ID) {
+    SellOrder sellOrderByKey(int ID) {
         return (SellOrder) selectByKey(SELL, ID);
     }
     @Override
-    public BuyOrder buyOrderByKey(int ID) {
+    BuyOrder buyOrderByKey(int ID) {
         return (BuyOrder) selectByKey(BUY, ID);
     }
 
     //---INSERT---
     @Override
-    public int insertOrUpdateInventory(InventoryRecord i) {
+    int insertOrUpdateInventory(InventoryRecord i) {
         return insertUpdateOnDupKey(INV, i);
     }
     @Override
-    public int insertUser(User u) {
+    int insertUser(User u) {
         return insert(USER, u);
     }
     @Override
-    public int insertUnit(OrgUnit u) {
+    int insertUnit(OrgUnit u) {
         return insert(UNIT, u);
     }
     @Override
-    public int insertAsset(Asset a) {
+    int insertAsset(Asset a) {
         return insert(ASSET, a);
     }
     @Override
-    public int insertSellOrder(SellOrder s) {
+    int insertSellOrder(SellOrder s) {
         return insert(SELL, s);
     }
     @Override
-    public int insertBuyOrder(BuyOrder b) {
+    int insertBuyOrder(BuyOrder b) {
         return insert(BUY, b);
     }
 
     //---UPDATE---
     @Override
-    public int updateUser(User u) {
+    int updateUser(User u) {
         return update(USER, u);
     }
     @Override
-    public int updateUnit(OrgUnit u) {
+    int updateUnit(OrgUnit u) {
         return update(UNIT, u);
     }
     @Override
-    public int updateAsset(Asset a) {
+    int updateAsset(Asset a) {
         return update(ASSET, a);
     }
     @Override
-    public int updateSellOrder(SellOrder s) {
+    int updateSellOrder(SellOrder s) {
         return update(SELL, s);
     }
     @Override
-    public int updateBuyOrder(BuyOrder b) {
+    int updateBuyOrder(BuyOrder b) {
         return update(BUY, b);
     }
 
     //---DELETE---
     @Override
-    public int debugDeleteEverything() {
+    int debugDeleteEverything() {
         return requestSpecial(DROP_PASSWORD);
     }
     @Override
-    public void recreate() {
+    void recreate() {
         requestSpecial(RECREATE_PASSWORD);
     }
 
     @Override
-    public int deleteInventoryRecord(String unit, int asset) {
+    int deleteInventoryRecord(String unit, int asset) {
         return delete(INV,filterEquals(INV.getColumns()[0], sqlFriendlyString(unit)) +
                 " AND " + filterEquals(INV.getColumns()[1], valueOf(asset)));
     }
     @Override
-    public int deleteUser(String key) {
+    int deleteUser(String key) {
         return deleteByKey(USER, key);
     }
     @Override
-    public int deleteUnit(String key) {
+    int deleteUnit(String key) {
         return deleteByKey(UNIT, key);
     }
     @Override
-    public int deleteAsset(int key) {
+    int deleteAsset(int key) {
         return deleteByKey(ASSET, key);
     }
     @Override
-    public int deleteBuyOrder(int key) {
+    int deleteBuyOrder(int key) {
         return deleteByKey(BUY, key);
     }
     @Override
-    public int deleteSellOrder(int key) {
+    int deleteSellOrder(int key) {
         return deleteByKey(SELL, key);
     }
 }

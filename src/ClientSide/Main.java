@@ -3,7 +3,7 @@ package ClientSide;
 /***
  * @author Johnny, Alistair, Scott & Sophia
  */
-public class Main {
+class Main {
 
     /***
      * Invokes the Client-Side GUI & holds the date/time

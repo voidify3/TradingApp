@@ -12,14 +12,14 @@ import java.util.List;
  * Inspired by methods from Stack Overflow, these have been modified to suit our app.
  * @see <a href="https://stackoverflow.com/a/28555827"/>
  */
-public class GuiSearch extends JComboBox<String> {
+class GuiSearch extends JComboBox<String> {
 
     private List<String> entries;
-    public List<String> getEntries() {
+    List<String> getEntries() {
         return entries;
     }
 
-    public GuiSearch(List<String> entries) {
+    GuiSearch(List<String> entries) {
         super(entries.toArray(new String[0]));
         this.entries = entries;
         this.setEditable(true);
@@ -45,7 +45,7 @@ public class GuiSearch extends JComboBox<String> {
     }
 
      // Build a list of entries that match the given filter.
-    public void comboFilter(String enteredText) {
+    void comboFilter(String enteredText) {
         List<String> entriesFiltered = new ArrayList<>();
 
         for (String entry : getEntries()) {

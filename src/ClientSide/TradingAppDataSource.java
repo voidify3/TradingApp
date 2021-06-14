@@ -5,43 +5,43 @@ import common.*;
 import java.sql.Timestamp;
 import java.util.ArrayList;
 
-public interface TradingAppDataSource {
+abstract class TradingAppDataSource {
 
     /**
      *
      * @return ArrayList of all users
      */
-    ArrayList<User> allUsers();
+    abstract ArrayList<User> allUsers();
 
     /**
      *
      * @return ArrayList of all OrgUnits
      */
-    ArrayList<OrgUnit> allOrgUnits();
+    abstract ArrayList<OrgUnit> allOrgUnits();
 
     /**
      *
      * @return ArrayList of all assets
      */
-    ArrayList<Asset> allAssets();
+    abstract ArrayList<Asset> allAssets();
 
     /**
      *
      * @return ArrayList of all inventory records
      */
-    ArrayList<InventoryRecord> inventoryList();
+    abstract ArrayList<InventoryRecord> inventoryList();
 
     /**
      *
      * @return ArrayList of all sell orders
      */
-    ArrayList<SellOrder> allSellOrders();
+    abstract ArrayList<SellOrder> allSellOrders();
 
     /**
      *
      * @return ArrayList of all buy orders
      */
-    ArrayList<BuyOrder> allBuyOrders();
+    abstract ArrayList<BuyOrder> allBuyOrders();
 
     /**
      *
@@ -49,11 +49,11 @@ public interface TradingAppDataSource {
      * @param asset Asset component of the composite key
      * @return The InventoryRecord object with the requested keys
      */
-    InventoryRecord inventoryRecordByKeys(String unit, int asset);
+    abstract InventoryRecord inventoryRecordByKeys(String unit, int asset);
 
-    ArrayList<SellOrder> allSellOrders(Boolean resolved);
+    abstract ArrayList<SellOrder> allSellOrders(Boolean resolved);
 
-    ArrayList<BuyOrder> allBuyOrders(Boolean resolved);
+    abstract ArrayList<BuyOrder> allBuyOrders(Boolean resolved);
     /**
      *
      * @param username a username
@@ -62,7 +62,7 @@ public interface TradingAppDataSource {
      *                 null for "include both resolved and unresolved orders"
      * @return ArrayList of all sell orders placed by the requested user that meet the resolvedness filter
      */
-    ArrayList<SellOrder> sellOrdersByUser(String username, Boolean resolved);
+    abstract ArrayList<SellOrder> sellOrdersByUser(String username, Boolean resolved);
 
     /**
      *
@@ -72,7 +72,7 @@ public interface TradingAppDataSource {
      *                 null for "include both resolved and unresolved orders"
      * @return ArrayList of all sell orders for the requested asset that meet the resolvedness filter
      */
-    ArrayList<SellOrder> sellOrdersByAsset(int assetID, Boolean resolved);
+    abstract ArrayList<SellOrder> sellOrdersByAsset(int assetID, Boolean resolved);
 
     /**
      *
@@ -83,7 +83,7 @@ public interface TradingAppDataSource {
      *                 null for "include both resolved and unresolved orders"
      * @return ArrayList of all sell orders with DatePlaced in requested range that meet the resolvedness filter
      */
-    ArrayList<SellOrder> sellOrdersPlacedBetween(Timestamp start, Timestamp end, Boolean resolved);
+    abstract ArrayList<SellOrder> sellOrdersPlacedBetween(Timestamp start, Timestamp end, Boolean resolved);
 
     /**
      *
@@ -91,7 +91,7 @@ public interface TradingAppDataSource {
      * @param end End date
      * @return ArrayList of all sell orders with DateResolved in requested range
      */
-    ArrayList<SellOrder> sellOrdersResolvedBetween(Timestamp start, Timestamp end);
+    abstract ArrayList<SellOrder> sellOrdersResolvedBetween(Timestamp start, Timestamp end);
 
     /**
      *
@@ -102,7 +102,7 @@ public interface TradingAppDataSource {
      * was not reduced to zero by the transaction.
      * The results of this query are a superset to sellOrdersResolvedBetween(start, end)
      */
-    ArrayList<SellOrder> sellOrdersReconciledBetween(Timestamp start, Timestamp end);
+    abstract ArrayList<SellOrder> sellOrdersReconciledBetween(Timestamp start, Timestamp end);
 
     /**
      *
@@ -112,7 +112,7 @@ public interface TradingAppDataSource {
      *                 null for "include both resolved and unresolved orders"
      * @return ArrayList of all buy orders placed by the requested user that meet the resolvedness filter
      */
-    ArrayList<BuyOrder> buyOrdersByUser(String username, Boolean resolved);
+    abstract ArrayList<BuyOrder> buyOrdersByUser(String username, Boolean resolved);
 
     /**
      *
@@ -122,7 +122,7 @@ public interface TradingAppDataSource {
      *                 null for "include both resolved and unresolved orders"
      * @return ArrayList of all buy orders for the requested asset that meet the resolvedness filter
      */
-    ArrayList<BuyOrder> buyOrdersByAsset(int assetID, Boolean resolved);
+    abstract ArrayList<BuyOrder> buyOrdersByAsset(int assetID, Boolean resolved);
 
     /**
      *
@@ -131,7 +131,7 @@ public interface TradingAppDataSource {
      * @param end End date
      * @return ArrayList of all buy orders for the asset in question with DateResolved in requested range
      */
-    ArrayList<BuyOrder> buyOrdersByAssetResolvedBetween(int assetID, Timestamp start, Timestamp end);
+    abstract ArrayList<BuyOrder> buyOrdersByAssetResolvedBetween(int assetID, Timestamp start, Timestamp end);
 
     /**
      *
@@ -142,7 +142,7 @@ public interface TradingAppDataSource {
      *                 null for "include both resolved and unresolved orders"
      * @return ArrayList of all buy orders with DatePlaced in requested range that meet the resolvedness filter
      */
-    ArrayList<BuyOrder> buyOrdersPlacedBetween(Timestamp start, Timestamp end, Boolean resolved);
+    abstract ArrayList<BuyOrder> buyOrdersPlacedBetween(Timestamp start, Timestamp end, Boolean resolved);
 
     /**
      *
@@ -150,27 +150,27 @@ public interface TradingAppDataSource {
      * @param end End date
      * @return ArrayList of all buy orders with DateResolved in requested range
      */
-    ArrayList<BuyOrder> buyOrdersResolvedBetween(Timestamp start, Timestamp end);
+    abstract ArrayList<BuyOrder> buyOrdersResolvedBetween(Timestamp start, Timestamp end);
 
     //--Calling selectByValue
-    ArrayList<User> usersByUnit(String unit);
+    abstract ArrayList<User> usersByUnit(String unit);
 
-    ArrayList<InventoryRecord> inventoriesByUnit(String unit);
+    abstract ArrayList<InventoryRecord> inventoriesByUnit(String unit);
 
-    ArrayList<InventoryRecord> inventoriesByAsset(int asset);
+    abstract ArrayList<InventoryRecord> inventoriesByAsset(int asset);
 
-    ArrayList<BuyOrder> buyOrdersByBoughtFrom(int sellOrderID);
+    abstract ArrayList<BuyOrder> buyOrdersByBoughtFrom(int sellOrderID);
 
     //--Calling selectByKey
-    User userByKey(String name);
+    abstract User userByKey(String name);
 
-    OrgUnit unitByKey(String name);
+    abstract OrgUnit unitByKey(String name);
 
-    Asset assetByKey(int ID);
+    abstract Asset assetByKey(int ID);
 
-    SellOrder sellOrderByKey(int ID);
+    abstract SellOrder sellOrderByKey(int ID);
 
-    BuyOrder buyOrderByKey(int ID);
+    abstract BuyOrder buyOrderByKey(int ID);
 
     //---INSERT---
 
@@ -180,7 +180,7 @@ public interface TradingAppDataSource {
      * @return 1 if insert succeeded, 2 if insert failed but update succeeded,
      * -1 if query failed due to nonexistence of unit or asset
      */
-    int insertOrUpdateInventory(InventoryRecord i);
+    abstract int insertOrUpdateInventory(InventoryRecord i);
 
     /**
      *
@@ -188,21 +188,21 @@ public interface TradingAppDataSource {
      * @return 1 if insert succeeded, 0 if insert failed due to duplicate key,
      * -1 if insert failed due to nonexistence of unit
      */
-    int insertUser(User u);
+    abstract int insertUser(User u);
 
     /**
      *
      * @param u orgunit object to send
      * @return 1 if insert succeeded, 0 if insert failed
      */
-    int insertUnit(OrgUnit u);
+    abstract int insertUnit(OrgUnit u);
 
     /**
      *
      * @param a asset object to send
      * @return 1 if insert succeeded, 0 if insert failed
      */
-    int insertAsset(Asset a);
+    abstract int insertAsset(Asset a);
 
     /**
      *
@@ -210,7 +210,7 @@ public interface TradingAppDataSource {
      * @return 1 if insert succeeded, 0 if insert failed due to duplicate key (should never happen though),
      * -1 if insert failed due to nonexistence of asset or user
      */
-    int insertSellOrder(SellOrder s);
+    abstract int insertSellOrder(SellOrder s);
 
     /**
      *
@@ -218,7 +218,7 @@ public interface TradingAppDataSource {
      * @return 1 if insert succeeded, 0 if insert failed (should never happen though),
      * -1 if insert failed due to nonexistence of asset or user
      */
-    int insertBuyOrder(BuyOrder b);
+    abstract int insertBuyOrder(BuyOrder b);
 
     //---UPDATE---
 
@@ -228,21 +228,21 @@ public interface TradingAppDataSource {
      * @return 1 if update succeeded, 0 if update failed due to nonexistent key,
      * -1 if update failed due to nonexistence of unit, or an attempt to set the unit null when orders exist
      */
-    int updateUser(User u);
+    abstract int updateUser(User u);
 
     /**
      *
      * @param u orgunit object to send
      * @return 1 if update succeeded, 0 if update failed due to nonexistent key
      */
-    int updateUnit(OrgUnit u);
+    abstract int updateUnit(OrgUnit u);
 
     /**
      *
      * @param a asset object to send
      * @return 1 if update succeeded, 0 if update failed due to nonexistent key
      */
-    int updateAsset(Asset a);
+    abstract int updateAsset(Asset a);
 
     /**
      *
@@ -250,7 +250,7 @@ public interface TradingAppDataSource {
      * @return 1 if update succeeded, 0 if update failed due to nonexistent key,
      * -1 if update failed due to nonexistence of asset or user
      */
-    int updateSellOrder(SellOrder s);
+    abstract int updateSellOrder(SellOrder s);
 
     /**
      *
@@ -258,7 +258,7 @@ public interface TradingAppDataSource {
      * @return 1 if update succeeded, 0 if update failed due to nonexistent key,
      *  -1 if update failed due to nonexistence of asset or user or BoughtFrom sell order
      */
-    int updateBuyOrder(BuyOrder b);
+    abstract int updateBuyOrder(BuyOrder b);
 
     //---DELETE---
 
@@ -266,19 +266,19 @@ public interface TradingAppDataSource {
      * Reset the data-- delete everything and reset auto-increment keys to 1. Exists for test purposes
      * @return The total number of records in all tables before the request was executed
      */
-    int debugDeleteEverything();
+    abstract int debugDeleteEverything();
 
     /**
      * Recreate the tables. Does nothing if debugDeleteEverything wasn't just called. Exists for test purposes
      */
-    void recreate();
+    abstract void recreate();
     /**
      *
      * @param unit Unit name of intended record
      * @param asset Asset ID of intended record
      * @return 1 if deletion succeeded, 0 if deletion failed
      */
-    int deleteInventoryRecord(String unit, int asset);
+    abstract int deleteInventoryRecord(String unit, int asset);
 
     /**
      *
@@ -287,7 +287,7 @@ public interface TradingAppDataSource {
      * -1 if deletion was prevented by constraints
      * (i.e. if buy orders or sell orders placed by the user exist)
      */
-    int deleteUser(String key);
+    abstract int deleteUser(String key);
 
     /**
      *
@@ -296,7 +296,7 @@ public interface TradingAppDataSource {
      * -1 if deletion was prevented by constraints
      * (i.e. if any members of the unit have buy orders or sell orders)
      */
-    int deleteUnit(String key);
+    abstract int deleteUnit(String key);
 
     /**
      *
@@ -305,14 +305,14 @@ public interface TradingAppDataSource {
      * -1 if deletion was prevented by constraints
      * (i.e. if the deletion of any SellOrders for this asset was prevented by constraints)
      */
-    int deleteAsset(int key);
+    abstract int deleteAsset(int key);
 
     /**
      *
      * @param key order ID to delete
      * @return 1 if deletion succeeded, 0 if deletion failed due to nonexistent key
      */
-    int deleteBuyOrder(int key);
+    abstract int deleteBuyOrder(int key);
 
     /**
      *
@@ -321,6 +321,6 @@ public interface TradingAppDataSource {
      * -1 if deletion was prevented by constraints
      * (i.e. if any BuyOrders reference this SellOrder as BoughtFrom)
      */
-    int deleteSellOrder(int key);
+    abstract int deleteSellOrder(int key);
 
 }
