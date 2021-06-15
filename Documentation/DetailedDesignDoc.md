@@ -29,7 +29,7 @@ The server-side constructor has parameters for all five fields and straightforwa
 The client-side constructor has this signature: 
 `public User(String username, String password, boolean adminAccess, String orgunit) throws InvalidString`
 Its algorithm is non-straightforward in two main ways.
-* Rather than naively assigning `this.username=username`, it checks that the username consists entirely of letters.
+* Rather than naively assigning `this.username=username`, it checks that the username consists entirely of letters and 0<length<=30.
   If this is not true, it throws InvalidString; if it is, the username is converted to lowercase and assigned to the field
 * Its password parameter is non-hashed. It generates a salt string using a private method and assigns it to the
   salt string field, then calls `hashPassword(password, this.salt)` to get the hashed password. If the password hashing 
@@ -58,14 +58,17 @@ NAME LENGTH RESTRICTION, CREDITS POSITIVE RESTRICTION
 ###Asset
 This DataObject subclass represents a record in the `Asset` table. Its fields (private with public getters) are:
 * id (no setter)
-* description (no setter???)
+* description (no setter)
 
 ###InventoryRecord
 This DataObject subclass represents a record in the ``
 
 ###Order
-This DataObject subclass contains fields for all properties shared by both buy and sell orders. These are:
-* 
+This DataObject subclass contains fields for all properties shared by both buy and sell orders. 
+These (all private with public getters and setters) are:
+* id (int)
+* unit (String)
+* asset (int)
 
 ###SellOrder
 This class represents a record in the `SellOrder` table. Its direct superclass is `Order`. 
@@ -79,17 +82,6 @@ A public setter is not needed because trade resolution happens server-side.
 ###DataPacket
 This serializable class is used in the protocol to contain all information about a query other than its type.
 
-###Custom exceptions
-####DoesNotExist
-####AlreadyExists
-####ConstraintException
-####NotAuthorised
-####OrderException
-####IllegalString
-####InvalidAmount
-####InvalidDate
-####InvalidPrice
-
 ###Enums
 ####DatabaseTables
 This enum has values for each database table. Each one has a table name string and column name string array.
@@ -97,7 +89,7 @@ All references to table or column names are computed using this enum, including 
 a table or column is trivial by just changing the value in this enum.
 ####ProtocolKeywords
 A value of this enum is always the first transmission by the client in a request.
-It has values for SELECT, INSERT, UPDATE, DELETE and also SPECIAL which is used to perform certain debug queries
+It has values for SELECT, INSERT, UPDATE, DELETE and also SPECIAL which is used for all other necessary requests
 
 
 ## Protocol
@@ -205,81 +197,81 @@ Non-private methods:
 
 ###Database
 For this assignment a MariaDB database will be used to store six tables of data:
-- [Users](#users-table)
+- [User](#user-table)
 - [OrgUnit](#orgunit-table)
 - [Inventories](#inventories-table)
-- [AssetInfo](#assetinfo-table)
+- [Asset](#asset-table)
 - [BuyOrder](#buyorder-table)
 - [SellOrder](#sellorder-table)
 
 The relationships between these tables can be seen in the below ERD diagram.
 
-![image](Diagrams/DatabaseERD2.png)
+![image](Diagrams/DatabaseERD.png)
 
 The line types encode this information about the relations in the database:
 - All relations are 1-M (a PK value may have arbitrarily many FK references)
 - All relations are optional (a PK value may have 0 FK references),
-  but all FK columns except for BoughtFrom and User.OrgUnit are `NOT NULL`
+  but all FK columns except for boughtFrom and user.orgUnit are `NOT NULL`
 
 
-### Users Table
+### User Table
 This table is used to store user data. It has four columns:
-- Username (string, PK)
-- Password (string)
-- OrgUnit (string, FK referencing OrgUnit.OrgUnitName, ON DELETE SET NULL )
-- AdminAccess (boolean)
-- SaltString (string)
+- name (string, PK)
+- passhash (string)
+- saltString (string)
+- orgUnit (string, FK referencing orgUnit.name, ON DELETE SET NULL)
+- adminAccess (boolean)
 
 The password is stored as a hash, made using the salt string, so that plaintext
 passwords are never sent between the client and server programs.
-Ideally, the salt string would live in a separate table, but this
+Ideally, the salt string would be stored in a separate table, but this
 project's scope is too small for this to be worthwhile.
 
 ### OrgUnit Table
 This table is used to store all the organisational units that use the app, and
 their credit balance. It has two columns:
-- OrgUnitName (string, PK)
-- Credits (int)
+- name (string, PK)
+- credits (int)
 
-### AssetInfo Table
+### Asset Table
 This table is used to store the assets that can be traded in the application.
 It has two columns:
-- AssetID (int)
-- AssetDesc (String)
+- idx (int)
+- assetDesc (String)
 
 ### Inventories Table
 This table stores information about the quantities of assets owned
 by OrgUnits. Because "OrgUnit owns asset" is a logical many-many relationship,
-this table will have a composite key: an organisational unit name, and an asset ID, may
+this table has a composite key: an organisational unit name, and an asset ID, may
 each appear arbitrarily many times, but only one record may exist for any
 given OrgUnit-Asset pair. The table has three columns:
-- OrgUnit (string, partial key, FK referencing OrgUnit.OrgUnitName)
-- AssetID (int, partial key, FK referencing AssetInfo.AssetID)
-- Quantity (int)
+- orgUnit (string, partial key, FK referencing orgUnit.name, ON DELETE CASCADE)
+- asset (int, partial key, FK referencing asset.idx, ON DELETE CASCADE)
+- quantity (int)
 
 
 ### SellOrder Table
 This table is used to track all the placed sell orders.
 It has seven columns:
-- OrderID (int, PK)
-- Seller (string, FK referencing Users.Username)
-- Asset (int, FK referencing Asset.AssetID)
-- AskingPricePerAsset (int)
-- CurrentQty (int)
-- DatePlaced (date)
-- DateResolved (date, will be null if order is currently outstanding)
+- idx (int, PK)
+- unit (string, FK referencing orgunit.name, ON DELETE CASCADE)
+- asset (int, FK referencing asset.idx, ON DELETE CASCADE)
+- price (int)
+- quantity (int)
+- datePlaced (date)
+- dateResolved (date, will be null if order is currently outstanding)
 
 ### BuyOrder Table
 This table is used to track all the placed buy orders.
 It has eight columns:
-- OrderID (int, PK)
-- Buyer (string, FK referencing Users.Username)
-- Asset (int, FK referencing Asset.AssetID)
-- MaxPricePerAsset (int)
-- RequestedQty (int)
-- DatePlaced (date)
-- DateResolved (date, will be null if order is currently outstanding)
-- BoughtFrom (int, FK referencing SellOrder.OrderID)
+- idx (int, PK)
+- unit (string, FK referencing orgunit.name, ON DELETE CASCADE)
+- asset (int, FK referencing asset.idx, ON DELETE CASCADE)
+- price (int)
+- quantity (int)
+- datePlaced (date)
+- dateResolved (date, will be null if order is currently outstanding)
+- boughtFrom (int, FK referencing sellOrder.idx, ON DELETE CASCADE)
 
 The reason for this asymmetry is that the system will resolve matching
 BuyOrders and SellOrders where the SellOrder has a higher quantity,
@@ -327,7 +319,7 @@ This is the GUI class. It is a Swing GUI containing the following:
 This class mediates between the GUI and NetworkDataSource. The GUI owns an instance of this class, and this
 class owns an instance of NetworkDataSource (or MockDataSource if the program was run with {"MOCK"}). 
 
-It has these public methods:
+[Go to JavaDoc]
 
 
 ###NetworkDataSource
@@ -335,52 +327,4 @@ This is the back end of the client program. It communicates with the server usin
 the class "MockDataSource" which implements the same interface as this class and imitates its I/O behaviour
 but uses a class of six Java collections to store data rather than the database.
 
-NetworkDataSource has the following public methods, which are used by TradingAppData:
-
-...
-
-#TODO
-
-* Fix the class diagram (ensure arrows are correct)
-  - [ ] add package shapes 
-  - [ ] add enums and database shape
-  - [ ] add data interface shape
-  - [ ] add method lists to data source and data
-  - [ ] update to reflect GUI structure  
-* FIRST PRIORITY: implement GUI pages as specified, adding tradingappdata content and error handling on the way
-  - [x] home page/admin portal system 
-  - [x] admin home has unit and asset bars
-  - [x] change own password page (available from menu bar)
-  - [x] unit editing page (can change credits)
-  - [x] asset editing page (can change description)
-  - [x] user editing page with password box and unit dropdown and access radio
-  - [x] place order page (asset dropdown, quantity spinner, price spinner)
-  - [x] place sell order page
-  - [x] convert home page 
-  - [x] branch off for GUI changes
-  - [x] order list page
-    - [ ] order list toggles
-    - [ ] order list clickthrough
-  - [ ] asset list page class
-    - [ ] clickthrough to info page
-  - [ ] inventory list page class
-    - [ ] search boxes and radio buttons
-    - [ ] clickthrough to an input dialog 
-* PRIORITY 1.5:
-  - [ ] JavaDoc for TradingAppData
-  - [ ] unit tests for TradingAppData
-  - [ ] unit test file for object class AssertThrows cases
-  - [ ] convert change password page
-  - [ ] convert login page
-  - [ ] convert shell panel
-  - [ ] `TradingAppGUI extends JFrame`
-  - [ ] Fix order placing problems
-* [ ] SECOND PRIORITY: have socket and hostname read from a file
-* THIRD PRIORITY: implement GUI content and protocol contingency for resolution notification
-  * [ ] third type of SPECIAL query, executed at data source setup, returning the number of seconds until the next res time
-  * [ ] Swing timer: every 5 minutes, with an initial delay of slightly more than this number to account for slowness, get 
-      `buyOrdersResolvedBetween(now.minusMinutes(5), now)` and `sellOrdersResolvedBetween(now.minusMinutes(5), now)`
-      and also refresh db info on current screen
-  * [ ] Logic to generate user-friendly summary
-  * [ ] display mini summary in a row of the screen, clickable to view full summary
-* [ ] FOURTH PRIORITY: implement graph view
+[Go to JavaDoc]

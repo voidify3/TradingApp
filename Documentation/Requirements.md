@@ -29,7 +29,7 @@ to be tested without having the server active, and the client program can be con
 
 These requirements have guided the development of a MariaDB database with tables and relations described by the following
 Entity Relationship Diagram.
-![ERD](Diagrams/DatabaseERD2.png)
+![ERD](Diagrams/DatabaseERD.png)
 
 Every five minutes, the server program will automatically run some queries to determine if any trade resolution is necessary,
 and resolve the trades if so. Older buy and sell orders will be prioritised over newer ones.
