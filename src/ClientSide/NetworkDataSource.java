@@ -253,8 +253,10 @@ class NetworkDataSource extends TradingAppDataSource {
                 filterBetween(SELL.getColumns()[6], sqlFriendlyString(start), sqlFriendlyString(end))); }
     @Override
     ArrayList<SellOrder> sellOrdersReconciledBetween(Timestamp start, Timestamp end) {
-        return (ArrayList) select(SELL, SELL.getColumns()[0] + "IN" + innerQuery(BUY.getName(), BUY.getColumns()[7],
-                filterBetween(BUY.getColumns()[6], sqlFriendlyString(start), sqlFriendlyString(end)))); }
+        return (ArrayList) select(SELL, SELL.getColumns()[0] + " IN " + innerQuery(BUY.getName(), BUY.getColumns()[7],
+                filterBetween(BUY.getColumns()[6], sqlFriendlyString(start), sqlFriendlyString(end))) +
+                " OR " + filterBetween(SELL.getColumns()[6], sqlFriendlyString(start), sqlFriendlyString(end))
+        ); }
     @Override
     ArrayList<BuyOrder> buyOrdersByUnit(String unitName, Boolean resolved) {
         return (ArrayList) select(BUY,

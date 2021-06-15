@@ -98,8 +98,9 @@ abstract class TradingAppDataSource {
      * @param start Start date
      * @param end End date
      * @return ArrayList of all sell orders that were involved in transactions during the requested range
-     * i.e. these sell orders are listed as BoughtFrom by buy orders resolved in that range, even if their quantity
-     * was not reduced to zero by the transaction.
+     * i.e. these sell orders were resolved in the range || are listed as BoughtFrom by buy orders resolved in that range
+     * (both checks are needed because a sell order whose quantity was not reduced to 0 by the transaction will only be the latter
+     * and a sell order whose quantity was reduced to 0 by a since-deleted buy order will only be the former)
      * The results of this query are a superset to sellOrdersResolvedBetween(start, end)
      */
     abstract ArrayList<SellOrder> sellOrdersReconciledBetween(Timestamp start, Timestamp end);

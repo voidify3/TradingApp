@@ -92,12 +92,16 @@ class MockDataSource extends TradingAppDataSource {
         ArrayList<BuyOrder> b = buyOrdersResolvedBetween(start, end);
         //using a set because they ignore duplicates
         Set<Integer> ids = new TreeSet<>();
+        ArrayList<SellOrder> output = new ArrayList<>();
         for (BuyOrder o : b) {
             ids.add(o.getBoughtFrom());
         }
-        ArrayList<SellOrder> output = new ArrayList<>();
         for (int i : ids) {
             output.add(sellOrderByKey(i));
+        }
+        //in case of the deletion of resolved buy orders
+        for (SellOrder s : sellOrdersResolvedBetween(start, end)) {
+            if (!ids.contains(s.getId())) output.add(s);
         }
         return output;
     }
