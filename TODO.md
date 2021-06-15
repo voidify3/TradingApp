@@ -8,7 +8,8 @@
     - [x] add package shapes
     - [x] add enums
     - [x] add data interface shape
-    - [ ] add method lists to data source and data
+    - [x] add method lists to data source
+    - [ ] add method lists to data
     - [ ] update to reflect GUI structure
 * FIRST PRIORITY: implement GUI pages as specified, adding tradingappdata content and error handling on the way
     - [x] home page/admin portal system
@@ -30,13 +31,13 @@
         - [ ] search boxes and radio buttons
         - [ ] clickthrough to an input dialog
 * SECOND PRIORITY:
-    - [ ] JavaDoc for TradingAppData
-    - [ ] unit tests for TradingAppData
-    - [ ] unit test file for object class AssertThrows cases
     - [ ] convert change password page
     - [ ] convert login page
     - [ ] convert shell panel
     - [ ] `TradingAppGUI extends JFrame`
+    - [ ] JavaDoc for TradingAppData
+    - [ ] unit tests for TradingAppData
+    - [ ] unit test file for object class AssertThrows cases
     - [ ] Fix order placing problems
 * [ ] THIRD PRIORITY: have socket and hostname read from a file
 * FOURTH PRIORITY: implement GUI content and protocol contingency for resolution notification
