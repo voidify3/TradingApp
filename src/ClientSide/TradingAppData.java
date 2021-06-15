@@ -114,6 +114,7 @@ class TradingAppData {
         return dataSource.allOrgUnits();
     }
     ArrayList<Asset> getAllAssets() { return dataSource.allAssets();}
+    ArrayList<InventoryRecord> getAllInventories() {return dataSource.inventoryList();}
     ArrayList<BuyOrder> getAllBuys() { return dataSource.allBuyOrders();}
     ArrayList<SellOrder> getAllSells() {return dataSource.allSellOrders();}
 

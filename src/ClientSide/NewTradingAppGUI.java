@@ -112,12 +112,26 @@ class NewTradingAppGUI {
         }
         return info;
     }
-    String[][] populateTable(ArrayList<Order> a) {
+    String[][] populateOrderTable(ArrayList<Order> a) {
         String[][] info = new String[0][7];
         for (Order o : a) {
             String[] infoNew = new String[]{String.valueOf(o.getId()), o.getUnit(), String.valueOf(o.getAsset()),
                     String.valueOf(o.getQty()), String.valueOf(o.getPrice()), o.getDatePlaced().toString(),
                     (o.getDateResolved() == null? "N/A" : o.getDateResolved().toString())};
+            info = Arrays.copyOf(info, info.length + 1);
+            info[info.length - 1] = infoNew;
+        }
+
+        return info;
+    }
+    String[][] populateTable(ArrayList<Asset> a) throws DoesNotExist {
+        String[][] info = new String[0][3];
+        for (Asset x : a) {
+            ArrayList<BuyOrder> assetPriceHistory = data.getResolvedBuysByAsset(x.getId());
+            Optional<BuyOrder> mostRecentSale = assetPriceHistory.stream().max(BuyOrder::compareTo);
+            AtomicInteger recentPrice = new AtomicInteger();
+            mostRecentSale.ifPresent(buyOrder -> recentPrice.set(buyOrder.getPrice()));
+            String[] infoNew = new String[]{x.getIdString(), x.getDescription(), "$" + recentPrice.get()};
             info = Arrays.copyOf(info, info.length + 1);
             info[info.length - 1] = infoNew;
         }
@@ -789,12 +803,50 @@ class NewTradingAppGUI {
                     new int[]{50,50,50,50,50,50,50}, new boolean[7]);
         }
         OrdersPage(boolean justMine, boolean isBuy, boolean resolvedFlag) {
-            this(populateTable(data.getOrdersForTable(user.getUnit(), justMine,isBuy,resolvedFlag)));
+            this(populateOrderTable(data.getOrdersForTable(user.getUnit(), justMine,isBuy,resolvedFlag)));
             //do more things
         }
         @Override
         void view(String key, String col2) {
 
+        }
+    }
+    class AssetListPage extends TablePage {
+
+        AssetListPage( String[][] info) {
+            super(new String[]{"Asset ID", "Description", "$ Current"}, info,
+                    new int[]{25, 400, 50}, new boolean[]{false, true, false});
+        }
+        AssetListPage() throws DoesNotExist {
+            this(populateTable(data.getAllAssets()));
+        }
+
+        @Override
+        void view(String key, String col2) {
+            shellPanel(new AssetInfoPage(parseInt(key)),
+                    false);
+            topLabel.setText(col2.toUpperCase());
+        }
+    }
+    class InventoryListPage extends TablePage {
+
+        InventoryListPage(String[][] info) {
+            super(new String[]{"Organisational unit", "Asset ID", "Asset description", "Quantity"}, info,
+                    new int[]{50, 25, 380, 20}, new boolean[]{false, true, false});
+        }
+        InventoryListPage() throws DoesNotExist {
+            this(populateTable(data.getAllInventories(), false));
+        }
+        InventoryListPage(String unit) throws DoesNotExist {
+            this(populateTable(data.getInventoriesByOrgUnit(unit), false));
+        }
+        InventoryListPage(int asset) throws DoesNotExist {
+            this(populateTable(data.getInventoriesByAsset(asset), false));
+        }
+
+        @Override
+        void view(String key, String col2) {
+            //open an input dialog
         }
     }
     abstract class FormPage extends JPanel implements ActionListener {
