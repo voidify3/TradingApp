@@ -24,9 +24,9 @@
     - [x] order list page
         - [ ] order list toggles
         - [ ] order list clickthrough
-    - [ ] asset list page class
+    - [x] asset list page class
         - [ ] clickthrough to info page
-    - [ ] inventory list page class
+    - [x] inventory list page class
         - [ ] search boxes and radio buttons
         - [ ] clickthrough to an input dialog
 * SECOND PRIORITY:
