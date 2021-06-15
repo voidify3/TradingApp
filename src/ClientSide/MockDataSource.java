@@ -30,7 +30,7 @@ class MockDataSource extends TradingAppDataSource {
     }
 
     @Override
-    ArrayList<InventoryRecord> inventoryList() {
+    ArrayList<InventoryRecord> allInventories() {
         return db.getInventories();
     }
 

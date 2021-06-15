@@ -167,7 +167,7 @@ public class TestDataSource {
                 ()->assertTrue(n.allOrgUnits().isEmpty()),
                 ()->assertTrue(n.allUsers().isEmpty()),
                 ()->assertTrue(n.allAssets().isEmpty()),
-                ()->assertTrue(n.inventoryList().isEmpty()),
+                ()->assertTrue(n.allInventories().isEmpty()),
                 ()->assertTrue(n.allBuyOrders().isEmpty()),
                 ()->assertTrue(n.allSellOrders().isEmpty())
         );
@@ -179,7 +179,7 @@ public class TestDataSource {
                 ()->assertFalse(n.allOrgUnits().isEmpty()),
                 ()->assertFalse(n.allUsers().isEmpty()),
                 ()->assertFalse(n.allAssets().isEmpty()),
-                ()->assertFalse(n.inventoryList().isEmpty())
+                ()->assertFalse(n.allInventories().isEmpty())
         );
     }
     @Test

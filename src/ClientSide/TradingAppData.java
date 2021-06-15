@@ -94,6 +94,10 @@ class TradingAppData {
         dataSource.recreate();
     }
 
+    int getTradeDelay() {
+        return dataSource.refreshDelay;
+    }
+
 
     User login(String username, String password) throws IllegalString, DoesNotExist {
         User user = dataSource.userByKey(username);
@@ -114,7 +118,7 @@ class TradingAppData {
         return dataSource.allOrgUnits();
     }
     ArrayList<Asset> getAllAssets() { return dataSource.allAssets();}
-    ArrayList<InventoryRecord> getAllInventories() {return dataSource.inventoryList();}
+    ArrayList<InventoryRecord> getAllInventories() {return dataSource.allInventories();}
     ArrayList<BuyOrder> getAllBuys() { return dataSource.allBuyOrders();}
     ArrayList<SellOrder> getAllSells() {return dataSource.allSellOrders();}
 

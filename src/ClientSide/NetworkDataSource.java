@@ -23,6 +23,7 @@ class NetworkDataSource extends TradingAppDataSource {
 
 
     NetworkDataSource() {
+        refreshDelay = requestSpecial(TRADE_DELAY_PASSWORD);
         //Send special request type 3
         //Save the number
     }
@@ -208,7 +209,7 @@ class NetworkDataSource extends TradingAppDataSource {
         return (ArrayList) select(ASSET, BLANK_FILTER);
     }
     @Override
-    ArrayList<InventoryRecord> inventoryList() {
+    ArrayList<InventoryRecord> allInventories() {
         return  (ArrayList) select(INV, BLANK_FILTER);
     }
     @Override

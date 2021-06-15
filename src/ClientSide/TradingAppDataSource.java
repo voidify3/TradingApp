@@ -6,7 +6,7 @@ import java.sql.Timestamp;
 import java.util.ArrayList;
 
 abstract class TradingAppDataSource {
-
+    int refreshDelay = 0;
     /**
      *
      * @return ArrayList of all users
@@ -29,7 +29,7 @@ abstract class TradingAppDataSource {
      *
      * @return ArrayList of all inventory records
      */
-    abstract ArrayList<InventoryRecord> inventoryList();
+    abstract ArrayList<InventoryRecord> allInventories();
 
     /**
      *
@@ -270,6 +270,8 @@ abstract class TradingAppDataSource {
      * Recreate the tables. Does nothing if debugDeleteEverything wasn't just called. Exists for test purposes
      */
     abstract void recreate();
+
+
     /**
      *
      * @param unit Unit name of intended record
