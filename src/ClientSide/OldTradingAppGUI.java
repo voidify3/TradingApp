@@ -486,9 +486,9 @@ public class OldTradingAppGUI {
         JPanel adminHome() {
             adminHome = new JPanel();
             adminHome.setLayout(new BoxLayout(adminHome, BoxLayout.PAGE_AXIS));
-            userSearch = new GuiSearch(data.getAllUsernames());
-            unitSearch = new GuiSearch(data.getAllUnitNames());
-            assetSearch = new GuiSearch(data.getAllAssetStrings());
+            userSearch = new GuiSearch(data.getUsernames(data.getAllUsers()));
+            unitSearch = new GuiSearch(data.getUnitNames(data.getAllUnits()));
+            assetSearch = new GuiSearch(data.getAssetStrings(data.getAllAssets()));
             resetAdminButtonListeners();
             adminHome.add(adminActionRow(new JButton[]{newUserButton, editUserButton, userListButton}, userSearch));
             adminHome.add(adminActionRow(new JButton[]{newUnitButton, editUnitButton, unitHoldingsButton}, unitSearch));

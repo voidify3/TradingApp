@@ -129,24 +129,21 @@ class TradingAppData {
         else return (ArrayList) dataSource.allSellOrders(resolvedFlag);
     }
 
-    ArrayList<String> getAllUsernames() {
-        ArrayList<User> users = dataSource.allUsers();
+    ArrayList<String> getUsernames(ArrayList<User> users) {
         ArrayList<String> output = new ArrayList<>();
         for (User u : users) {
             output.add(u.getUsername());
         }
         return output;
     }
-    ArrayList<String> getAllUnitNames() {
-        ArrayList<OrgUnit> units = dataSource.allOrgUnits();
+    ArrayList<String> getUnitNames(ArrayList<OrgUnit> units) {
         ArrayList<String> output = new ArrayList<>();
         for (OrgUnit u : units) {
             output.add(u.getName());
         }
         return output;
     }
-    ArrayList<String> getAllAssetStrings() {
-        ArrayList<Asset> assets = dataSource.allAssets();
+    ArrayList<String> getAssetStrings(ArrayList<Asset> assets) {
         ArrayList<String> output = new ArrayList<>();
         for (Asset a : assets) {
             output.add(String.format("%d (%s)", a.getId(), a.getDescription()));
@@ -229,6 +226,39 @@ class TradingAppData {
     ArrayList<SellOrder> getSellsByUnit(String unitName) throws DoesNotExist {
         getUnitByKey(unitName); //throws DoesNotExist
         return dataSource.sellOrdersByUnit(unitName, null);
+    }
+
+    ArrayList<Asset> getHeldAssets(String unitName) throws DoesNotExist {
+        ArrayList<Asset> results = new ArrayList<>();
+        for (InventoryRecord i : getInventoriesByOrgUnit(unitName)) {
+            results.add(getAssetByKey(i.getAssetID()));
+        }
+        return results;
+    }
+    ArrayList<Asset> getUnheldAssets(String unitName) throws DoesNotExist {
+        ArrayList<Asset> heldAssets = getHeldAssets(unitName);
+        ArrayList<Asset> results = new ArrayList<>();
+        for (Asset a :  getAllAssets()) {
+            if (!heldAssets.contains(a)) results.add(a);
+        }
+        return results;
+    }
+
+    ArrayList<OrgUnit> getHoldingUnits(int assetID) throws DoesNotExist {
+        ArrayList<OrgUnit> results = new ArrayList<>();
+        for (InventoryRecord i : getInventoriesByAsset(assetID)) {
+            results.add(getUnitByKey(i.getUnitName()));
+        }
+        return results;
+    }
+
+    ArrayList<OrgUnit> getUnholdingUnits(int assetID) throws DoesNotExist {
+        ArrayList<OrgUnit> results = new ArrayList<>();
+        ArrayList<OrgUnit> holdingUnits = getHoldingUnits(assetID);
+        for (OrgUnit o : getAllUnits()) {
+            if (!holdingUnits.contains(o)) results.add(o);
+        }
+        return results;
     }
 
     //TODO: methods to get the buys resolved in the last session
