@@ -86,7 +86,7 @@ This serializable class is used in the protocol to contain all information about
 ####DatabaseTables
 This enum has values for each database table. Each one has a table name string and column name string array.
 All references to table or column names are computed using this enum, including the create script, so renaming
-a table or column is trivial by just changing the value in this enum.
+a table or column is trivial by just changing the value in this enum, then dropping and recreating tables.
 ####ProtocolKeywords
 A value of this enum is always the first transmission by the client in a request.
 It has values for SELECT, INSERT, UPDATE, DELETE and also SPECIAL which is used for all other necessary requests
@@ -112,19 +112,15 @@ The protocol connecting the server and client programs works like this:
   - For a SELECT query, an `ArrayList<DataObject>` of the results, sorted by primary key value ascending 
     (for Inventories, primary order by orgunit and secondary by asset)
   - For any other kind of query, an integer value encoding the effect of the query
-      - A positive number means "this many rows were affected". DELETE with a PK-value filter, INSERT with the flag set false, and UPDATE
+      - A positive number means "this many rows were affected". For queries executed via the connection, 
+        queries that fall under "DELETE with a PK-value filter, INSERT with the flag set false, or UPDATE"
         will never exceed 0. If the query was INSERT with flag true, 2 means "the INSERT failed but the UPDATE succeeded".
         A special request of the type "drop all tables" will return the total number of records erased by the drop.
       - 0 means "query benignly failed" (UPDATE where PK value does not exist, INSERT where PK
         value already exists, DELETE where the filter matched no records)
-      - -1 means "query failed due to a foreign key constraint". Any DELETE that violates one of the ON DELETE RESTRICT
-        foreign key constraints, or any INSERT or UPDATE where the value of a FK column is non-null but 
-        does not point to any existing record of the parent table, will result in this value. 
-        A query will also fail with a -1 return value if it is an UPDATE on the user table (or an indirect one via a 
-        DELETE on the orgunit table, because that FK constraint is ON DELETE SET NULL) that would result in a database 
-        state where some buy or sell orders belong to a user with null orgunit-
-        this situation would cause problems when attempting to cancel or resolve the orders, so it is best to just prohibit it.
-
+      - -1 means "query failed due to a foreign key constraint". I.e. the query was an INSERT or UPDATE where a FK value
+        was not a valid reference to any parent table record
+       
 ## Server program
 
 ###ServerGUI
@@ -139,27 +135,27 @@ and one which re-runs the table creation script
 
 ###NetworkServer
 This class is the back end of the server side. It deals with information sent over the connection as dictated by 
-the protocol, and also automatically resolves trades every 5 minutes using a timer.
+the protocol, and also automatically resolves trades every 5 minutes using a timer thread.
 
 None of this class's members are public, because they don't need to be accessed outside the package.
-It has string constants for useful queries
+It has string constants for useful queries.
 
-It has some package-private members accessed by ServerGUI and its unit tests
+[Go to JavaDoc]
 
-Here is the logic followed by trade reconciliation. Note that the seller's unit's inventory of the sold asset and the
-buyer's unit's credit balance were reduced by the appropriate amounts when the orders were placed, so no reduction
+Here is the logic followed by trade reconciliation. Note that the selling unit's inventory of the sold asset and the
+buying unit's credit balance were reduced by the appropriate amounts when the orders were placed, so no reduction
 of balance or inventory takes place at resolution time, and transactions with a price difference result in
-the buyer's unit being refunded the difference. Also note that the database connection should have autocommit off
-so that the entire transaction can be rolled back if an error occurs
+the buying unit being refunded the difference. Example: Unit 1 places a buy order for 10 widgets at 6 credits each. 50
+credits are deducted from the unit's balance at time of order placement. Unit 2 places a sell order offering 10 widgets
+at 4 credits each; 10 widgets are deducted from the unit's inventory. Those two orders are then resolved in trade reconciliation.
+Unit 2 gains 30 credits; Unit 1 gains 10 widgets and 20 credits because there was a total price difference of 20.
 
 * Save the current date and time in `now`. This timestamp will be used for all orders resolved in this session.
 * Declare tracking variables used to display information about the resolution session
 * For each asset in the database: 
     * Save the asset ID in `asset`
     * Retrieve the list of all sell orders (ordered from oldest to newest), and the list of all buy orders 
-      (also ordered from oldest to newest). For convenience, this program uses queries with a join tp retrieve
-      the name of the buying/selling user's orgunit. It should be impossible for a user with null orgunit to own
-      any buy or sell orders, but just in case, the query also specifies the exclusion of rows with null unit.
+      (also ordered from oldest to newest). 
     * Define local int collection `ignoredBuys` as empty. This collection contains the IDs of all buy orders 
       that were resolved earlier in the session; this way, we only need to query the table for outstanding buys
       at the start of each asset rather than at the start of each sell order
@@ -172,28 +168,23 @@ so that the entire transaction can be rolled back if an error occurs
             * For readability, my program saves its properties in `buyID`, `buyPrice`, `buyQty`, `buyUnit`
             * Check if the order's ID is referenced in `ignoredBuys`. If so, move on to the next one
             * If `buyPrice >= sellPrice && buyQty <= sellQty`:
-                * The transaction can be resolved! This involves two variable mutations and 4-5 SQL queries.
-                  These SQL queries are executed directly via prepared statements
+                * The transaction can be resolved!
                 * Reduce `sellQty` by `buyQty`
                 * Add `buyID` to `ignoredBuys`
-                * Execute an UPDATE on buyorder: set the price, dateResolved and boughtFrom columns of buyorder `buyID`
+                * Update the buyorder record via the updatable resultset: set the price, dateResolved and boughtFrom columns
                   to `sellPrice`, `now`, and `sellID` (the price is changed because buy orders are used to represent
                   transactions, so resolved buy orders should store the price at which the sale actually happened)
-                * Execute an UPDATE on sellorder: set the quantity column of sellorder `sellID` to the new value of
+                * Update the sellorder record via the updatable resultset: set the quantity column to the new value of
                   `sellQty`, and if `sellQty` now equals zero, set dateResolved to `now` (if not, leave it null)
                 * Execute an UPDATE on orgunit: increase the credits of `sellUnit` by `sellPrice * buyQty`
                 * If the prices were different, execute another UPDATE on orgunit: increase the credits of
-                  `buyUnit` by `(buyPrice-sellPrice)*buyQty` to refund the difference from the deduction upon order placement
-                * Execute an INSERT ON DUPLICATE KEY UPDATE on Inventories: attempt to insert an inventory record 
+                  `buyUnit` by `(buyPrice-sellPrice)*buyQty`
+                * Execute a special INSERT ON DUPLICATE KEY UPDATE on Inventories: attempt to insert an inventory record 
                   for `buyUnit` and `asset` with quantity `buyQty`; if a record for this unit-asset combo
-                  already exists, SQL will instead increase the quantity by `buyQty`
+                  already exists, instead increase the current value by `buyQty`
                 * Commit the database connection now that all the queries have executed successfully; 
                   there is a try/catch around this whole thing that does a rollback if a SQLException occurs 
                 * Update tracking variables
-
-Non-private methods:
-
-
 
 ###Database
 For this assignment a MariaDB database will be used to store six tables of data:

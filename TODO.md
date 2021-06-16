@@ -32,7 +32,7 @@
         - [x] clickthrough to an input dialog
         - [x] create new record button
 * SECOND PRIORITY:
-    - [ ] EDIT TRADE RESOLUTION TO USE AN UPDATABLE RESULT SET
+    - [x] EDIT TRADE RESOLUTION TO USE AN UPDATABLE RESULT SET
     - [ ] user list page class
     - [ ] convert change password page
     - [ ] convert login page
