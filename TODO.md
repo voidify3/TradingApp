@@ -33,11 +33,13 @@
         - [x] create new record button
 * SECOND PRIORITY:
     - [ ] EDIT TRADE RESOLUTION TO USE AN UPDATABLE RESULT SET
-    - [ ] user list page class
-    - [ ] convert change password page
-    - [ ] convert login page
+    - [x] convert change password page
+    - [x] convert login page inner part
+    - [x] convert menu bar
+    - [x] convert shell panel first row and get rid of guilisteners
+    - [ ] convert login page outer part
     - [ ] convert shell panel
-    - [ ] `TradingAppGUI extends JFrame`
+    - [x] `TradingAppGUI extends JFrame`
     - [ ] JavaDoc for TradingAppData
     - [ ] unit tests for TradingAppData
     - [ ] unit test file for object class AssertThrows cases

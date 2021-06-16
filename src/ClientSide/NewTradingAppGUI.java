@@ -25,66 +25,164 @@ import java.util.concurrent.atomic.AtomicInteger;
 import static java.lang.Integer.parseInt;
 
 /***
- * @author Johnny Madigan & Scott Peachey (wrote createAndShowGui, menuBar, resizeImg, loginPanel, shellPanel);
- * Sophia Walsh Long (all other code and the fact that the members aren't static;
- * above methods have also been refactored)
+ * @author Sophia Walsh Long, with some code borrowed from vastly different implementation by Johnny and Scott
  */
-class NewTradingAppGUI {
-
+class NewTradingAppGUI extends JFrame {
     // Logged in user for the session
     private User user = null;
-
-    // instances of components & interactions
-    private GuiListeners listeners = new GuiListeners();
     private TradingAppData data;
-
     // General variables
-    private final int WIDTH = 800;
-    private final int HEIGHT = 500;
-    private final String DARKGREY = "#4D4D4D";
-    private final String WHITE = "#FCFCFC";
-
-    private final JFrame mainFrame = new JFrame("STONK MACHINE");
-
-    // Login panel & widgets, and change password widgets
-    JPanel loginPanel = new JPanel(new GridBagLayout());
-    JCheckBox passwordHide = new JCheckBox();
-    JButton loginButton = new JButton("Login");
-    JLabel usernameLabel = new JLabel("Username");
-    JLabel passwordLabel = new JLabel("Password");
-    JLabel invalidLabel = new JLabel(" ");
-    JTextField usernameInput = new JTextField(10);
-    JPasswordField passwordInput = new JPasswordField(10);
-    JLabel newPasswordLabel = new JLabel("New password");
-    JLabel confirmNewPasswordLabel = new JLabel("Confirm new password");
-    JPasswordField newPasswordInput = new JPasswordField(10);
-    JPasswordField confirmNewPasswordInput = new JPasswordField(10);
-    JButton changePassButton = new JButton("Change password");
-    JPanel changePassPanel = new JPanel();
-
-    // Shell panel & widgets
-    JPanel shellPanel = new JPanel();
-    JButton homeButton = new JButton("Home");
-    JButton adminButton = new JButton("Admin portal");
-    JButton assetsButton = new JButton("All assets");
-    JButton ordersButton = new JButton("Orders");
-    JLabel welcomeLabel = new JLabel("Welcome back (username)", SwingConstants.CENTER);
-    JLabel topLabel = new JLabel("ORG UNIT HERE", SwingConstants.CENTER);
-
-    // Menu bar & widgets
-    JMenuBar menuBar = new JMenuBar();
-    JMenuItem logoutMenu = new JMenuItem("Logout");
-    JMenuItem exitMenu = new JMenuItem("Exit");
-    JMenuItem changePassword = new JMenuItem("Change password");
-    JMenuItem masterUserKey = new JMenuItem("Master User Key");
-    JMenuItem masterAdminKey = new JMenuItem("Master Admin Key");
-
-
+    private static final int WIDTH = 800;
+    private static final int HEIGHT = 500;
+    private static final String DARKGREY = "#4D4D5D";
+    private static final String WHITE = "#FCFCFC";
+    private static final String WRAP_DIALOG ="<html><body><p style='width: 200px;'>%s</p></body></html>";
+    // Top-level components
+    JPanel loginPanel;
+    JPanel shellPanel;
+    JMenuBar menuBar;
 
     public NewTradingAppGUI(TradingAppData data) {
+        setTitle("STONK MACHINE");
         this.data = data;
     }
 
+
+    void createAndShowGUI() throws IllegalString, AlreadyExists, IOException, DoesNotExist, InvalidDate, InvalidAmount, OrderException {
+        setPreferredSize(new Dimension(WIDTH, HEIGHT));
+        setResizable(false);
+        setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
+
+        data.mockObjectsWithPrices();
+        loginPanel(); // creates & shows login portal as the first screen
+        menuBar(); // declare the menu-bar once here
+
+        pack();
+        setLocationRelativeTo(null);
+        setVisible(true);
+    }
+
+    // Menu Bar---------------------------------------------------------------------------------------------------------
+    private void menuBar() {
+        menuBar = new MyMenuBar(); // reset
+
+        // Boilerplate
+        setJMenuBar(menuBar);
+        revalidate();
+    }
+
+    // Resizes images---------------------------------------------------------------------------------------------------
+    /***
+     *  from https://stackoverflow.com/questions/244164/how-can-i-resize-an-image-using-java
+      */
+    private BufferedImage resizeImg(Image originalImg, int width, int height, boolean preserveAlpha) {
+        //System.out.println("resizing...");
+        int imageType = preserveAlpha ? BufferedImage.TYPE_INT_RGB : BufferedImage.TYPE_INT_ARGB;
+        BufferedImage scaledBI = new BufferedImage(width, height, imageType);
+        Graphics2D g = scaledBI.createGraphics();
+        if (preserveAlpha) g.setComposite(AlphaComposite.Src);
+        g.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+        g.drawImage(originalImg, 0, 0, width, height, null);
+        g.dispose();
+        return scaledBI;
+    }
+
+    // Login screen-----------------------------------------------------------------------------------------------------
+    private void loginPanel() {
+        loginPanel = new JPanel(new GridBagLayout()); // reset
+        JPanel loginBox = new JPanel();
+        loginPanel.setBackground(Color.decode(DARKGREY));
+        loginBox.setLayout(new BoxLayout(loginBox, BoxLayout.PAGE_AXIS));
+        loginBox.setBorder(BorderFactory.createEtchedBorder(EtchedBorder.RAISED));
+
+        BufferedImage img;
+        JLabel bannerLabel = new JLabel();
+        try {
+            img = ImageIO.read(new File("./Images/GUI images/banner.png"));
+            BufferedImage newImg = resizeImg(img, 350,62, false);
+            bannerLabel = new JLabel(new ImageIcon(newImg));
+        } catch (IOException e) {
+            bannerLabel.setText("STONK MACHINE");
+        }
+        InnerLoginPage login = new InnerLoginPage();
+        login.formatButton();
+
+        // Add panels together
+        loginBox.add(bannerLabel);
+        loginBox.add(login);
+        loginPanel.add(loginBox);
+
+        // Boilerplate
+        setContentPane(loginPanel);
+        revalidate();
+    }
+
+    // Shell template (content depends on the parameter)----------------------------------------------------------------
+    private void shellPanel(JPanel content, boolean includeWelcomeLabel) {
+        shellPanel(content, includeWelcomeLabel, null);
+    }
+    private void shellPanel(JPanel content, boolean includeWelcomeLabel, String unitLabel) {
+        shellPanel = new JPanel(); // reset
+        shellPanel.setBackground(Color.decode(WHITE));
+        try { //entire thing needs to be this
+            user = data.getUserByKey(user.getUsername());
+
+            String unitText, creditsText;
+            if (user.getUnit() != null) {
+                unitText = user.getUnit();
+                try {
+                    creditsText = String.format("Your organisational unit has %d credits and the below holdings:",
+                            data.getUnitByKey(user.getUnit()).getCredits());
+                } catch (DoesNotExist doesNotExist) {
+                    doesNotExist.printStackTrace();
+                    displayError("Unexpected error: " + doesNotExist.getMessage(),
+                            "Either something went wrong internally, or an admin deleted your organisational" +
+                                    "unit while this page was loading. Use Help > Refresh User Data to fix the problem");
+                    creditsText = "";
+                }
+            } else {
+                unitText = "No organisational unit";
+                creditsText = "";
+            }
+            JLabel welcomeLabel = new JLabel(String.format("Welcome back %s! %s", user.getUsername(), creditsText),
+                    SwingConstants.CENTER);
+
+            shellPanel.setBorder(new EmptyBorder(30, 40, 30, 40));
+            shellPanel.setLayout(new BoxLayout(shellPanel, BoxLayout.PAGE_AXIS));
+            ShellFirstRow row1 = new ShellFirstRow((unitLabel==null?unitText.toUpperCase():unitLabel));
+
+            row1.setMaximumSize(new Dimension(WIDTH, 50));
+            JPanel row2 = new JPanel();
+            row2.setBackground(Color.decode(WHITE));
+            row2.setLayout(new FlowLayout());
+            row2.add(welcomeLabel);
+
+            // The parameter panel is added here, always a panel
+            JPanel row3 = new JPanel();
+            row3.setBackground(Color.decode(WHITE));
+            row3.setPreferredSize(new Dimension(700,400));
+            row3.setLayout(new FlowLayout());
+            row3.add(content);
+
+            shellPanel.add(row1);
+            shellPanel.add(Box.createVerticalStrut(20));
+            if (includeWelcomeLabel) {
+                shellPanel.add(row2);
+                shellPanel.add(Box.createVerticalStrut(20));
+            }
+            shellPanel.add(row3);
+
+            // Boilerplate
+            setContentPane(shellPanel);
+            revalidate();
+        } catch (DoesNotExist doesNotExist) {
+            doesNotExist.printStackTrace();
+            displayError("Unexpected error: " + doesNotExist.getMessage(),
+                    "Either something went wrong internally, or an admin deleted your account while" +
+                            "this page was loading. Logging you out...");
+        }
+    }
+    //helpers
     String[][] populateTable(ArrayList<InventoryRecord> a, boolean isHomepage) throws DoesNotExist {
         String[][] info = new String[0][4];
         for (InventoryRecord inventoryRecord : a) {
@@ -138,259 +236,24 @@ class NewTradingAppGUI {
 
         return info;
     }
-    //TODO: add polymorphism for other possibiltiies
 
-    void createAndShowGUI() throws IllegalString, AlreadyExists, IOException, DoesNotExist, InvalidDate, InvalidAmount, OrderException {
-        mainFrame.setPreferredSize(new Dimension(WIDTH, HEIGHT));
-        mainFrame.setResizable(false);
-        mainFrame.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
 
-        data.mockObjectsWithPrices();
-        loginPanel(); // creates & shows login portal as the first screen
-        menuBar(); // declare the menu-bar once here
-
-        mainFrame.pack();
-        mainFrame.setLocationRelativeTo(null);
-        mainFrame.setVisible(true);
-    }
-
-    // Menu Bar---------------------------------------------------------------------------------------------------------
-    private void menuBar() {
-        menuBar = new JMenuBar(); // reset
-
-        JMenu fileMenu = new JMenu("File");
-        fileMenu.add("Preference");
-        fileMenu.add(logoutMenu);
-        fileMenu.add(exitMenu);
-        menuBar.add(fileMenu);
-
-        JMenu editMenu = new JMenu("Edit");
-        editMenu.add("Cut");
-        editMenu.add("Copy");
-        editMenu.add("Paste");
-        menuBar.add(editMenu);
-
-        JMenu viewMenu = new JMenu("View");
-        menuBar.add(viewMenu);
-
-        JMenu helpMenu = new JMenu("Help");
-        helpMenu.add(changePassword);
-        menuBar.add(helpMenu);
-
-        JMenu devMenu = new JMenu("Dev Tools");
-        devMenu.add(masterUserKey);
-        devMenu.add(masterAdminKey);
-        menuBar.add(devMenu);
-
-        // Listeners
-        listeners.logoutListener();
-        listeners.exitListener();
-        listeners.masterUserKeyListener();
-        listeners.masterAdminKeyListener();
-        listeners.homeListener();
-        listeners.adminListener();
-        listeners.changePassMenuListener();
-        listeners.ordersListener();
-        listeners.assetsListener();
-
-        // Boilerplate
-        mainFrame.setJMenuBar(menuBar);
-        mainFrame.revalidate();
-    }
-
-    // Resizes images---------------------------------------------------------------------------------------------------
-    /***
-     *  from https://stackoverflow.com/questions/244164/how-can-i-resize-an-image-using-java
-      */
-    private BufferedImage resizeImg(Image originalImg, int width, int height, boolean preserveAlpha) {
-        //System.out.println("resizing...");
-        int imageType = preserveAlpha ? BufferedImage.TYPE_INT_RGB : BufferedImage.TYPE_INT_ARGB;
-        BufferedImage scaledBI = new BufferedImage(width, height, imageType);
-        Graphics2D g = scaledBI.createGraphics();
-        if (preserveAlpha) {
-            g.setComposite(AlphaComposite.Src);
-        }
-        g.setRenderingHint(RenderingHints.KEY_ANTIALIASING,
-                RenderingHints.VALUE_ANTIALIAS_ON);
-        g.drawImage(originalImg, 0, 0, width, height, null);
-        g.dispose();
-        return scaledBI;
-    }
-
-    // Login screen-----------------------------------------------------------------------------------------------------
-    private void loginPanel() {
-        loginPanel = new JPanel(new GridBagLayout()); // reset
-
-        JPanel loginBox = new JPanel();
-
-        loginPanel.setBackground(Color.decode(DARKGREY));
-
-        loginBox.setLayout(new BoxLayout(loginBox, BoxLayout.PAGE_AXIS));
-        loginBox.setBorder(BorderFactory.createEtchedBorder(EtchedBorder.RAISED));
-
-        invalidLabel.setMinimumSize(new Dimension(100, 50));
-        loginButton.setContentAreaFilled(false);
-        loginButton.setOpaque(true);
-        passwordHide.setToolTipText("Show & hide password...");
-
-        // Reset fields & checkbox
-        passwordInput.setText("");
-        usernameInput.setText("");
-        invalidLabel.setText(" "); // need space for the label to have a fixed height
-        passwordHide.setSelected(false);
-
-        BufferedImage img;
-        JLabel bannerLabel = new JLabel();
-        try {
-            img = ImageIO.read(new File("./Images/GUI images/banner.png"));
-            BufferedImage newImg = resizeImg(img, 350,62, false);
-            bannerLabel = new JLabel(new ImageIcon(newImg));
-        } catch (IOException e) {
-            bannerLabel.setText("STONK MACHINE");
-        }
-        JPanel login = new JPanel(new GridBagLayout());
-        GridBagConstraints cords = new GridBagConstraints(-1, 1, 1, 1, 0, 0,
-                GridBagConstraints.CENTER, GridBagConstraints.NONE, new Insets(5,5,5,5), 0,0);
-        // Position the interactive components (text fields, buttons etc)
-        login.add(usernameLabel, cords);
-        cords.gridx += 2;
-        login.add(usernameInput, cords);
-
-        cords.gridy++; // password row is always below username row
-        cords.gridx = -1;
-        login.add(passwordLabel, cords);
-        cords.gridx += 2;
-        login.add(passwordInput, cords);
-        cords.gridx++;
-        login.add(passwordHide,cords);
-
-        cords.gridy++; // login button is always below password row
-        cords.gridx = 0;
-        cords.gridwidth = 3;
-        login.add(loginButton, cords);
-
-        cords.gridy++; // warning message is always below login button
-        login.add(invalidLabel, cords);
-
-        // Add panels together
-        loginBox.add(bannerLabel);
-        loginBox.add(login);
-        loginPanel.add(loginBox);
-
-        // Listeners
-        listeners.loginActionListener();
-        listeners.loginKeyListener();
-        listeners.passwordHiddenListener();
-
-        // Boilerplate
-        mainFrame.setContentPane(loginPanel);
-        mainFrame.revalidate();
-    }
-
-    // Shell template (content depends on the parameter)----------------------------------------------------------------
-    private void shellPanel(JPanel content, boolean includeWelcomeLabel) {
-        shellPanel = new JPanel(); // reset
-        shellPanel.setBackground(Color.decode(WHITE));
-        try { //entire thing needs to be this
-            user = data.getUserByKey(user.getUsername());
-            homeButton.setToolTipText("Go to the home screen");
-            assetsButton.setToolTipText("Go to the search screen");
-            adminButton.setToolTipText("Go to admin portal");
-            ordersButton.setToolTipText("View my orders");
-            String unitText, creditsText;
-            if (user.getUnit() != null) {
-                unitText = user.getUnit();
-                try {
-                    creditsText = String.format("Your organisational unit has %d credits and the below holdings:",
-                            data.getUnitByKey(user.getUnit()).getCredits());
-                } catch (DoesNotExist doesNotExist) {
-                    doesNotExist.printStackTrace();
-                    displayError("Unexpected error: " + doesNotExist.getMessage(),
-                            "Either something went wrong internally, or an admin deleted your organisational" +
-                                    "unit while this page was loading. Use Help > Refresh User Data to fix the problem");
-                    creditsText = "";
-                }
-            } else {
-                unitText = "No organisational unit";
-                creditsText = "";
-            }
-            welcomeLabel.setText(String.format("Welcome back %s! %s", user.getUsername(), creditsText));
-            topLabel.setText(unitText.toUpperCase());
-
-            shellPanel.setBorder(new EmptyBorder(30, 40, 30, 40));
-            shellPanel.setLayout(new BoxLayout(shellPanel, BoxLayout.PAGE_AXIS));
-
-            JPanel row1 = new JPanel();
-            JPanel leftButtons = new JPanel();
-            JPanel rightButtons = new JPanel();
-            // keeps row 1 fixed in height so no matter what the content is (a table, buttons, graphs)
-            // it won't change sizes (sometimes takes up most of the screen!)
-            row1.setBackground(Color.decode(WHITE));
-            row1.setBorder(BorderFactory.createEtchedBorder(EtchedBorder.RAISED));
-            row1.setMaximumSize(new Dimension(WIDTH, 50));
-            row1.setLayout(new BorderLayout());
-            leftButtons.add(homeButton);
-            if (user.getAdminAccess()) leftButtons.add(adminButton);
-            rightButtons.add(assetsButton);
-            rightButtons.add(ordersButton);
-            row1.add(leftButtons, BorderLayout.WEST);
-            row1.add(topLabel, BorderLayout.CENTER);
-            row1.add(rightButtons, BorderLayout.EAST);
-
-            JPanel row2 = new JPanel();
-            row2.setBackground(Color.decode(WHITE));
-            row2.setLayout(new FlowLayout());
-            row2.add(welcomeLabel);
-
-            // The parameter panel is added here, always a panel
-            JPanel row3 = new JPanel();
-            row3.setBackground(Color.decode(WHITE));
-            row3.setPreferredSize(new Dimension(700,400));
-            row3.setLayout(new FlowLayout());
-            row3.add(content);
-
-            shellPanel.add(row1);
-            shellPanel.add(Box.createVerticalStrut(20));
-            if (includeWelcomeLabel) {
-                shellPanel.add(row2);
-                shellPanel.add(Box.createVerticalStrut(20));
-            }
-            shellPanel.add(row3);
-
-            // Listeners
-
-            // Boilerplate
-            mainFrame.setContentPane(shellPanel);
-            mainFrame.revalidate();
-        } catch (DoesNotExist doesNotExist) {
-            doesNotExist.printStackTrace();
-            displayError("Unexpected error: " + doesNotExist.getMessage(),
-                    "Either something went wrong internally, or an admin deleted your account while" +
-                            "this page was loading. Logging you out...");
-        }
-    }
-    private void shellPanel(JPanel content, boolean includeWelcomeLabel, String unitLabel) {
-        shellPanel(content, includeWelcomeLabel);
-        topLabel.setText(unitLabel);
-    }
-
-    final String wrapDialog ="<html><body><p style='width: 200px;'>%s</p></body></html>";
     void messageDialogFormatted(String title, String message, int type) {
-        JOptionPane.showMessageDialog(this.mainFrame,
-                String.format(wrapDialog, message),
+        JOptionPane.showMessageDialog(this,
+                String.format(WRAP_DIALOG, message),
                 title, type);
     }
     void displayError(String title, String message) {
         messageDialogFormatted(title, message, JOptionPane.ERROR_MESSAGE);
     }
     int displayConfirm(String title, String message) {
-        return JOptionPane.showConfirmDialog(NewTradingAppGUI.this.mainFrame, String.format(wrapDialog, message),
+        return JOptionPane.showConfirmDialog(NewTradingAppGUI.this, String.format(WRAP_DIALOG, message),
                 title, JOptionPane.YES_NO_OPTION);
     }
 
     void displayFeedback(String title, String message) {
         messageDialogFormatted(title, message, JOptionPane.INFORMATION_MESSAGE);
-        //JOptionPane.showMessageDialog(TradingAppGUI.this.mainFrame,message, title, JOptionPane.PLAIN_MESSAGE);
+        //JOptionPane.showMessageDialog(TradingAppGUI.this,message, title, JOptionPane.PLAIN_MESSAGE);
     }
 
     //Helper to throw NotAuthorised
@@ -414,271 +277,198 @@ class NewTradingAppGUI {
             return -1;
         }
     }
-    /***
-     * @author Sophia Walsh Long, with some code borrowed from now-deleted methods written by Johnny and Scott
-     */
-    private class GuiListeners {
+    private void doLogin() throws DoesNotExist {
+        shellPanel(new HomePage(), true);
+    }
 
-        private void doLogin() throws DoesNotExist {
-            shellPanel(new HomePage(), true);
+    private void doLogout() {
+        user = null; // reset session user data
+        loginPanel(); // creates & shows login portal
+    }
+    class ShellPanel extends JPanel implements ActionListener {
+
+        @Override
+        public void actionPerformed(ActionEvent e) {
+
         }
+    }
+    class OuterLogin extends JPanel {
 
-        private void doLogout() throws AlreadyExists, IllegalString {
-            user = null; // reset session user data
-            loginPanel(); // creates & shows login portal
+    }
+    class MyMenuBar extends JMenuBar implements ActionListener {
+        JMenuItem logoutMenu = new JMenuItem("Logout");
+        JMenuItem exitMenu = new JMenuItem("Exit");
+        JMenuItem changePassword = new JMenuItem("Change password");
+        JMenuItem masterUserKey = new JMenuItem("Master User Key");
+        JMenuItem masterAdminKey = new JMenuItem("Master Admin Key");
+        MyMenuBar() {
+            JMenu fileMenu = new JMenu("File");
+            fileMenu.add("Preference");
+            fileMenu.add(logoutMenu);
+            fileMenu.add(exitMenu);
+            logoutMenu.addActionListener(this);
+            exitMenu.addActionListener(this);
+            add(fileMenu);
+
+            JMenu editMenu = new JMenu("Edit");
+            editMenu.add("Cut");
+            editMenu.add("Copy");
+            editMenu.add("Paste");
+            add(editMenu);
+
+            JMenu viewMenu = new JMenu("View");
+            add(viewMenu);
+
+            JMenu helpMenu = new JMenu("Help");
+            helpMenu.add(changePassword);
+            changePassword.addActionListener(this);
+            add(helpMenu);
+
+            JMenu devMenu = new JMenu("Dev Tools");
+            devMenu.add(masterUserKey);
+            devMenu.add(masterAdminKey);
+            masterUserKey.addActionListener(this);
+            masterAdminKey.addActionListener(this);
+            add(devMenu);
         }
-
-        // Checks login credentials-----------------------------------------------------------------------------------------
-        private void checkLogin() {
-            // store the user object for the duration of the session (if login was successful)
-            String username = usernameInput.getText();
-            String password = new String(passwordInput.getPassword());
-            try {
-                user = data.login(username, password);
-                shellPanel(new HomePage(), true);
-            } catch (DoesNotExist | IllegalString ex) {
-                ex.printStackTrace();
-                passwordInput.setText("");  // clear password field
-                invalidLabel.setForeground(Color.RED);
-                invalidLabel.setText("Invalid Login Credentials");
-            }
-        }
-
-        private void checkPassChange() {
-            int i = displayConfirm("Confirm password change", "Click yes to confirm password change");
-            if (i == JOptionPane.YES_OPTION){
-                String username = usernameInput.getText();
-                String password = new String(passwordInput.getPassword());
-                String newPassword = new String(newPasswordInput.getPassword());
-                String newPassword2 = new String(confirmNewPasswordInput.getPassword());
-                try {
-                    data.login(username, password);
-                    if (!newPassword.equals(newPassword2)) {
-                        invalidLabel.setForeground(Color.RED);
-                        invalidLabel.setText("New passwords do not match");
-                    } else {
-                        user.changePassword(newPassword);
-                        data.updateUser(user);
-                        passwordInput.setText("");
-                        newPasswordInput.setText("");
-                        confirmNewPasswordInput.setText("");
-                        invalidLabel.setForeground(Color.GREEN);
-                        invalidLabel.setText("Password successfully changed!");
-                    }
-                } catch (DoesNotExist ex) {
-                    ex.printStackTrace();
-                    invalidLabel.setForeground(Color.RED);
-                    invalidLabel.setText("Incorrect current password");
-                } catch (IllegalString ex) {
-                    ex.printStackTrace();
-                    invalidLabel.setForeground(Color.RED);
-                    invalidLabel.setText("Password may not contain whitespace");
-                } catch (ConstraintException e) {
-                    displayError("Unexpected error: ", e.getMessage());
-                }
-            }
-        }
-
-        // Panels with the content to be passed into the shell template-----------------------------------------------------
-
-
-        JPanel changePasswordPage() {
-            changePassPanel = new JPanel();
-            invalidLabel.setMinimumSize(new Dimension(100, 50));
-            passwordHide.setToolTipText("Show & hide password...");
-
-            // Reset fields & checkbox
-            passwordInput.setText("");
-            newPasswordInput.setText("");
-            confirmNewPasswordInput.setText("");
-            usernameInput.setText(user.getUsername());
-            usernameInput.setEnabled(false);
-            invalidLabel.setText(" "); // need space for the label to have a fixed height
-            passwordHide.setSelected(false);
-            JPanel login = new JPanel(new GridBagLayout());
-            GridBagConstraints cords = new GridBagConstraints(-1, 1, 1, 1, 0, 0,
-                    GridBagConstraints.CENTER, GridBagConstraints.NONE, new Insets(5,5,5,5), 0,0);
-            // Position the interactive components (text fields, buttons etc)
-            login.add(usernameLabel, cords);
-            cords.gridx += 2;
-            login.add(usernameInput, cords);
-
-            cords.gridy++; // password row is always below username row
-            cords.gridx = -1;
-            login.add(passwordLabel, cords);
-            cords.gridx += 2;
-            login.add(passwordInput, cords);
-            cords.gridx++;
-            login.add(passwordHide,cords);
-
-            cords.gridy++; // new password row is always below password row
-            cords.gridx = -1;
-            login.add(newPasswordLabel, cords);
-            cords.gridx += 2;
-            login.add(newPasswordInput, cords);
-
-            cords.gridy++; // confirm row is always below new password row
-            cords.gridx = -1;
-            login.add(confirmNewPasswordLabel, cords);
-            cords.gridx += 2;
-            login.add(confirmNewPasswordInput, cords);
-
-            cords.gridy++; // button is always below the last row
-            cords.gridx = 0;
-            cords.gridwidth = 3;
-            login.add(changePassButton, cords);
-
-            cords.gridy++; // warning message is always below login button
-            login.add(invalidLabel, cords);
-
-            changePassPanel.add(login);
-
-            changePassActionListener();
-            changePassKeyListener();
-            passwordHiddenListener();
-
-            return changePassPanel;
-        }
-
-        // Login portal/password change listeners-------------------------------------------------------------------------------------------
-
-        // Triggers checkLogin when the 'Login' button is pressed
-        void loginActionListener() {
-            loginButton.addActionListener(e -> checkLogin());
-        }
-
-        // Triggers checkLogin when the 'Enter' key is pressed
-        void loginKeyListener() {
-            passwordInput.addKeyListener(new KeyListener() {
-                @Override
-                public void keyTyped(KeyEvent e) {}
-
-                @Override
-                public void keyPressed(KeyEvent e) {
-                    if (e.getKeyCode() == KeyEvent.VK_ENTER) {
-                        checkLogin();
-                    }
-                }
-
-                @Override
-                public void keyReleased(KeyEvent e) {}
-            });
-        }
-
-        void changePassActionListener() {
-            changePassButton.addActionListener(e->checkPassChange());
-        }
-
-        void changePassKeyListener() {
-            confirmNewPasswordInput.addKeyListener(new KeyListener() {
-                @Override
-                public void keyTyped(KeyEvent e) {}
-
-                @Override
-                public void keyPressed(KeyEvent e) {
-                    if (e.getKeyCode() == KeyEvent.VK_ENTER) {
-                        checkPassChange();
-                    }
-                }
-
-                @Override
-                public void keyReleased(KeyEvent e) {}
-            });
-        }
-
-        // Shows/hides password when the radio button passwordHidden is toggled
-        void passwordHiddenListener() {
-            passwordHide.addItemListener(e -> {
-                if (e.getStateChange() == ItemEvent.SELECTED) {
-                    passwordInput.setEchoChar((char) 0);
-                } else {
-                    passwordInput.setEchoChar('\u2022');
-                }
-            });
-        }
-
-        // Menu bar listeners-----------------------------------------------------------------------------------------------
-
-        // Logs out the user when 'Logout' is clicked in the File menu
-        void logoutListener() {
-            logoutMenu.addActionListener(e -> {
-                try {
-                    doLogout();
-                } catch (AlreadyExists | IllegalString ex) {
-                    ex.printStackTrace();
-                }
-            });
-        }
-
-        // Dev master key to bypass login for testing (goes straight to user home)
-        void masterUserKeyListener() {
-            masterUserKey.addActionListener(e -> {
+        @Override
+        public void actionPerformed(ActionEvent e) {
+            if (e.getSource() == exitMenu) System.exit(0);
+            else if (e.getSource() == logoutMenu) doLogout();
+            else if (e.getSource() == masterUserKey) {
                 user = TradingAppData.userDev;
                 try {
                     doLogin();
                 } catch (DoesNotExist doesNotExist) {
                     doesNotExist.printStackTrace();
                 }
-            });
-        }
-
-        // Dev master key to bypass login for testing (goes straight to admin home)
-        void masterAdminKeyListener() {
-            masterAdminKey.addActionListener(e -> {
+            }
+            else if (e.getSource() == masterAdminKey) {
                 user = TradingAppData.adminDev;
                 try {
                     doLogin();
                 } catch (DoesNotExist doesNotExist) {
                     doesNotExist.printStackTrace();
                 }
-            });
+            }
+            else if (e.getSource() == changePassword && NewTradingAppGUI.this.user != null) shellPanel(new ChangePasswordPage(), false);
         }
+    }
+    class ShellFirstRow extends JPanel implements ActionListener {
+        JButton homeButton = new JButton("Home");
+        JButton adminButton = new JButton("Admin portal");
+        JButton assetsButton = new JButton("All assets");
+        JButton ordersButton = new JButton("Orders");
+        JLabel topLabel = new JLabel("ORG UNIT HERE", SwingConstants.CENTER);
 
-        // Closes mainFrame and stops Main when 'Exit' is clicked in the File menu
-        public void exitListener() {
-            exitMenu.addActionListener(ev -> System.exit(0));
+        ShellFirstRow(String toplabel) {
+            topLabel.setText(toplabel);
+            homeButton.setToolTipText("Go to the home screen");
+            assetsButton.setToolTipText("Go to the search screen");
+            adminButton.setToolTipText("Go to admin portal");
+            ordersButton.setToolTipText("View my orders");
+            JPanel leftButtons = new JPanel();
+            JPanel rightButtons = new JPanel();
+            // keeps row 1 fixed in height so no matter what the content is (a table, buttons, graphs)
+            // it won't change sizes (sometimes takes up most of the screen!)
+            leftButtons.setBackground(Color.decode(WHITE));
+            rightButtons.setBackground(Color.decode(WHITE));
+            setBackground(Color.decode(WHITE));
+            setBorder(BorderFactory.createEtchedBorder(EtchedBorder.RAISED));
+            setLayout(new BorderLayout());
+            leftButtons.add(homeButton);
+            homeButton.addActionListener(this);
+            if (user.getAdminAccess()) {
+                leftButtons.add(adminButton);
+                adminButton.addActionListener(this);
+            }
+            rightButtons.add(assetsButton);
+            assetsButton.addActionListener(this);
+            rightButtons.add(ordersButton);
+            ordersButton.addActionListener(this);
+            add(leftButtons, BorderLayout.WEST);
+            add(topLabel, BorderLayout.CENTER);
+            add(rightButtons, BorderLayout.EAST);
+
         }
-
-        public void changePassMenuListener() {
-            changePassword.addActionListener(e->{
-                if (NewTradingAppGUI.this.user != null) {
-                    shellPanel(changePasswordPage(), false);
-                }
-            });
-        }
-
-        //Other listeners
-
-        void ordersListener() {
-            ordersButton.addActionListener(e->{
-                shellPanel(new OrdersTablePage(true, true, false), false);
-            });
-        }
-        void homeListener() {
-            homeButton.addActionListener(e -> {
-                topLabel.setText("ORG UNIT HERE");
+        @Override
+        public void actionPerformed(ActionEvent e) {
+            if (e.getSource() == homeButton) {
                 try {
                     shellPanel(new HomePage(), true);
                 } catch (DoesNotExist doesNotExist) {
-                    doesNotExist.printStackTrace();
+                    displayError("Could not load due to unexpected error", doesNotExist.getMessage());
                 }
-            });
-        }
-
-        void adminListener() {
-            adminButton.addActionListener(e->{
-                shellPanel(new AdminPortal(), false);
-                topLabel.setText("ADMIN PORTAL");
-            });
-        }
-        void assetsListener() {
-            assetsButton.addActionListener(e->{
+            }
+            else if (e.getSource() == ordersButton) shellPanel(new OrdersTablePage(true, true, false), false);
+            else if (e.getSource() == adminButton) shellPanel(new AdminPortal(), false, "ADMIN PORTAL");
+            else if (e.getSource() == assetsButton) {
                 try {
                     shellPanel(new AssetTablePage(), false);
                 } catch (DoesNotExist doesNotExist) {
-                    doesNotExist.printStackTrace();
+                    displayError("Could not load due to unexpected error", doesNotExist.getMessage());
                 }
-            });
+            }
+        }
+    }
+    class AdminPortal extends JPanel implements ActionListener {
+        JButton newUserButton = new JButton("New user");
+        JButton editUserButton = new JButton("Edit selected");
+        JButton userListButton = new JButton("Expanded list");
+        JButton newUnitButton = new JButton("New organisational unit");
+        JButton editUnitButton = new JButton("Edit selected");
+        JButton unitHoldingsButton = new JButton("Holdings");
+        JButton newAssetButton = new JButton("New asset");
+        JButton editAssetButton = new JButton("Edit selected");
+        JButton assetHoldingsButton = new JButton("Holdings");
+        GuiSearch userSearch;
+        GuiSearch unitSearch;
+        GuiSearch assetSearch;
+
+        AdminPortal() {
+            this.setLayout(new BoxLayout(this, BoxLayout.PAGE_AXIS));
+            userSearch = new GuiSearch(data.getUsernames(data.getAllUsers()));
+            unitSearch = new GuiSearch(data.getUnitNames(data.getAllUnits()));
+            assetSearch = new GuiSearch(data.getAssetStrings(data.getAllAssets()));
+            newUserButton.addActionListener(this);
+            newUnitButton.addActionListener(this);
+            newAssetButton.addActionListener(this);
+            editAssetButton.addActionListener(this);
+            editUnitButton.addActionListener(this);
+            editUserButton.addActionListener(this);
+            userListButton.addActionListener(this);
+            unitHoldingsButton.addActionListener(this);
+            assetHoldingsButton.addActionListener(this);
+            add(adminActionRow(new JButton[]{newUserButton, editUserButton}, userSearch));
+            add(adminActionRow(new JButton[]{newUnitButton, editUnitButton, unitHoldingsButton}, unitSearch));
+            add(adminActionRow(new JButton[]{newAssetButton, editAssetButton, assetHoldingsButton}, assetSearch));
+        }
+        JPanel adminActionRow(JButton[] buttons, GuiSearch search) {
+            JPanel result = new JPanel();
+            for (JButton b : buttons) result.add(b);
+            result.add(search);
+            return result;
+        }
+        @Override
+        public void actionPerformed(ActionEvent e) {
+            try {
+                if (e.getSource() == editAssetButton)
+                    shellPanel(new AssetFormPage((String) assetSearch.getSelectedItem()), false);
+                else if (e.getSource() == assetHoldingsButton)
+                    shellPanel(new InventoryTablePage(parseAssetString((String) assetSearch.getSelectedItem())), false);
+                else if (e.getSource() == editUnitButton)
+                    shellPanel(new UnitFormPage((String) unitSearch.getSelectedItem()), false);
+                else if (e.getSource() == unitHoldingsButton)
+                    shellPanel(new InventoryTablePage((String) unitSearch.getSelectedItem()), false);
+                else if (e.getSource() == editUserButton)
+                    shellPanel(new UserFormPage((String) userSearch.getSelectedItem()), false);
+            } catch (DoesNotExist d) { displayError("Could not load page", d.getMessage());}
+            try {
+                if (e.getSource() == newAssetButton) shellPanel(new AssetFormPage(null), false);
+                else if (e.getSource() == newUnitButton) shellPanel(new UnitFormPage(null), false);
+                else if (e.getSource() == newUserButton) shellPanel(new UserFormPage(null), false);
+            } catch (DoesNotExist d) {
+                displayError("Could not load page due to unexpected error", d.getMessage());}
         }
     }
     class AssetInfoPage extends JPanel implements ActionListener {
@@ -717,35 +507,183 @@ class NewTradingAppGUI {
             orderButtons.add(sellButton);
             add(orderButtons, BorderLayout.SOUTH);
         }
-
         void tryGetHistoricalPrices(TradingAppData.Intervals intervals) {
-            try {
-                data.getHistoricalPrices(asset, intervals);
-            } catch (InvalidDate | DoesNotExist invalidDate) {
-                displayError("An error occurred while displaying prices", invalidDate.getMessage());
-            }
+            try { data.getHistoricalPrices(asset, intervals); }
+            catch (InvalidDate | DoesNotExist invalidDate) { displayError("An error occurred while displaying prices", invalidDate.getMessage()); }
         }
-
         @Override
         public void actionPerformed(ActionEvent e) {
             if (e.getSource() == daysButton) tryGetHistoricalPrices(TradingAppData.Intervals.DAYS);
             else if (e.getSource() == weeksButton) tryGetHistoricalPrices(TradingAppData.Intervals.WEEKS);
             else if (e.getSource() == monthsButton) tryGetHistoricalPrices(TradingAppData.Intervals.MONTHS);
             else if (e.getSource() == yearsButton) tryGetHistoricalPrices(TradingAppData.Intervals.YEARS);
-            else if (e.getSource() == buyButton) {
+            try {
+                if (e.getSource() == buyButton) shellPanel(new OrderFormPage(asset, true, true), false);
+                else if (e.getSource() == sellButton) shellPanel(new OrderFormPage(asset, true, false), false);
+            } catch (DoesNotExist d) { displayError("Unexpected error", d.getMessage()); }
+        }
+    }
+    class InnerLoginPage extends JPanel implements ActionListener, ItemListener, KeyListener {
+        JCheckBox passwordHide = new JCheckBox();
+        JButton loginButton = new JButton("Login");
+        JLabel usernameLabel = new JLabel("Username");
+        JLabel passwordLabel = new JLabel("Password");
+        JLabel invalidLabel = new JLabel(" ");
+        JTextField usernameInput = new JTextField(10);
+        JPasswordField passwordInput = new JPasswordField(10);
+        GridBagConstraints cords = new GridBagConstraints(-1, 1, 1, 1, 0, 0,
+                GridBagConstraints.CENTER, GridBagConstraints.NONE, new Insets(5,5,5,5), 0,0);
+        InnerLoginPage() {
+            setLayout(new GridBagLayout());
+            invalidLabel.setMinimumSize(new Dimension(100, 50));
+            passwordHide.setToolTipText("Show & hide password...");
+
+            // Reset fields & checkbox
+            passwordInput.setText("");
+            usernameInput.setText("");
+            invalidLabel.setText(" "); // need space for the label to have a fixed height
+            passwordHide.setSelected(false);
+
+            // Position the interactive components (text fields, buttons etc)
+            add(usernameLabel, cords);
+            cords.gridx += 2;
+            add(usernameInput, cords);
+
+            cords.gridy++; // password row is always below username row
+            cords.gridx = -1;
+            add(passwordLabel, cords);
+            cords.gridx += 2;
+            add(passwordInput, cords);
+            cords.gridx++;
+            add(passwordHide,cords);
+
+            cords.gridy++; // button is always below the last row
+            cords.gridx = 0;
+            cords.gridwidth = 3;
+            add(loginButton, cords);
+
+            cords.gridy++; // warning message is always below login button
+            add(invalidLabel, cords);
+            loginButton.addActionListener(this);
+            passwordInput.addKeyListener(this);
+            passwordHide.addItemListener(this);
+
+        }
+        void formatButton() {
+            loginButton.setContentAreaFilled(false);
+            loginButton.setOpaque(true);
+        }
+        private void checkLogin() {
+            // store the user object for the duration of the session (if login was successful)
+            try {
+                user = data.login(usernameInput.getText(), new String(passwordInput.getPassword()));
+                shellPanel(new HomePage(), true);
+            } catch (DoesNotExist | IllegalString ex) {
+                ex.printStackTrace();
+                passwordInput.setText("");  // clear password field
+                invalidLabel.setForeground(Color.RED);
+                invalidLabel.setText("Invalid Login Credentials");
+            }
+        }
+        @Override
+        public void actionPerformed(ActionEvent e) { if (e.getSource() == loginButton) checkLogin(); }
+        @Override
+        public void itemStateChanged(ItemEvent e) {
+            if (e.getSource() == passwordHide){
+                if (e.getStateChange() == ItemEvent.SELECTED) passwordInput.setEchoChar((char) 0);
+                else passwordInput.setEchoChar('\u2022');
+            }
+        }
+
+        @Override public void keyTyped(KeyEvent e) {}
+        @Override
+        public void keyPressed(KeyEvent e) {
+            if (e.getSource() == passwordInput && e.getKeyCode() == KeyEvent.VK_ENTER) {
+                checkLogin();
+            }
+        }
+        @Override public void keyReleased(KeyEvent e) {}
+    }
+    class ChangePasswordPage extends InnerLoginPage {
+        JLabel newPasswordLabel = new JLabel("New password");
+        JLabel confirmNewPasswordLabel = new JLabel("Confirm new password");
+        JPasswordField newPasswordInput = new JPasswordField(10);
+        JPasswordField confirmNewPasswordInput = new JPasswordField(10);
+        JButton changePassButton = new JButton("Change password");
+        ChangePasswordPage() {
+            super();
+            usernameInput.setText(user.getUsername());
+            usernameInput.setEnabled(false);
+            remove(loginButton);
+            remove(invalidLabel);
+            cords.gridy--;
+            cords.gridwidth = 1;
+            cords.gridx = -1;
+            add(newPasswordLabel, cords);
+            cords.gridx += 2;
+            add(newPasswordInput, cords);
+
+            cords.gridy++; // confirm row is always below new password row
+            cords.gridx = -1;
+            add(confirmNewPasswordLabel, cords);
+            cords.gridx += 2;
+            add(confirmNewPasswordInput, cords);
+
+            cords.gridy++; // button is always below the last row
+            cords.gridx = 0;
+            cords.gridwidth = 3;
+            add(changePassButton, cords);
+
+            cords.gridy++; // warning message is always below login button
+            add(invalidLabel, cords);
+            changePassButton.addActionListener(this);
+
+        }
+        private void checkPassChange() {
+            int i = displayConfirm("Confirm password change", "Click yes to confirm password change");
+            if (i == JOptionPane.YES_OPTION){
+                String username = usernameInput.getText();
+                String password = new String(passwordInput.getPassword());
+                String newPassword = new String(newPasswordInput.getPassword());
+                String newPassword2 = new String(confirmNewPasswordInput.getPassword());
                 try {
-                    shellPanel(new OrderFormPage(asset, true, true), false);
-                } catch (DoesNotExist doesNotExist) {
-                    displayError("Unexpected error", doesNotExist.getMessage());
+                    data.login(username, password);
+                    if (!newPassword.equals(newPassword2)) {
+                        invalidLabel.setForeground(Color.RED);
+                        invalidLabel.setText("New passwords do not match");
+                    } else {
+                        user.changePassword(newPassword);
+                        data.updateUser(user);
+                        passwordInput.setText("");
+                        newPasswordInput.setText("");
+                        confirmNewPasswordInput.setText("");
+                        invalidLabel.setForeground(Color.GREEN);
+                        invalidLabel.setText("Password successfully changed!");
+                    }
+                } catch (DoesNotExist ex) {
+                    ex.printStackTrace();
+                    invalidLabel.setForeground(Color.RED);
+                    invalidLabel.setText("Incorrect current password");
+                } catch (IllegalString ex) {
+                    ex.printStackTrace();
+                    invalidLabel.setForeground(Color.RED);
+                    invalidLabel.setText(ex.getMessage());
+                } catch (ConstraintException e) {
+                    displayError("Unexpected error: ", e.getMessage());
                 }
             }
-            else if (e.getSource() == sellButton) {
-                try {
-                    shellPanel(new OrderFormPage(asset, true, false), false);
-                } catch (DoesNotExist doesNotExist) {
-                    displayError("Unexpected error", doesNotExist.getMessage());
-                }
+        }
+
+        @Override
+        public void keyPressed(KeyEvent e) {
+            if (e.getSource() == confirmNewPasswordInput && e.getKeyCode() == KeyEvent.VK_ENTER) {
+                checkPassChange();
             }
+        }
+
+        @Override
+        public void actionPerformed(ActionEvent e) {
+            if (e.getSource() == changePassButton) checkPassChange();
         }
     }
     abstract class TablePage extends JPanel implements MouseListener {
@@ -775,7 +713,6 @@ class NewTradingAppGUI {
             this.add(scrollPane);
             table.addMouseListener(this);
         }
-
         abstract void onRowClick(String col1, String col2);
         @Override
         public void mouseClicked(MouseEvent e) {
@@ -783,29 +720,12 @@ class NewTradingAppGUI {
             String key = table.getModel().getValueAt(row, 0).toString();
             onRowClick(key, table.getModel().getValueAt(row, 1).toString());
         }
-
-        @Override
-        public void mousePressed(MouseEvent e) {
-
-        }
-
-        @Override
-        public void mouseReleased(MouseEvent e) {
-
-        }
-
-        @Override
-        public void mouseEntered(MouseEvent e) {
-
-        }
-
-        @Override
-        public void mouseExited(MouseEvent e) {
-
-        }
+        @Override public void mousePressed(MouseEvent e) {}
+        @Override public void mouseReleased(MouseEvent e) {}
+        @Override public void mouseEntered(MouseEvent e) {}
+        @Override public void mouseExited(MouseEvent e) {}
     }
     class HomePage extends TablePage {
-
         private HomePage(String[][] info) {
             super(new String[]{"Asset ID", "Description", "Qty", "$ Current"}, info,
                     new int[]{25, 400, 20, 30}, new boolean[]{false, true, false, false});
@@ -815,13 +735,9 @@ class NewTradingAppGUI {
             this((user.getUnit() == null? new String[0][4] :
                     populateTable(data.getInventoriesByOrgUnit(user.getUnit()), true)));
         }
-
         @Override
         void onRowClick(String col1, String col2) {
-            shellPanel(new AssetInfoPage(parseInt(col1)),
-                    false);
-            topLabel.setText(col2.toUpperCase());
-        }
+            shellPanel(new AssetInfoPage(parseInt(col1)), false, col2.toUpperCase()); }
     }
     class OrdersTablePage extends TablePage implements ActionListener {
         boolean isBuy;
@@ -907,8 +823,7 @@ class NewTradingAppGUI {
         @Override
         void onRowClick(String col1, String col2) {
             shellPanel(new AssetInfoPage(parseInt(col1)),
-                    false);
-            topLabel.setText(col2.toUpperCase());
+                    false, col2.toUpperCase());
         }
     }
     class InventoryTablePage extends TablePage implements ActionListener{
@@ -956,81 +871,68 @@ class NewTradingAppGUI {
             unitSearch.addActionListener(this);
             JFormattedTextField qtyTF = ((JSpinner.DefaultEditor) quantityInput.getEditor()).getTextField();
             qtyTF.setColumns(4);
-
         }
+
+        /**
+         * Constructor that shows ALL inventory records
+         * @throws DoesNotExist Never, but the computer doesn't know that
+         */
         InventoryTablePage() throws DoesNotExist {
             this(populateTable(data.getAllInventories(), false));
             unitfilter = null;
             assetfilter = 0;
-            unitSearch.setEnabled(false);
-            assetSearch.setEnabled(false);
-            newRecordButton.setEnabled(false);
+            setEnableds(false,false,false);
             showAll.setSelected(true);
         }
+
+        /**
+         * Constructor that shows inventory records for one unit
+         * @param unit Unit name
+         * @throws DoesNotExist when the unit doesn't exist
+         */
         InventoryTablePage(String unit) throws DoesNotExist {
             this(populateTable(data.getInventoriesByOrgUnit(unit), false));
             if (unit == null) throw new DoesNotExist("Please select an option from the list");
             data.getUnitByKey(unit); //exception if it doesn't exist
             unitfilter = unit;
             assetfilter = 0;
-            unitSearch.setEnabled(true);
-            assetSearch.setEnabled(false);
+            setEnableds(false,true,false);
             unitSearch.setSelectedItem(unit);
-            newRecordButton.setEnabled(true);
             byUnit.setSelected(true);
         }
+
+        /**
+         * Constructor that shows inventory records for one asset
+         * @param asset Asset name
+         * @throws DoesNotExist when the asset doesn't exist
+         */
         InventoryTablePage(int asset) throws DoesNotExist {
             this(populateTable(data.getInventoriesByAsset(asset), false));
             data.getAssetByKey(asset); //exception if it doesn't exist
             assetfilter = asset;
             unitfilter = null;
-            unitSearch.setEnabled(false);
-            assetSearch.setEnabled(true);
+            setEnableds(true,false,true);
             assetSearch.setSelectedIndex(asset-1);
-            newRecordButton.setEnabled(true);
             byAsset.setSelected(true);
         }
-
         void notAuthorisedDialog(String message) {
             displayError("Unexpected error: " + message,
                     "Another admin may have revoked your admin access");
         }
-
-
         void refresh() throws DoesNotExist {
-            if (unitfilter != null) {
-                shellPanel(new InventoryTablePage(unitfilter), false);
-            }
-            else if (assetfilter != 0) {
-                shellPanel(new InventoryTablePage(assetfilter), false);
-            }
-            else {
-                shellPanel(new InventoryTablePage(), false);
-            }
+            if (unitfilter != null) shellPanel(new InventoryTablePage(unitfilter), false);
+            else if (assetfilter != 0) shellPanel(new InventoryTablePage(assetfilter), false);
+            else shellPanel(new InventoryTablePage(), false);
         }
         void loadSelection() {
-            if (showAll.isSelected()) {
-                try {
-                    shellPanel(new InventoryTablePage(), false);
-                } catch (DoesNotExist doesNotExist) {
-                    displayError("Could not load due to unexpected error", doesNotExist.getMessage());
-                }
-            }
-            else if (byAsset.isSelected()) {
-                try {
+            try {
+                if (showAll.isSelected()) shellPanel(new InventoryTablePage(), false);
+                else if (byAsset.isSelected())
                     shellPanel(new InventoryTablePage(parseAssetString((String) assetSearch.getSelectedItem())), false);
-                } catch (DoesNotExist doesNotExist) {
-                    displayError("Could not load", doesNotExist.getMessage());
-                }
-            }
-            else if (byUnit.isSelected()) {
-                try {
+                else if (byUnit.isSelected())
                     shellPanel(new InventoryTablePage((String) unitSearch.getSelectedItem()), false);
-                    refresh();
-                } catch (DoesNotExist doesNotExist) {
-                    displayError("Could not load", doesNotExist.getMessage());
-                }
-            }
+            }catch (DoesNotExist doesNotExist) {
+                displayError("Could not load", doesNotExist.getMessage()); }
         }
         void create() throws DoesNotExist, NotAuthorised {
             String titlestring = "";
@@ -1056,7 +958,7 @@ class NewTradingAppGUI {
             editInvPanel.add(new JLabel("Enter quantity:"));
             editInvPanel.add(quantityInput);
             quantityInput.setValue(0);
-            int result = JOptionPane.showOptionDialog(mainFrame, editInvPanel, "Creating new holding for " + titlestring,
+            int result = JOptionPane.showOptionDialog(NewTradingAppGUI.this, editInvPanel, "Creating new holding for " + titlestring,
                     JOptionPane.YES_NO_OPTION, JOptionPane.PLAIN_MESSAGE, null, options2, null);
             if (result == JOptionPane.YES_OPTION) {
                 failIfNotAdmin("Create a new inventory record");
@@ -1065,6 +967,19 @@ class NewTradingAppGUI {
                 refresh();
             }
         }
+
+        /**
+         * Set the enabled value of three elements whose enabled values are often set together
+         * @param assetSrch new enabled value for assetSearch
+         * @param unitSrch new enabled value for unitSearch
+         * @param newRecBtn new enabled value for newRecordButton
+         */
+        void setEnableds(boolean assetSrch, boolean unitSrch, boolean newRecBtn) {
+            assetSearch.setEnabled(assetSrch);
+            unitSearch.setEnabled(unitSrch);
+            newRecordButton.setEnabled(newRecBtn);
+        }
+
         @Override
         void onRowClick(String col1, String col2) {
             editInvPanel.add(new JLabel("Enter quantity:"));
@@ -1073,7 +988,7 @@ class NewTradingAppGUI {
                 int asset = parseInt(col2);
                 int qty = data.getInv(col1, asset).getQuantity();
                 quantityInput.setValue(qty);
-                int result = JOptionPane.showOptionDialog(mainFrame, editInvPanel, "Editing quantity of asset " + col2 + " held by " + col1 ,
+                int result = JOptionPane.showOptionDialog(NewTradingAppGUI.this, editInvPanel, "Editing quantity of asset " + col2 + " held by " + col1 ,
                         JOptionPane.YES_NO_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE, null, options, null);
                 if (result == JOptionPane.YES_OPTION) {
                     failIfNotAdmin("Change the quantity of an asset held by an organisational unit");
@@ -1095,41 +1010,19 @@ class NewTradingAppGUI {
 
         @Override
         public void actionPerformed(ActionEvent e) {
-            if (e.getSource() == showAll) {
-                unitSearch.setEnabled(false);
-                assetSearch.setEnabled(false);
-                newRecordButton.setEnabled(false);
-            }
-            else if (e.getSource() == byAsset) {
-                unitSearch.setEnabled(false);
-                assetSearch.setEnabled(true);
-                newRecordButton.setEnabled(false);
-            }
-            else if (e.getSource() == byUnit) {
-                unitSearch.setEnabled(true);
-                assetSearch.setEnabled(false);
-                newRecordButton.setEnabled(false);
-            }
-            else if (e.getSource() == refreshButton) {
-                loadSelection();
-            }
+            if (e.getSource() == showAll) setEnableds(false, false, false);
+            else if (e.getSource() == byAsset) setEnableds(true, false, false);
+            else if (e.getSource() == byUnit) setEnableds(false, true, false);
+            else if (e.getSource() == refreshButton) loadSelection();
             else if (e.getSource()==newRecordButton) {
-                try {
-                    create();
-                } catch (DoesNotExist doesNotExist) {
-                    displayError("Could not load", doesNotExist.getMessage());
-                } catch (NotAuthorised notAuthorised) {
-                    notAuthorisedDialog(notAuthorised.getMessage());
-                }
+                try {create();}
+                catch (DoesNotExist doesNotExist) { displayError("Could not load", doesNotExist.getMessage());}
+                catch (NotAuthorised notAuthorised) { notAuthorisedDialog(notAuthorised.getMessage());}
             }
-            else if (e.getSource()==unitSearch) {
-                if (!unitfilter.equals(unitSearch.getSelectedItem()))
+            else if (e.getSource()==unitSearch && !unitfilter.equals(unitSearch.getSelectedItem()))
                     newRecordButton.setEnabled(false);
-            }
-            else if (e.getSource()==assetSearch) {
-                if (assetfilter != parseAssetString((String) assetSearch.getSelectedItem()))
+            else if (e.getSource()==assetSearch && assetfilter != parseAssetString((String) assetSearch.getSelectedItem()))
                     newRecordButton.setEnabled(false);
-            }
         }
     }
     abstract class FormPage extends JPanel implements ActionListener {
@@ -1159,10 +1052,8 @@ class NewTradingAppGUI {
         abstract void save();
         abstract void create();
         abstract void delete();
-        void cancel() {
-            if (displayConfirm("Return to portal?", "Changes will be discarded")
-                    == JOptionPane.YES_OPTION) exitToPortal();
-        }
+        void cancel() { if (displayConfirm("Return to portal?", "Changes will be discarded")
+                    == JOptionPane.YES_OPTION) exitToPortal(); }
         void exitToPortal(){shellPanel(new AdminPortal(),false);}
         void notAuthorisedDialog(String message) {
             displayError("Unexpected error: " + message,
@@ -1174,9 +1065,7 @@ class NewTradingAppGUI {
             else if (e.getSource()==saveCreateButton) create();
             else if (e.getSource()==deleteButton) {
                 if (displayConfirm("Confirm deletion",  deletePromptText) == JOptionPane.YES_OPTION) delete();}
-            else if (e.getSource()==cancelEditButton) {
-                cancel();
-            }
+            else if (e.getSource()==cancelEditButton) cancel();
         }
     }
     class AssetFormPage extends FormPage {
@@ -1496,7 +1385,7 @@ class NewTradingAppGUI {
             else {
                 o = data.getBuyByKey(id);
                 infoLabel.setText(String.format("Info for %s order", typeText));
-                extraInfoLabel.setText(String.format(wrapDialog, MessageFormat.format("Placed at {0} by a member of {1} for asset {2}; {3}",
+                extraInfoLabel.setText(String.format(WRAP_DIALOG, MessageFormat.format("Placed at {0} by a member of {1} for asset {2}; {3}",
                         o.getDatePlaced().toString(), o.getUnit(), o.getAsset(),
                         (o.getDateResolved() == null) ? "unresolved." : MessageFormat.format("resolved at {0}{1}.",
                                 o.getDateResolved().toString(), (o instanceof BuyOrder ? " with sell order " + ((BuyOrder) o).getBoughtFrom().toString() : "")))));
@@ -1578,110 +1467,6 @@ class NewTradingAppGUI {
                 displayError("Unexpected error", doesNotExist.getMessage());
             } catch (InvalidAmount invalidAmount) {
                 displayError("Unexpected error when doing refund", invalidAmount.getMessage());
-            }
-        }
-    }
-    class AdminPortal extends JPanel implements ActionListener {
-        JButton newUserButton = new JButton("New user");
-        JButton editUserButton = new JButton("Edit selected");
-        JButton userListButton = new JButton("Expanded list");
-        JButton newUnitButton = new JButton("New organisational unit");
-        JButton editUnitButton = new JButton("Edit selected");
-        JButton unitHoldingsButton = new JButton("Holdings");
-        JButton newAssetButton = new JButton("New asset");
-        JButton editAssetButton = new JButton("Edit selected");
-        JButton assetHoldingsButton = new JButton("Holdings");
-        GuiSearch userSearch;
-        GuiSearch unitSearch;
-        GuiSearch assetSearch;
-
-        AdminPortal() {
-            this.setLayout(new BoxLayout(this, BoxLayout.PAGE_AXIS));
-            userSearch = new GuiSearch(data.getUsernames(data.getAllUsers()));
-            unitSearch = new GuiSearch(data.getUnitNames(data.getAllUnits()));
-            assetSearch = new GuiSearch(data.getAssetStrings(data.getAllAssets()));
-            newUserButton.addActionListener(this);
-            newUnitButton.addActionListener(this);
-            newAssetButton.addActionListener(this);
-            editAssetButton.addActionListener(this);
-            editUnitButton.addActionListener(this);
-            editUserButton.addActionListener(this);
-            userListButton.addActionListener(this);
-            unitHoldingsButton.addActionListener(this);
-            assetHoldingsButton.addActionListener(this);
-            add(adminActionRow(new JButton[]{newUserButton, editUserButton, userListButton}, userSearch));
-            add(adminActionRow(new JButton[]{newUnitButton, editUnitButton, unitHoldingsButton}, unitSearch));
-            add(adminActionRow(new JButton[]{newAssetButton, editAssetButton, assetHoldingsButton}, assetSearch));
-        }
-
-        JPanel adminActionRow(JButton[] buttons, GuiSearch search) {
-            JPanel result = new JPanel();
-            for (JButton b : buttons) {
-                result.add(b);
-            }
-            result.add(search);
-            return result;
-        }
-
-        @Override
-        public void actionPerformed(ActionEvent e) {
-            if (e.getSource() == editAssetButton) {
-                try {shellPanel(new AssetFormPage((String) assetSearch.getSelectedItem()), false);}
-                catch (DoesNotExist d) {
-                    displayError("Could not load page", d.getMessage());
-                }
-            }
-            else if (e.getSource() == newAssetButton) {
-                try {
-                    shellPanel(new AssetFormPage(null), false);
-                } catch (DoesNotExist doesNotExist) {
-                    displayError("Could not load page due to unexpected error", doesNotExist.getMessage());
-                }
-            }
-            else if (e.getSource() == assetHoldingsButton) {
-                try {
-                    shellPanel(new InventoryTablePage(parseAssetString((String) assetSearch.getSelectedItem())), false);
-                } catch (DoesNotExist doesNotExist) {
-                    displayError("Could not load page", doesNotExist.getMessage());
-                }
-            }
-            else if (e.getSource() == editUnitButton) {
-                try {
-                    shellPanel(new UnitFormPage((String) unitSearch.getSelectedItem()), false);
-                } catch (DoesNotExist doesNotExist) {
-                    displayError("Could not load page", doesNotExist.getMessage());
-                }
-            }
-            else if (e.getSource() == newUnitButton) {
-                try {
-                    shellPanel(new UnitFormPage(null), false);
-                } catch (DoesNotExist doesNotExist) {
-                    displayError("Could not load page due to unexpected error", doesNotExist.getMessage());
-                }
-            }
-            else if (e.getSource() == unitHoldingsButton) {
-                try {
-                    shellPanel(new InventoryTablePage((String) unitSearch.getSelectedItem()), false);
-                } catch (DoesNotExist doesNotExist) {
-                    displayError("Could not load page", doesNotExist.getMessage());
-                }
-            }
-            else if (e.getSource() == editUserButton) {
-                try {
-                    shellPanel(new UserFormPage((String) userSearch.getSelectedItem()), false);
-                } catch (DoesNotExist doesNotExist) {
-                    displayError("Could not load page", doesNotExist.getMessage());
-                }
-            }
-            else if (e.getSource() == newUserButton) {
-                try {
-                    shellPanel(new UserFormPage(null), false);
-                } catch (DoesNotExist doesNotExist) {
-                    displayError("Could not load page due to unexpected error", doesNotExist.getMessage());
-                }
-            }
-            else if (e.getSource() == userListButton) {
-
             }
         }
     }
