@@ -5,6 +5,7 @@ import common.Exceptions.IllegalString;
 
 import static common.DatabaseTables.*;
 import static common.ProtocolKeywords.*;
+import static java.sql.ResultSet.TYPE_SCROLL_INSENSITIVE;
 
 import java.io.IOException;
 import java.io.ObjectInputStream;
@@ -122,19 +123,10 @@ class NetworkServer {
             "SELECT * FROM buyorder " +
                     "WHERE dateResolved IS NULL AND asset=? " +
                     "ORDER BY datePlaced, idx;";
-    private static final String RECONCILIATION_RESOLVE_BUY =
-            "UPDATE buyorder " +
-                    "SET price=?, dateResolved=?, boughtFrom=? " +
-                    "WHERE idx=?;";
-    private static final String RECONCILIATION_RESOLVE_SELL =
-            "UPDATE sellorder " +
-                    "SET quantity=?, dateResolved=? " +
-                    "WHERE idx=?;";
     private static final String RECONCILIATION_ADJUST_BALANCE =
             "UPDATE orgunit " +
                     "SET credits=credits+? " +
                     "WHERE name=?;";
-
     private static final String INSERT_OR_UPDATE_INV =
             "INSERT INTO inventories (orgunit, asset, quantity)" +
                     "VALUES (?, ?, ?)" +
@@ -151,8 +143,6 @@ class NetworkServer {
     private PreparedStatement getAssets;
     private PreparedStatement getSellsReconciliation;
     private PreparedStatement getBuysReconciliation;
-    private PreparedStatement resolveBuy;
-    private PreparedStatement resolveSell;
     private PreparedStatement adjustBalance;
     private PreparedStatement insertUpdateInv;
     private PreparedStatement insertAdjustInv;
@@ -182,10 +172,8 @@ class NetworkServer {
             getAssets = connection.prepareStatement(GET_ASSETS);
             insertUpdateInv = connection.prepareStatement(INSERT_OR_UPDATE_INV);
             insertAdjustInv = connection.prepareStatement(INSERT_OR_ADJUST_INV);
-            getSellsReconciliation = connection.prepareStatement(RECONCILIATION_GET_SELLS);
-            getBuysReconciliation = connection.prepareStatement(RECONCILIATION_GET_BUYS);
-            resolveBuy = connection.prepareStatement(RECONCILIATION_RESOLVE_BUY);
-            resolveSell = connection.prepareStatement(RECONCILIATION_RESOLVE_SELL);
+            getSellsReconciliation = connection.prepareStatement(RECONCILIATION_GET_SELLS, TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_UPDATABLE);
+            getBuysReconciliation = connection.prepareStatement(RECONCILIATION_GET_BUYS, TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_UPDATABLE);
             adjustBalance = connection.prepareStatement(RECONCILIATION_ADJUST_BALANCE);
 
         } catch (SQLException ex) {
@@ -528,19 +516,15 @@ class NetworkServer {
                         if (buyQty <= sellQty && buyPrice >= sellPrice) {
                             //System.out.printf("Resolving sell order %d and buy order %d...", sellID, buyID);
                             int refundAmount = (buyPrice - sellPrice) * buyQty;
-                            resolveBuy.setInt(1, sellPrice);
-                            resolveBuy.setTimestamp(2, now);
-                            resolveBuy.setInt(3, sellID);
-                            resolveBuy.setInt(4, buyID);
-                            resolveBuy.execute();
+                            buys.updateInt(5, sellPrice);
+                            buys.updateTimestamp(7, now);
+                            buys.updateInt(8, sellID);
+                            buys.updateRow();
 
                             sellQty -= buyQty;
-
-                            resolveSell.setInt(1,sellQty);
-                            if (sellQty == 0) resolveSell.setTimestamp(2,now);
-                            else resolveSell.setNull(2,Types.TIMESTAMP);
-                            resolveSell.setInt(3,sellID);
-                            resolveSell.execute();
+                            sells.updateInt(4, sellQty);
+                            if (sellQty==0) sells.updateTimestamp(7, now);
+                            sells.updateRow();
 
                             int totalPrice = buyQty * sellPrice;
                             adjustBalance.setInt(1, totalPrice); //total credits gained by seller
@@ -568,7 +552,6 @@ class NetworkServer {
                         }
                         if (sellQty == 0) break;
                     }
-
                 }
                 System.out.printf("Reconciliation done for asset %d (%s)\n", assetid, assetdesc);
             }
