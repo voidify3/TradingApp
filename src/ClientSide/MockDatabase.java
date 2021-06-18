@@ -6,7 +6,6 @@ import java.sql.Timestamp;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 
-@Deprecated
 class MockDatabase {
     //Stub data structures
     private ArrayList<User> allUsers = new ArrayList<>();
