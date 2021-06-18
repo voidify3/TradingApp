@@ -73,7 +73,7 @@ public class User extends DataObject {
     // GETTERS & SETTERS------------------------------------------------------------------------------------------------
     /***
      * Getter for the username.
-     * NO setter as the username is unique & decided upon user creation (hence final).
+     * NO setter as the username is unique and decided upon user creation (hence final).
      * @return username string
      */
     public String getUsername() {
@@ -176,7 +176,7 @@ public class User extends DataObject {
      * begin to encrypted passwords so that even if 2 user's choose/given the same password,
      * their saved passwords in the DB will be drastically different.
      *
-     * This method breaks the password & salt down into bytes before hashing into a string of 128 chars.
+     * This method breaks the password and salt down into bytes before hashing into a string of 128 chars.
      * Furthermore, this method is deterministic. So it can also be used for authenticating user's when logging in.
      * When a user types their username, the program will query for their username and use the corresponding salt string
      * (see login method) and then hash whatever password typed before checking if this newly hashed password

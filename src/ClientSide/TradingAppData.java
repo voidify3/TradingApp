@@ -36,6 +36,7 @@ class TradingAppData {
     static Asset assetDev1;
     static Asset assetDev2;
     static BuyOrder testBuyOrder;
+    static BuyOrder testBuyOrder2;
     static SellOrder testSellOrder;
 
 
@@ -86,11 +87,14 @@ class TradingAppData {
         dataSource.insertUser(userDev4);
         dataSource.insertAsset(assetDev1);
         dataSource.insertAsset(assetDev2);
+        dataSource.insertOrUpdateInventory(new InventoryRecord(unitDev2.getName(), assetDev1.getId(), 800));
         dataSource.insertOrUpdateInventory(new InventoryRecord(unitDev.getName(), assetDev1.getId(), 500));
         dataSource.insertOrUpdateInventory(new InventoryRecord(unitDev.getName(), assetDev2.getId(), 3500));
         testBuyOrder = new BuyOrder(unitDev.getName(), assetDev1.getId(), 20, 13);
+        testBuyOrder2 = new BuyOrder(unitDev2.getName(), assetDev1.getId(), 30, 15);
         testSellOrder = new SellOrder(unitDev.getName(), assetDev1.getId(), 6, 47);
         placeBuyOrder(testBuyOrder);
+        placeBuyOrder(testBuyOrder2);
         placeSellOrder(testSellOrder);
     }
 
@@ -662,7 +666,7 @@ class TradingAppData {
      * @param unitName Unit name
      * @param newBalance new balance
      * @throws DoesNotExist if unit doesn't exist
-     * @throws InvalidAmount if new balance < 0
+     * @throws InvalidAmount if new balance is less than 0
      */
     void setUnitBalance(String unitName, int newBalance) throws DoesNotExist, InvalidAmount {
         OrgUnit unitInQuestion = getUnitByKey(unitName);
@@ -674,7 +678,7 @@ class TradingAppData {
      * @param unitName Unit name
      * @param amount number to add to balance
      * @throws DoesNotExist if unit doesn't exist
-     * @throws InvalidAmount if new balance < 0
+     * @throws InvalidAmount if new balance is less than 0
      */
     void adjustUnitBalance(String unitName, int amount) throws DoesNotExist, InvalidAmount {
         OrgUnit unitInQuestion = getUnitByKey(unitName);

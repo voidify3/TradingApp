@@ -10,7 +10,7 @@ import java.util.List;
 /***
  * This is a simple class for filtering text in a search box
  * Inspired by methods from Stack Overflow, these have been modified to suit our app.
- * @see <a href="https://stackoverflow.com/a/28555827"/>
+ * @see <a href="https://stackoverflow.com/a/28555827">this</a>
  */
 class GuiSearch extends JComboBox<String> {
 

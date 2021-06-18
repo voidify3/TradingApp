@@ -44,7 +44,7 @@ public class TestUser {
     // TEST CONSTRUCTOR, GETTERS, & SETTERS-----------------------------------------------------------------------------
     /***
      * Tests if user constructor compiles, which indirectly tests the getters as well.
-     * Also indirectly tests the helper functions "generateSALT" & "hashPasswords".
+     * Also indirectly tests the helper functions "generateSALT" and "hashPasswords".
      */
     @Test
     @DisplayName("Users constructor assigns the data correctly")
@@ -63,7 +63,7 @@ public class TestUser {
     }
 
     /***
-     * Tests if user setters & getters for admin bool & org unit work correctly.
+     * Tests if user setters and getters for admin bool and org unit work correctly.
      * DOES NOT test the setter for passwords (see "testUserConstructor" as
      * it tests the password is valid and hashed with SHA-512 correctly.
      */

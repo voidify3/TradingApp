@@ -44,7 +44,7 @@
   - [x] create unit test file for data object validation
   - [x] create build script file
   - [x] dot points of video scripts
-  - [ ] check that trade rec actually happens
+  - [x] check that trade rec actually happens
   - [ ] finish unit tests for TradingAppData
   - [ ] generate javadoc for everything
 * SATURDAY

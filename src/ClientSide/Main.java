@@ -1,12 +1,12 @@
 package ClientSide;
 
 /***
- * @author Johnny, Alistair, Scott & Sophia
+ * @author Johnny, Alistair, Scott and Sophia
  */
 class Main {
 
     /***
-     * Invokes the Client-Side GUI & holds the date/time
+     * Invokes the Client-Side GUI
      * @param args CLI arguments. If the first argument is "MOCK", use the mock data source instead of the network.
      *             If the last argument is "TESTDATA", populate test data in all tables on startup-- otherwise, just
      *             the bare minimum, i.e. one admin and one non-admin user for the menu bar master keys.
