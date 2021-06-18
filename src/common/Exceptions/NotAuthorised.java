@@ -1,6 +1,9 @@
 package common.Exceptions;
 
-public class NotAuthorised extends Throwable {
+/**
+ * Custom exception for when a non-admin is attempting an admin-only action
+ */
+public class NotAuthorised extends Exception {
     public NotAuthorised(String s1, String s) {
         this(String.format(s1, s));
     }

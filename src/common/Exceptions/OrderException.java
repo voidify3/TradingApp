@@ -1,5 +1,8 @@
 package common.Exceptions;
 
+/**
+ * Custom exception for order placing
+ */
 public class OrderException extends Exception {
     public OrderException() {
         super();

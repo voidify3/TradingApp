@@ -1,6 +1,9 @@
 package common.Exceptions;
 
-public class ConstraintException extends Throwable {
+/**
+ * Custom exception for when a constraint prevented an insertion or update
+ */
+public class ConstraintException extends Exception {
 
     public ConstraintException(String message) {
         super(message);

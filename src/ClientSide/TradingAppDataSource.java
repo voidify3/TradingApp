@@ -185,9 +185,9 @@ abstract class TradingAppDataSource {
     abstract ArrayList<InventoryRecord> inventoriesByAsset(int asset);
 
     /**
-     * Get all buy orders
-     * @param sellOrderID
-     * @return
+     * Get all buy orders that were resolved with a specific sell order
+     * @param sellOrderID Sell order ID
+     * @return ArrayList of all matcing buy orders
      */
     abstract ArrayList<BuyOrder> buyOrdersByBoughtFrom(int sellOrderID);
 

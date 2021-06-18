@@ -1,6 +1,9 @@
 package common.Exceptions;
 
-public class InvalidDate extends Throwable{
+/**
+ * Custom exception for invalid dates
+ */
+public class InvalidDate extends Exception{
     public InvalidDate(String s) {
         super(s);
     }

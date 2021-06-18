@@ -1,6 +1,9 @@
 package common.Exceptions;
 
-public class DoesNotExist extends Throwable {
+/**
+ * Custom exception for when a database record doesn't exist
+ */
+public class DoesNotExist extends Exception {
     public DoesNotExist(String s, String itemThatDoesNotExist) {
         this(String.format(s, itemThatDoesNotExist));
     }

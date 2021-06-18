@@ -1,10 +1,15 @@
 package common.Exceptions;
 
-public class AlreadyExists extends Throwable {
+/**
+ * Custom exception for when an insertion failed due to pre-existence of key
+ */
+public class AlreadyExists extends Exception {
     public AlreadyExists(String s) {
         super(s);
     }
-
+    public AlreadyExists(String s, Object... args) {
+        this(String.format(s, args));
+    }
     public AlreadyExists(String s, String s1) {
         this(String.format(s, s1));
     }

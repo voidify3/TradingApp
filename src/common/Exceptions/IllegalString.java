@@ -1,6 +1,9 @@
 package common.Exceptions;
 
-public class IllegalString extends Throwable {
+/**
+ * Custom exception for illegal strings
+ */
+public class IllegalString extends Exception {
     public IllegalString(String s) {
         super(s);
     }

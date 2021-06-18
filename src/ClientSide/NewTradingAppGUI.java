@@ -331,7 +331,7 @@ class NewTradingAppGUI extends JFrame {
     /**
      * JMenuBar subclass with all the needed menu bar items
      */
-    class MyMenuBar extends JMenuBar implements ActionListener {
+    private class MyMenuBar extends JMenuBar implements ActionListener {
         JMenuItem logoutMenu = new JMenuItem("Logout");
         JMenuItem exitMenu = new JMenuItem("Exit");
         JMenuItem changePassword = new JMenuItem("Change password");
@@ -394,7 +394,7 @@ class NewTradingAppGUI extends JFrame {
     /**
      * JPanel subclass for the first row of the shell panel (the part with the nav buttons)
      */
-    class ShellFirstRow extends JPanel implements ActionListener {
+    private class ShellFirstRow extends JPanel implements ActionListener {
         JButton homeButton = new JButton("Home");
         JButton adminButton = new JButton("Admin portal");
         JButton assetsButton = new JButton("All assets");
@@ -455,7 +455,7 @@ class NewTradingAppGUI extends JFrame {
     /**
      * JPanel subclass for the admin portal
      */
-    class AdminPortal extends JPanel implements ActionListener {
+    private class AdminPortal extends JPanel implements ActionListener {
         JButton newUserButton = new JButton("New user");
         JButton editUserButton = new JButton("Edit selected");
         JButton userListButton = new JButton("Expanded list");
@@ -519,7 +519,7 @@ class NewTradingAppGUI extends JFrame {
     /**
      * JPanel subclass for the asset info page
      */
-    class AssetInfoPage extends JPanel implements ActionListener {
+    private class AssetInfoPage extends JPanel implements ActionListener {
         int asset;
         JButton daysButton = new JButton("Days");
         JButton weeksButton = new JButton("Weeks");
@@ -582,7 +582,7 @@ class NewTradingAppGUI extends JFrame {
     /**
      * JPanel subclass for the interactive bit of the login page
      */
-    class InnerLoginPage extends JPanel implements ActionListener, ItemListener, KeyListener {
+    private class InnerLoginPage extends JPanel implements ActionListener, ItemListener, KeyListener {
         JCheckBox passwordHide = new JCheckBox();
         JButton loginButton = new JButton("Login");
         JLabel usernameLabel = new JLabel("Username");
@@ -667,7 +667,7 @@ class NewTradingAppGUI extends JFrame {
     /**
      * The change password page is just the inner login page plus/minus a few widgets
      */
-    class ChangePasswordPage extends InnerLoginPage {
+    private class ChangePasswordPage extends InnerLoginPage {
         JLabel newPasswordLabel = new JLabel("New password");
         JLabel confirmNewPasswordLabel = new JLabel("Confirm new password");
         JPasswordField newPasswordInput = new JPasswordField(10);
@@ -753,7 +753,7 @@ class NewTradingAppGUI extends JFrame {
     /**
      * Abstract JPanel subclass for all the pages with tables in
      */
-    abstract class TablePage extends JPanel implements MouseListener {
+    private abstract class TablePage extends JPanel implements MouseListener {
         JTable table;
         JPanel beforePanel;
         JScrollPane scrollPane;
@@ -796,7 +796,7 @@ class NewTradingAppGUI extends JFrame {
     /**
      * Home page (holdings of the unit of the logged in user, with recent prices)
      */
-    class HomePage extends TablePage {
+    private class HomePage extends TablePage {
         private HomePage(String[][] info) {
             super(new String[]{"Asset ID", "Description", "Qty", "$ Current"}, info,
                     new int[]{25, 400, 20, 30}, new boolean[]{false, true, false, false});
@@ -814,7 +814,7 @@ class NewTradingAppGUI extends JFrame {
     /**
      * Orders page with toggles
      */
-    class OrdersTablePage extends TablePage implements ActionListener {
+    private class OrdersTablePage extends TablePage implements ActionListener {
         boolean isBuy;
         boolean justOurs;
         boolean resolvedFlag;
@@ -888,7 +888,7 @@ class NewTradingAppGUI extends JFrame {
     /**
      * Asset table page
      */
-    class AssetTablePage extends TablePage {
+    private class AssetTablePage extends TablePage {
 
         AssetTablePage(String[][] info) {
             super(new String[]{"Asset ID", "Description", "$ Current"}, info,
@@ -909,7 +909,7 @@ class NewTradingAppGUI extends JFrame {
     /**
      * Inventory table page with toggles
      */
-    class InventoryTablePage extends TablePage implements ActionListener{
+    private class InventoryTablePage extends TablePage implements ActionListener{
         String unitfilter = null;
         int assetfilter = 0;
         ButtonGroup filter = new ButtonGroup();
@@ -1112,7 +1112,7 @@ class NewTradingAppGUI extends JFrame {
     /**
      * Abstract JPanel subclass for all the "create/edit record" pages
      */
-    abstract class FormPage extends JPanel implements ActionListener {
+    private abstract class FormPage extends JPanel implements ActionListener {
         String deletePromptText;
         JButton saveEditButton = new JButton("Save");
         JButton saveCreateButton = new JButton("Create");
@@ -1159,7 +1159,7 @@ class NewTradingAppGUI extends JFrame {
     /**
      * Asset creating/editing page
      */
-    class AssetFormPage extends FormPage {
+    private class AssetFormPage extends FormPage {
         JLabel infoLabel;
         JLabel numberKeyLabel;
         JTextField stringField;
@@ -1250,7 +1250,7 @@ class NewTradingAppGUI extends JFrame {
     /**
      * User creating/editing page
      */
-    class UserFormPage extends FormPage {
+    private class UserFormPage extends FormPage {
         public static final String NO_UNIT = "[NO UNIT]";
         JLabel infoLabel;
         JLabel passwordLabel;
@@ -1369,7 +1369,7 @@ class NewTradingAppGUI extends JFrame {
     /**
      * Unit creating/editing page
      */
-    class UnitFormPage extends FormPage {
+    private class UnitFormPage extends FormPage {
         JLabel infoLabel;
         JTextField nameField;
         JSpinner creditsInput;
@@ -1464,7 +1464,7 @@ class NewTradingAppGUI extends JFrame {
     /**
      * Order creating/"editing" page
      */
-    class OrderFormPage extends FormPage {
+    private class OrderFormPage extends FormPage {
         int id; //asset id if creating, order id if viewing existing order
         Order o;
         boolean isBuy;

@@ -4,6 +4,7 @@ import java.time.LocalDateTime;
 import java.util.Objects;
 
 /**
+ * Shared superclass for BuyOrder and SellOrder
  * @author Alistair Ridge
  */
 public abstract class Order extends DataObject implements Comparable<Order> {

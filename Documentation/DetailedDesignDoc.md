@@ -279,11 +279,15 @@ so it makes the most sense to model it like this.
 
 ## Client program
 ###Main
+[Go to JavaDoc](../doc/ClientSide/Main.html)
+
 This is where client execution will start. For debug purposes, if run with an args array starting with "MOCK", the
 mock database will be used instead of the real one, and if run with an args array ending with "TESTDATA", it will
 populate a lot of test data (otherwise it will just populate one admin and one non-admin user).
 
 ###TradingAppGUI
+[Go to JavaDoc](../doc/ClientSide/NewTradingAppGUI.html)
+
 This is the GUI class. It is a Swing GUI implemented as a JFrame subclass, and has the following pages, implemented
 using inner JPanel subclasses:
 
@@ -308,6 +312,8 @@ This is an old diagram of the GUI data flow. It is outdated but still has some u
 
 
 ##GuiSearch
+[Go to JavaDoc](../doc/ClientSide/GuiSearch.html)
+
 This is a JComboBox subclass used for dropdowns in the GUI. I'm not entirely sure why we needed it,
 but the boys implemented it before the group split and I assumed it was useful
 
@@ -315,7 +321,7 @@ but the boys implemented it before the group split and I assumed it was useful
 This class mediates between the GUI and NetworkDataSource. The GUI owns an instance of this class, and this
 class owns an instance of NetworkDataSource (or MockDataSource if the program was run with {"MOCK"}). 
 
-[Go to JavaDoc]
+[Go to JavaDoc](../doc/ClientSide/TradingAppData.html)
 
 
 ###NetworkDataSource
@@ -323,4 +329,4 @@ This is the back end of the client program. It communicates with the server usin
 the class "MockDataSource" which implements the same interface as this class and imitates its I/O behaviour
 but uses a class of six Java collections to store data rather than the database.
 
-[Go to JavaDoc]
+[Go to JavaDoc](../doc/ClientSide/NetworkDataSource.html)
