@@ -1305,7 +1305,7 @@ class NewTradingAppGUI extends JFrame {
         void initialiseFields() {
             infoLabel = new JLabel("Creating new unit with name:");
             nameField = new JTextField(30);
-            creditsInput = new JSpinner(new SpinnerNumberModel(1, 1, null, 1));
+            creditsInput = new JSpinner(new SpinnerNumberModel(0, 0, null, 1));
             JFormattedTextField qtyTF = ((JSpinner.DefaultEditor) creditsInput.getEditor()).getTextField();
             qtyTF.setColumns(4);
         }
