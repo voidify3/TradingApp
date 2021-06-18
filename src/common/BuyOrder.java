@@ -13,11 +13,6 @@ public class BuyOrder extends Order {
     }
 
     private Integer boughtFrom = null;
-
-    public BuyOrder(OrgUnit unit, Asset asset, int qty, int price) {
-        super(unit, asset, qty, price);
-    }
-
     /**
      * Constructor for server-side use
      * @param id
@@ -35,8 +30,8 @@ public class BuyOrder extends Order {
         this.boughtFrom = boughtFrom;
     }
 
-    public BuyOrder(String user, int asset, int qty, int price) {
-        super(user, asset, qty, price);
+    public BuyOrder(String unit, int asset, int qty, int price) {
+        super(unit, asset, qty, price);
     }
 
     @Override

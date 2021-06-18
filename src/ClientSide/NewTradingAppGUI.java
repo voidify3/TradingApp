@@ -16,10 +16,8 @@ import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
 import java.text.MessageFormat;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Objects;
-import java.util.Optional;
+import java.time.LocalDate;
+import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import static java.lang.Integer.parseInt;
@@ -479,6 +477,7 @@ class NewTradingAppGUI extends JFrame {
         JButton yearsButton = new JButton("Years");
         JButton buyButton = new JButton("Buy Asset");
         JButton sellButton = new JButton("Sell Asset");
+        TreeMap<LocalDate, Double> graphData = new TreeMap<>();
         public AssetInfoPage(int asset) {
             this.asset=asset;
             setPreferredSize(new Dimension(600,325));
@@ -507,8 +506,14 @@ class NewTradingAppGUI extends JFrame {
             orderButtons.add(sellButton);
             add(orderButtons, BorderLayout.SOUTH);
         }
+        void renderGraph() {
+
+        }
         void tryGetHistoricalPrices(TradingAppData.Intervals intervals) {
-            try { data.getHistoricalPrices(asset, intervals); }
+            try {
+                graphData = data.getHistoricalPrices(asset, intervals);
+                renderGraph();
+            }
             catch (InvalidDate | DoesNotExist invalidDate) { displayError("An error occurred while displaying prices", invalidDate.getMessage()); }
         }
         @Override
@@ -1108,9 +1113,7 @@ class NewTradingAppGUI extends JFrame {
             String description = stringField.getText();
             try {
                 failIfNotAdmin("Edit an asset's description");
-                new Asset(description); //for the check
-                Asset toSend = new Asset(parseInt(numberKeyLabel.getText()), description);
-                data.updateAsset(toSend);
+                data.updateAsset(DataObjectFactory.newAssetValidated(parseInt(numberKeyLabel.getText()), description));
                 displayFeedback("Asset successfully updated", "Click OK to return to admin portal");
                 exitToPortal();
             } catch (IllegalString illegalString) {
@@ -1128,8 +1131,7 @@ class NewTradingAppGUI extends JFrame {
             String description = stringField.getText();
             try {
                 failIfNotAdmin("Create a new asset");
-                Asset toSend = new Asset(description);
-                data.addAsset(toSend);
+                data.addAsset(DataObjectFactory.newAssetValidated(description));
                 displayFeedback("Asset successfully created", "Click OK to return to admin portal");
                 exitToPortal();
             } catch (IllegalString illegalString) {
@@ -1314,16 +1316,16 @@ class NewTradingAppGUI extends JFrame {
         void save() {
             try {
                 failIfNotAdmin("Change an organisational unit's credit balance");
-                data.updateUnit(new OrgUnit(old.getName(), (Integer) creditsInput.getValue()));
+                data.setUnitBalance(old.getName(), (Integer) creditsInput.getValue());
                 displayFeedback("Unit successfully updated", "Click OK to return to admin portal");
                 exitToPortal();
             } catch (NotAuthorised notAuthorised) {
                 notAuthorisedDialog(notAuthorised.getMessage());
-            } catch (IllegalString illegalString) {
-                displayError("Unexpected error", illegalString.getMessage());
             } catch (DoesNotExist doesNotExist) {
                 displayError("Unexpected error: " + doesNotExist.getMessage(),
                         "Another admin may have deleted the unit.");
+            } catch (InvalidAmount invalidAmount) {
+                displayError("Could not save", invalidAmount.getMessage());
             }
         }
 
@@ -1332,7 +1334,7 @@ class NewTradingAppGUI extends JFrame {
         void create() {
             try {
                 failIfNotAdmin("Create an organisational unit");
-                data.addUnit(new OrgUnit(old.getName(), (Integer) creditsInput.getValue()));
+                data.addUnit(DataObjectFactory.newOrgUnitValidated(old.getName(), (Integer) creditsInput.getValue()));
                 displayFeedback("Unit successfully created", "Click OK to return to admin portal");
                 exitToPortal();
             } catch (NotAuthorised notAuthorised) {
@@ -1341,6 +1343,8 @@ class NewTradingAppGUI extends JFrame {
                 displayError("Invalid name", illegalString.getMessage());
             } catch (AlreadyExists doesNotExist) {
                 displayError("Unit could not be created", doesNotExist.getMessage());
+            } catch (InvalidAmount invalidAmount) {
+                displayError("Invalid amount", invalidAmount.getMessage());
             }
         }
 
@@ -1371,6 +1375,7 @@ class NewTradingAppGUI extends JFrame {
         JSpinner priceInput;
         OrderFormPage(int id, boolean isCreate, boolean isBuy) throws DoesNotExist {
             super(isCreate);
+            saveEditButton.getParent().remove(saveEditButton);
             this.isBuy = isBuy;
             String typeText = isBuy?"buy":"sell";
             infoLabel.setText(String.format("Placing new %s order for asset: ", typeText));
@@ -1435,17 +1440,12 @@ class NewTradingAppGUI extends JFrame {
         }
 
         @Override
-        void save() {
-            displayError("Cannot edit", "Orders can only be created and deleted, I meant to remove" +
-                    "this button before the deadline, oops");
-        }
+        void save() { } //button was removed
 
         @Override
         void create() {
             try {
-                if (isBuy) data.placeBuyOrder(new BuyOrder(user.getUnit(), id,
-                        (Integer)quantityInput.getValue(), (Integer)priceInput.getValue()));
-                else data.placeSellOrder(new SellOrder(user.getUnit(), id,
+                data.placeOrder(DataObjectFactory.newOrderValidated(isBuy, user.getUnit(), id,
                         (Integer)quantityInput.getValue(), (Integer)priceInput.getValue()));
                 done("Order successfully placed!", id);
             } catch (OrderException e) {

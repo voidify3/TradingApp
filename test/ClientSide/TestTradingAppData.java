@@ -23,7 +23,7 @@ public class TestTradingAppData {
      */
     @Test
     public void TestSellTooMany() {
-        SellOrder testSellOrder = new SellOrder(unitDev, assetDev1, 500, 10);
+        SellOrder testSellOrder = new SellOrder(unitDev.getName(), assetDev1.getId(), 500, 10);
         assertThrows(OrderException.class, () -> {i.placeSellOrder(testSellOrder);});
 
     }
@@ -33,7 +33,7 @@ public class TestTradingAppData {
      */
     @Test
     public void TestBuyTooExpensive() {
-        BuyOrder testBuyOrder = new BuyOrder(unitDev, assetDev1, 5, 1000);
+        BuyOrder testBuyOrder = new BuyOrder(unitDev.getName(), assetDev1.getId(), 5, 1000);
         assertThrows(OrderException.class, () -> {i.placeBuyOrder(testBuyOrder);});
     }
     @Test
@@ -41,34 +41,34 @@ public class TestTradingAppData {
         assertAll(
                 // Multiple days
                 () -> assertEquals(15, i.getAveragePrice(LocalDate.of(2021,1,1),
-                        LocalDate.of(2021, 2, 1), assetDev1)),
+                        LocalDate.of(2021, 2, 1), assetDev1.getId())),
                 // Single day
                 () -> assertEquals(15, i.getAveragePrice(LocalDate.of(2021,1,1),
-                        LocalDate.of(2021, 1, 1), assetDev1)),
+                        LocalDate.of(2021, 1, 1), assetDev1.getId())),
                 // Future end date correction
                 () -> assertEquals(15, i.getAveragePrice(LocalDate.of(2021,1,1),
-                        LocalDate.now().plusDays(1), assetDev1)),
+                        LocalDate.now().plusDays(1), assetDev1.getId())),
                 // Early start date correction
                 () -> assertEquals(15, i.getAveragePrice(LocalDate.now().minusDays(4 * 365 + 1),
-                        LocalDate.now(), assetDev1)),
+                        LocalDate.now(), assetDev1.getId())),
                 // Future start date exception
                 () -> assertThrows(InvalidDate.class, () ->
-                        i.getAveragePrice(LocalDate.now().plusDays(1), LocalDate.now(), assetDev1)),
+                        i.getAveragePrice(LocalDate.now().plusDays(1), LocalDate.now(), assetDev1.getId())),
                 // Early end date exception
                 () -> assertThrows(InvalidDate.class, () ->
-                        i.getAveragePrice(LocalDate.now(), LocalDate.now().minusDays(4 * 365 + 1), assetDev1)),
+                        i.getAveragePrice(LocalDate.now(), LocalDate.now().minusDays(4 * 365 + 1), assetDev1.getId())),
                 // Start date after end date
                 () -> assertThrows(InvalidDate.class, () ->
-                        i.getAveragePrice(LocalDate.now(), LocalDate.now().minusDays(1), assetDev1))
+                        i.getAveragePrice(LocalDate.now(), LocalDate.now().minusDays(1), assetDev1.getId()))
         );
     }
 
     @Test
     public void testGetHistoricalPrices() throws InvalidDate, DoesNotExist {
         //TODO: TEST THAT VALUES ARE CORRECT
-        i.getHistoricalPrices(assetDev1, TradingAppData.Intervals.DAYS);
-        i.getHistoricalPrices(assetDev1, TradingAppData.Intervals.WEEKS);
-        i.getHistoricalPrices(assetDev1, TradingAppData.Intervals.MONTHS);
-        i.getHistoricalPrices(assetDev1, TradingAppData.Intervals.YEARS);
+        i.getHistoricalPrices(assetDev1.getId(), TradingAppData.Intervals.DAYS);
+        i.getHistoricalPrices(assetDev1.getId(), TradingAppData.Intervals.WEEKS);
+        i.getHistoricalPrices(assetDev1.getId(), TradingAppData.Intervals.MONTHS);
+        i.getHistoricalPrices(assetDev1.getId(), TradingAppData.Intervals.YEARS);
     }
 }

@@ -62,7 +62,7 @@ class TradingAppData {
         }
     }
 
-    void mockObjects() throws IllegalString, InvalidAmount, OrderException, DoesNotExist {
+    void mockObjects() throws IllegalString, OrderException, DoesNotExist {
         unitDev = new OrgUnit("Developers", 1000);
         unitDev2 = new OrgUnit("Marketing", 1000);
         adminDev = new User("sophia", "bo$$", true, unitDev2.getName());
@@ -83,26 +83,39 @@ class TradingAppData {
         dataSource.insertAsset(assetDev2);
         dataSource.insertOrUpdateInventory(new InventoryRecord(unitDev.getName(), assetDev1.getId(), 500));
         dataSource.insertOrUpdateInventory(new InventoryRecord(unitDev.getName(), assetDev2.getId(), 3500));
-        testBuyOrder = new BuyOrder(unitDev, assetDev1, 20, 13);
-        testSellOrder = new SellOrder(unitDev, assetDev1, 6, 47);
+        testBuyOrder = new BuyOrder(unitDev.getName(), assetDev1.getId(), 20, 13);
+        testSellOrder = new SellOrder(unitDev.getName(), assetDev1.getId(), 6, 47);
         placeBuyOrder(testBuyOrder);
         placeSellOrder(testSellOrder);
     }
 
+    /**
+     * Clear data (debug)
+     */
     void deleteEverything() {
         dataSource.debugDeleteEverything();
         dataSource.recreate();
     }
 
+
     int getTradeDelay() {
         return dataSource.refreshDelay;
     }
 
-
+    /**
+     * Validate login-- determine first whether the input username exists, then whether the input password is correct
+     * (by retrieving the user's salt string and hashed password, then hashing the input password with the salt string
+     * and checking if it matches the input password)
+     * @param username Username input string
+     * @param password Password input string
+     * @return User object of the now-logged-in user if the credentials were correct
+     * @throws IllegalString if the input password was of an invalid format (meaning it must be incorrect)
+     * @throws DoesNotExist if the user does not exist or the password is incorrect
+     */
     User login(String username, String password) throws IllegalString, DoesNotExist {
         User user = dataSource.userByKey(username);
         if (user == null) {
-            throw new DoesNotExist("User does not exist", username);
+            throw new DoesNotExist("User %s does not exist", username);
         }
         String hashedInputPassword = User.hashPassword(password, user.getSalt());
         if (!hashedInputPassword.equals(user.getPassword())) {
@@ -111,17 +124,49 @@ class TradingAppData {
         return user;
     }
 
+    /**
+     * Get an ArrayList of the entire user table
+     * @return ArrayList of the entire user table
+     */
     ArrayList<User> getAllUsers() {
         return dataSource.allUsers();
     }
+    /**
+     * Get an ArrayList of the entire orgunit table
+     * @return ArrayList of the entire orgunit table
+     */
     ArrayList<OrgUnit> getAllUnits() {
         return dataSource.allOrgUnits();
     }
+    /**
+     * Get an ArrayList of the entire asset table
+     * @return ArrayList of the entire asset table
+     */
     ArrayList<Asset> getAllAssets() { return dataSource.allAssets();}
+    /**
+     * Get an ArrayList of the entire inventories table
+     * @return ArrayList of the entire inventories table
+     */
     ArrayList<InventoryRecord> getAllInventories() {return dataSource.allInventories();}
+    /**
+     * Get an ArrayList of the entire buyorder table
+     * @return ArrayList of the entire buyorder table
+     */
     ArrayList<BuyOrder> getAllBuys() { return dataSource.allBuyOrders();}
+    /**
+     * Get an ArrayList of the entire sellorder table
+     * @return ArrayList of the entire sellorder table
+     */
     ArrayList<SellOrder> getAllSells() {return dataSource.allSellOrders();}
 
+    /**
+     * Gets orders to populate an OrderTablePage
+     * @param unitName Unit name, used iff justMine
+     * @param justMine True means "just get orders from unitName", false means "don't filter by org unit"
+     * @param isBuy True means "get buy orders", false means "get sell orders"
+     * @param resolvedFlag True means "get resolved orders", false means "get unresolved orders"
+     * @return An ArrayList of either BuyOrders or SellOrders
+     */
     ArrayList<Order> getOrdersForTable(String unitName, boolean justMine, boolean isBuy, boolean resolvedFlag) {
         if (justMine && isBuy) return (ArrayList) dataSource.buyOrdersByUnit(unitName,resolvedFlag);
         else if (justMine) return (ArrayList) dataSource.sellOrdersByUnit(unitName,resolvedFlag);
@@ -129,6 +174,11 @@ class TradingAppData {
         else return (ArrayList) dataSource.allSellOrders(resolvedFlag);
     }
 
+    /**
+     * Generate strings for a GuiSearch of users
+     * @param users Results of a user qeury
+     * @return ArrayList of their usernames
+     */
     ArrayList<String> getUsernames(ArrayList<User> users) {
         ArrayList<String> output = new ArrayList<>();
         for (User u : users) {
@@ -136,6 +186,12 @@ class TradingAppData {
         }
         return output;
     }
+
+    /**
+     * Generate strings for a GuiSearch of orgunits
+     * @param units Resultts of an orgunit query
+     * @return ArrayList of their names
+     */
     ArrayList<String> getUnitNames(ArrayList<OrgUnit> units) {
         ArrayList<String> output = new ArrayList<>();
         for (OrgUnit u : units) {
@@ -143,6 +199,12 @@ class TradingAppData {
         }
         return output;
     }
+
+    /**
+     * Get strings for a GuiSearch of assets formatted like "ID (description)"
+     * @param assets Results of an asset query
+     * @return ArrayList of strings formatted in that way
+     */
     ArrayList<String> getAssetStrings(ArrayList<Asset> assets) {
         ArrayList<String> output = new ArrayList<>();
         for (Asset a : assets) {
@@ -151,20 +213,28 @@ class TradingAppData {
         return output;
     }
 
-    ArrayList<User> getMembers(OrgUnit unit) throws DoesNotExist {
-        return dataSource.usersByUnit(unit.getName());
-    }
-
     ArrayList<User> getMembers(String unit) throws DoesNotExist {
         return dataSource.usersByUnit(unit);
     }
 
+    /**
+     * Query the user table by a specific username
+     * @param key Username
+     * @return User object of the user if they exist
+     * @throws DoesNotExist if the user does not exist
+     */
     User getUserByKey(String key) throws DoesNotExist {
         User result = dataSource.userByKey(key);
         if (result == null) throw new DoesNotExist("The user '%s' does not exist.", key);
         return result;
     }
 
+    /**
+     * Query the orgunit table by a specific name
+     * @param unitName Name
+     * @return OrgUnit object if it exists
+     * @throws DoesNotExist if the unit does not exist
+     */
     OrgUnit getUnitByKey(String unitName) throws DoesNotExist {
         // Convert username to User object while making sure it exists in the DB.
         OrgUnit result = dataSource.unitByKey(unitName);
@@ -172,24 +242,49 @@ class TradingAppData {
         return result;
     }
 
+    /**
+     * Query the asset table by a specific key
+     * @param key ID
+     * @return Asset object if it exists
+     * @throws DoesNotExist if the asset does not exist
+     */
     Asset getAssetByKey(int key) throws DoesNotExist {
         Asset result = dataSource.assetByKey(key);
         if (result == null) throw new DoesNotExist("Asset '%s' does not exist.", key);
         return result;
     }
 
+    /**
+     * Query the sellorder table by a specific key
+     * @param key ID
+     * @return SellOrder object if it exists
+     * @throws DoesNotExist if the order does not exist
+     */
     SellOrder getSellByKey(int key) throws DoesNotExist {
         SellOrder result = dataSource.sellOrderByKey(key);
         if (result == null) throw new DoesNotExist("Sell order '%s' does not exist.", key);
         return result;
     }
-
+    /**
+     * Query the buyorder table by a specific key
+     * @param key ID
+     * @return BuyOrder object if it exists
+     * @throws DoesNotExist if the order does not exist
+     */
     BuyOrder getBuyByKey(int key) throws DoesNotExist {
         BuyOrder result = dataSource.buyOrderByKey(key);
         if (result == null) throw new DoesNotExist("Buy order '%s' does not exist.", key);
         return result;
     }
 
+    /**
+     *
+     * @param unit Unit name
+     * @param asset Asset ID
+     * @return InventoryRecord object if the unit and asset are real. If the unit and asset are real but have no inventory
+     * record, it returns a new record with quantity 0 because that's the same thing
+     * @throws DoesNotExist if the unit or asset do not exist
+     */
     InventoryRecord getInv(String unit, int asset) throws DoesNotExist {
         getUnitByKey(unit);
         getAssetByKey(asset);
@@ -199,42 +294,90 @@ class TradingAppData {
         return result;
     }
 
+    /**
+     * Get all inventory records of a unit
+     * @param unitName Name
+     * @return ArrayList of all inventory records of the unit (may be empty)
+     * @throws DoesNotExist if the unit does not exist
+     */
     ArrayList<InventoryRecord> getInventoriesByOrgUnit(String unitName) throws DoesNotExist {
         getUnitByKey(unitName);
         return dataSource.inventoriesByUnit(unitName);
     }
 
+    /**
+     * Get all invantory records of an asset
+     * @param assetID ID
+     * @return ArrayList of all inventory records of the asset (may be empty)
+     * @throws DoesNotExist if the asset does not exist
+     */
     ArrayList<InventoryRecord> getInventoriesByAsset(int assetID) throws DoesNotExist {
         getAssetByKey(assetID);
         return dataSource.inventoriesByAsset(assetID);
     }
 
+    /**
+     * Get all resolved buy orders for an asset (for historical prices)
+     * @param assetID ID
+     * @return ArrayList of all resolved buy orders for the asset (may be empty)
+     * @throws DoesNotExist If the asset does not exist
+     */
     ArrayList<BuyOrder> getResolvedBuysByAsset(int assetID) throws DoesNotExist {
         getAssetByKey(assetID);
         return dataSource.buyOrdersByAsset(assetID, true);
     }
-
+    /**
+     * Get all unresolved buy orders for an asset
+     * @param assetID ID
+     * @return ArrayList of all unresolved buy orders for the asset (may be empty)
+     * @throws DoesNotExist If the asset does not exist
+     */
     ArrayList<BuyOrder> getUnresolvedBuysByAsset(int assetID) throws DoesNotExist {
         getAssetByKey(assetID);
         return dataSource.buyOrdersByAsset(assetID, false);
     }
 
+    /**
+     * Get all buy orders by a unit
+     * @param unitName name
+     * @return ArrayList of all buy orders by the unit
+     * @throws DoesNotExist if unit does not eixst
+     */
     ArrayList<BuyOrder> getBuysByUnit(String unitName) throws DoesNotExist {
         getUnitByKey(unitName); //throws DoesNotExist
         return dataSource.buyOrdersByUnit(unitName, null);
     }
+    /**
+     * Get all sell orders by a unit
+     * @param unitName name
+     * @return ArrayList of all sell orders by the unit
+     * @throws DoesNotExist if unit does not eixst
+     */
     ArrayList<SellOrder> getSellsByUnit(String unitName) throws DoesNotExist {
         getUnitByKey(unitName); //throws DoesNotExist
         return dataSource.sellOrdersByUnit(unitName, null);
     }
 
+    /**
+     * Get all assets held by a unit
+     * @param unitName name
+     * @return ArrayList of assets held by the unit
+     * @throws DoesNotExist if the unit does not exist
+     */
     ArrayList<Asset> getHeldAssets(String unitName) throws DoesNotExist {
         ArrayList<Asset> results = new ArrayList<>();
         for (InventoryRecord i : getInventoriesByOrgUnit(unitName)) {
-            results.add(getAssetByKey(i.getAssetID()));
+            if (i.getQuantity() > 0) results.add(getAssetByKey(i.getAssetID()));
         }
         return results;
     }
+
+    /**
+     * Get all assets NOT held by a unit
+     * @param unitName name
+     * @return ArrayList of assets with no inevtory info for this unit
+     * @throws DoesNotExist if the unit deos not exist
+     */
     ArrayList<Asset> getUnheldAssets(String unitName) throws DoesNotExist {
         ArrayList<Asset> heldAssets = getHeldAssets(unitName);
         ArrayList<Asset> results = new ArrayList<>();
@@ -244,14 +387,25 @@ class TradingAppData {
         return results;
     }
 
+    /**
+     * Get all units that have some of the asset
+     * @param assetID ID
+     * @return ArrayList of all units which have inventory info on the unit
+     * @throws DoesNotExist if the asset does not exist
+     */
     ArrayList<OrgUnit> getHoldingUnits(int assetID) throws DoesNotExist {
         ArrayList<OrgUnit> results = new ArrayList<>();
         for (InventoryRecord i : getInventoriesByAsset(assetID)) {
-            results.add(getUnitByKey(i.getUnitName()));
+            if (i.getQuantity() > 0) results.add(getUnitByKey(i.getUnitName()));
         }
         return results;
     }
-
+    /**
+     * Get all units that have none of the asset
+     * @param assetID ID
+     * @return ArrayList of all units which have no inventory info on the unit
+     * @throws DoesNotExist if the asset does not exist
+     */
     ArrayList<OrgUnit> getUnholdingUnits(int assetID) throws DoesNotExist {
         ArrayList<OrgUnit> results = new ArrayList<>();
         ArrayList<OrgUnit> holdingUnits = getHoldingUnits(assetID);
@@ -267,22 +421,39 @@ class TradingAppData {
 
     //DELETE METHODS
 
-
+    /**
+     * Delete asset from database
+     * @param id asset ID to delete
+     * @throws DoesNotExist if asset does not exist
+     */
     void deleteAsset(int id) throws DoesNotExist {
         int i = dataSource.deleteAsset(id);
         if (i == 0) throw new DoesNotExist("Asset '%s' not found", id);
     }
-
+    /**
+     * Delete user from database
+     * @param name username to delete
+     * @throws DoesNotExist if user does not exist
+     */
     void deleteUser(String name) throws DoesNotExist {
         int i = dataSource.deleteUser(name);
         if (i == 0) throw new DoesNotExist("User '%s' not found", name);
     }
-
+    /**
+     * Delete unit from database
+     * @param name name to delete
+     * @throws DoesNotExist if unit does not exist
+     */
     void deleteUnit(String name) throws DoesNotExist {
         int i = dataSource.deleteUnit(name);
         if (i == 0) throw new DoesNotExist("Unit '%s' not found", name);
     }
 
+    /**
+     * Delete a sell order; if it's unresolved, return the leftover assets to the unit
+     * @param id order ID to delete
+     * @throws DoesNotExist if the order does not exist
+     */
     void cancelSellOrder(int id) throws DoesNotExist {
         SellOrder s = getSellByKey(id); //this throws the doesnotexist if needed
         String unitToReturn = s.getUnit();
@@ -290,7 +461,12 @@ class TradingAppData {
         if (s.getDateResolved() == null) adjustInventory(unitToReturn, s.getAsset(), s.getQty());
         //return the assets if it's unresolved
     }
-
+    /**
+     * Delete a buy order; if it's unresolved, return the leftover credits
+     * @param id order ID to delete
+     * @throws DoesNotExist if the order does not exist
+     * @throws InvalidAmount never, but the computer doesn't know that
+     */
     void cancelBuyOrder(int id) throws DoesNotExist, InvalidAmount {
         BuyOrder b = getBuyByKey(id);
         String unitToReturn = b.getUnit();
@@ -298,6 +474,12 @@ class TradingAppData {
         if (b.getDateResolved() == null) adjustUnitBalance(unitToReturn, b.getPrice()*b.getQty());
     }
 
+    /**
+     * Delete an inventory record
+     * @param unit unit name
+     * @param asset asset ID
+     * @throws DoesNotExist if the record did not exist
+     */
     void deleteInventoryRecord(String unit, int asset) throws DoesNotExist {
         if (dataSource.deleteInventoryRecord(unit, asset) == 0) {
             throw new DoesNotExist("Inventory information for this asset and unit '%s' does not exist", unit);
@@ -306,12 +488,16 @@ class TradingAppData {
 
     //INSERT METHODS-----------------------------------------------------
 
-    void placeSellOrder(SellOrder s) throws OrderException, DoesNotExist, InvalidAmount {
+    /**
+     * Place sell order
+     * @param s SellOrder object
+     * @throws OrderException if the unit doesn't have enough of the asset
+     * @throws DoesNotExist if the unit or asset referenced by the prder do not exist
+     */
+    void placeSellOrder(SellOrder s) throws OrderException, DoesNotExist {
         //OrgUnit unitInQuestion = dataSource.unitByKey(dataSource.userByKey(s.getUsername()).getUnit());
         InventoryRecord inventoryRecord = getInv(s.getUnit(), s.getAsset());
         int quantity = inventoryRecord.getQuantity();
-        if (s.getQty() <= 0) throw new InvalidAmount("Quantity %d is invalid; must be greater than 0", s.getQty());
-        if (s.getPrice() <= 0) throw new InvalidAmount("Price %d is invalid; must be greater than 0", s.getPrice());
         if (quantity < s.getQty()) {
             throw new OrderException("Insufficient quantity of asset- unit %s has %d but %d are needed to" +
                     "place this order", inventoryRecord.getUnitName(), quantity, s.getQty());
@@ -321,23 +507,44 @@ class TradingAppData {
             dataSource.insertSellOrder(s);
         }
     }
-
-    void placeBuyOrder(BuyOrder s) throws OrderException, InvalidAmount {
-        OrgUnit unitInQuestion = dataSource.unitByKey(s.getUnit());
+    /**
+     * Place buy order
+     * @param s Buyorder object
+     * @throws OrderException if the unit doesn't have enough credits
+     * @throws DoesNotExist if the unit or asset do not exist
+     */
+    void placeBuyOrder(BuyOrder s) throws OrderException, DoesNotExist {
+        getAssetByKey(s.getAsset());
+        OrgUnit unitInQuestion = getUnitByKey(s.getUnit());
         int neededCredits = s.getQty() * s.getPrice();
-        if (s.getQty() <= 0) throw new InvalidAmount("Quantity %d is invalid; must be greater than 0", s.getQty());
-        if (s.getPrice() <= 0) throw new InvalidAmount("Price %d is invalid; must be greater than 0", s.getPrice());
-        if (unitInQuestion.getCredits() < neededCredits) {
-            throw new OrderException("Insufficient credits- unit %s has %d but %d are needed to" +
-                            "place this buy order",
-                    unitInQuestion.getName(), unitInQuestion.getCredits(), neededCredits);
-        } else {
+        try{
             unitInQuestion.adjustBalance(-s.getQty());
             dataSource.updateUnit(unitInQuestion);
             dataSource.insertBuyOrder(s);
+        } catch (InvalidAmount i) {
+            throw new OrderException("Insufficient credits- unit %s has %d but %d are needed to" +
+                    "place this buy order",
+                    unitInQuestion.getName(), unitInQuestion.getCredits(), neededCredits);
         }
     }
 
+    /**
+     * Place order of unknown subtype
+     * @param o Order object that could be either subclass
+     * @throws OrderException if there was an insufficient amount
+     * @throws DoesNotExist if the unit/asset do not exist
+     */
+    void placeOrder(Order o) throws OrderException, DoesNotExist {
+        if (o instanceof BuyOrder) placeBuyOrder((BuyOrder) o);
+        else placeSellOrder((SellOrder) o);
+    }
+
+    /**
+     * Add user to database
+     * @param u User object
+     * @throws AlreadyExists if username already exists
+     * @throws DoesNotExist if org unit does not exist
+     */
     void addUser(User u) throws AlreadyExists, DoesNotExist {
         int result = dataSource.insertUser(u);
         if (result == 0)
@@ -345,21 +552,43 @@ class TradingAppData {
         else if (result == -1) throw new DoesNotExist("Could not create user- org unit %s does not exist", u.getUnit());
     }
 
+    /**
+     * Add orgunit to database
+     * @param u OrgUnit object
+     * @throws AlreadyExists If unit name already exists
+     */
     void addUnit(OrgUnit u) throws AlreadyExists {
         if (dataSource.insertUnit(u) == 0)
             throw new AlreadyExists("Unit '%s' already exists. Please try a different unit name.", u.getName());
     }
 
+    /**
+     * Add asset to database
+     * @param a Asset object
+     * @throws AlreadyExists if asset ID is duplicate (though this should never happen)
+     */
     void addAsset(Asset a) throws AlreadyExists {
         if (dataSource.insertAsset(a) == 0) throw new AlreadyExists("Asset '%i' already exists.", a.getId());
     }
 
+    /**
+     * Set inventory quantity (new record if nonexistent, update existing record if existent)
+     * @param i InventoryRecord object
+     * @throws DoesNotExist if unit or asset do not exist
+     */
     void setInventory(InventoryRecord i) throws DoesNotExist {
         if (dataSource.insertOrUpdateInventory(i) == -1) {
             throw new DoesNotExist("Unit %s and/or asset %i not found.");
         }
     }
 
+    /**
+     * Adjust inventory quantity
+     * @param unit Unit name
+     * @param asset Asset ID
+     * @param adjustment Adjustment to add to the current quantity (if no record exists it acts as if 0 is quantity)
+     * @throws DoesNotExist if the unit or asset don't exist
+     */
     void adjustInventory(String unit, int asset, int adjustment) throws DoesNotExist {
         InventoryRecord i = new InventoryRecord(unit, asset, adjustment);
         i.adjustQuantity(getInv(unit,asset).getQuantity()); //done this way to just set it to the value if no record exists
@@ -370,52 +599,91 @@ class TradingAppData {
 
 
     //UPDATE METHODS--------------------------------------------------------------------
+
+    /**
+     * Update, replacing the details for the user record wiht this username
+     * @param u User object
+     * @throws DoesNotExist if the user does not exist
+     * @throws ConstraintException if the new org unit does not exist
+     */
     void updateUser(User u) throws DoesNotExist, ConstraintException {
         int result = dataSource.updateUser(u);
         if (result == 0) throw new DoesNotExist("User '%s' not found.", u.getUsername());
         else if (result == -1) throw new DoesNotExist("Unit %s not found.", u.getUnit());
     }
 
+    /**
+     * Update, replacing the details for the unit record wiht this username
+     * @param u OrgUnit object
+     * @throws DoesNotExist if the unit name does not exist
+     */
     void updateUnit(OrgUnit u) throws DoesNotExist {
         if (dataSource.updateUnit(u) == 0) throw new DoesNotExist("Unit '%s' not found.", u.getName());
     }
 
+    /**
+     * Update, replacing the details for the asset record with this ID
+     * @param a Asset object
+     * @throws DoesNotExist if asset ID does not exist
+     */
     void updateAsset(Asset a) throws DoesNotExist {
         if (dataSource.updateAsset(a) == 0) throw new DoesNotExist("Asset '%i' not found.", a.getId());
     }
 
+    /**
+     * Update, replacing the details for the BuyOrder record wiht this ID
+     * @param o BuyOrder object
+     * @throws DoesNotExist if ID does not exist
+     */
     void updateBuyOrder(BuyOrder o) throws DoesNotExist {
         int result = dataSource.updateBuyOrder(o);
         if (result == 0) throw new DoesNotExist("Buy order '%i' not found.", o.getId());
         else if (result == -1) throw new DoesNotExist("Unit and/or asset not found.");
     }
 
+    /**
+     * Update, replacing the details for SellOrder record with this ID
+     * @param o SellOrder object
+     * @throws DoesNotExist if ID does not exist
+     */
     void updateSellOrder(SellOrder o) throws DoesNotExist {
         int result = dataSource.updateSellOrder(o);
         if (result == 0) throw new DoesNotExist("Sell order '%i' not found.", o.getId());
         else if (result == -1) throw new DoesNotExist("Unit and/or asset not found.");
     }
 
+    /**
+     * Update, changing the balance of org unit
+     * @param unitName Unit name
+     * @param newBalance new balance
+     * @throws DoesNotExist if unit doesn't exist
+     * @throws InvalidAmount if new balance < 0
+     */
     void setUnitBalance(String unitName, int newBalance) throws DoesNotExist, InvalidAmount {
         OrgUnit unitInQuestion = getUnitByKey(unitName);
         unitInQuestion.setBalance(newBalance);
         updateUnit(unitInQuestion);
     }
-
+    /**
+     * Update, adjusting the balance of org unit
+     * @param unitName Unit name
+     * @param amount number to add to balance
+     * @throws DoesNotExist if unit doesn't exist
+     * @throws InvalidAmount if new balance < 0
+     */
     void adjustUnitBalance(String unitName, int amount) throws DoesNotExist, InvalidAmount {
         OrgUnit unitInQuestion = getUnitByKey(unitName);
         unitInQuestion.adjustBalance(amount);
         updateUnit(unitInQuestion);
     }
+
     /***
      * Method to get the average price of an asset between a start date and end date.
      * @param startDate the date at which the user wants to start reading data.
      * @param endDate the date at which the user wants to finish reading data.
+     * @param asset Asset ID
      * @return returns a double of the average price.
      */
-    double getAveragePrice(LocalDate startDate, LocalDate endDate, Asset asset) throws InvalidDate, DoesNotExist {
-        return getAveragePrice(startDate, endDate, asset.getId());
-    }
     double getAveragePrice(LocalDate startDate, LocalDate endDate, int asset) throws InvalidDate, DoesNotExist {
 
         LocalDate earliestDate;
@@ -448,9 +716,6 @@ class TradingAppData {
         return (double)sum / count;
     }
 
-    TreeMap<LocalDate, Double> getHistoricalPrices(Asset a, Intervals timeInterval) throws InvalidDate, DoesNotExist {
-        return getHistoricalPrices(a.getId(), timeInterval);
-    }
     /***
      * Method that collects average prices between specified intervals for the entire data set and places them into a
      * TreeMap. This may be used to create a price history graph.

@@ -25,11 +25,11 @@ public class TestDataSource {
         n = new MockDataSource();
         //n = new NetworkDataSource();
         assertAll(
-                ()->assertEquals(1, n.insertUnit(new OrgUnit(TEST_ORG_1))),
+                ()->assertEquals(1, n.insertUnit(new OrgUnit(TEST_ORG_1, 0))),
                 ()->assertFalse(n.allOrgUnits().isEmpty()),
                 ()->assertEquals(1, n.insertUser(new User(TEST_USER,
                         "password", false, TEST_ORG_1))),
-                ()->assertEquals(1, n.insertAsset(new Asset(TEST_ASSET))),
+                ()->assertEquals(1, n.insertAsset(new Asset(0, TEST_ASSET))),
                 ()->assertEquals(1, n.insertSellOrder(new SellOrder(TEST_ORG_1, 1, 10, 5))),
                 ()->assertEquals(1, n.insertBuyOrder(new BuyOrder(TEST_ORG_1, 1, 10, 5)))
         );
@@ -42,7 +42,7 @@ public class TestDataSource {
     @Test
     void failInserts() {
         assertAll(
-                ()->assertEquals(0, n.insertUnit(new OrgUnit(TEST_ORG_1))),
+                ()->assertEquals(0, n.insertUnit(new OrgUnit(TEST_ORG_1, 0))),
                 ()->assertEquals(0, n.insertUser(new User(TEST_USER,
                         "password", false, TEST_ORG_1)))
         );

@@ -11,23 +11,12 @@ public class OrgUnit extends DataObject implements Comparable<OrgUnit> {
     private Integer orgCredits;
     static int minBalance = 0;
 
-    /***
-     * Constructor for creating new org units with default credits of 0.
-     * @param orgName the name of the org unit
-     */
-    public OrgUnit(String orgName) throws IllegalString {
-        this(orgName, minBalance);
-    }
-
     /**
      * Constructor which includes the credits number
      * @param orgName the name
      * @param credits the credits value found
      */
-    public OrgUnit(String orgName, int credits) throws IllegalString {
-        if (orgName.equals("")) throw new IllegalString("Unit name may not be empty");
-        if (orgName.length() > 30) throw new IllegalString("'%s' exceeds the maximum organisational unit" +
-                "name length of 30. Please try again.", orgName);
+    public OrgUnit(String orgName, int credits) {
         this.orgName = orgName;
         this.orgCredits = credits;
     }
@@ -48,16 +37,15 @@ public class OrgUnit extends DataObject implements Comparable<OrgUnit> {
     }
 
     /***
-     * Setter method for the org unit's credit balance.
+     * Private setter method for the org unit's credit balance.
      * @param amount to set
      */
-    public void setCredits(Integer amount) {
+    private void setCredits(Integer amount) {
             this.orgCredits = amount;
     }
-    //No need to update the database, this changes an OBJECT which is SENT
 
     /***
-     * Method to set an unit's balance.
+     * Non-straightforward method to set an unit's balance.
      * @param amount to set
      * @throws InvalidAmount if the amount to set is less than 0
      */
@@ -65,7 +53,7 @@ public class OrgUnit extends DataObject implements Comparable<OrgUnit> {
         if (amount >= minBalance) {
             this.setCredits(amount);
         } else {
-            throw new InvalidAmount("Cannot set balance to less than 0", amount);
+            throw new InvalidAmount("Cannot set balance to less than "+minBalance, amount);
         }
     }
 

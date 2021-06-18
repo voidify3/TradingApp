@@ -6,7 +6,7 @@ import java.util.Objects;
 /**
  * @author Alistair Ridge
  */
-public class Order extends DataObject implements Comparable<Order> {
+public abstract class Order extends DataObject implements Comparable<Order> {
     private int id = 0;
     private String unit;
     private int asset;
@@ -16,15 +16,12 @@ public class Order extends DataObject implements Comparable<Order> {
     private int price;
 
     /**
-     * This constructor sets the trade ID of the order and adds the trade specific information to the object.
+     * This constructor adds the trade specific information to the object.
      * @param unit OrgUnit object that placed the trade
      * @param asset Asset that is being traded
      * @param qty Amount of the asset that is being traded
      * @param price Price at which the asset is being traded
      */
-    public Order(OrgUnit unit, Asset asset, int qty, int price) {
-        this(unit.getName(), asset.getId(), qty,price);
-    }
     public Order(String unit, int asset, int qty, int price) {
 
         // Set the time that the order was created.

@@ -2,11 +2,8 @@ package ClientSide;
 
 // class imports
 
-import common.Asset;
-import common.BuyOrder;
+import common.*;
 import common.Exceptions.*;
-import common.InventoryRecord;
-import common.User;
 
 import javax.imageio.ImageIO;
 import javax.swing.*;
@@ -982,9 +979,7 @@ public class OldTradingAppGUI {
             saveEditButton.addActionListener(e->{
                 String description = stringField.getText();
                 try {
-                    new Asset(description); //for the check
-                    Asset toSend = new Asset(parseInt(numberKeyLabel.getText()), description);
-                    data.updateAsset(toSend);
+                    data.updateAsset(DataObjectFactory.newAssetValidated(parseInt(numberKeyLabel.getText()), description));
                     displayFeedback("Asset successfully updated", "Click OK to return to admin portal");
                     shellPanel(adminHome(),false);
                 } catch (IllegalString illegalString) {
@@ -998,7 +993,7 @@ public class OldTradingAppGUI {
             saveCreateButton.addActionListener(e->{
                 String description = stringField.getText();
                 try {
-                    Asset toSend = new Asset(description);
+                    Asset toSend = DataObjectFactory.newAssetValidated(description);
                     data.addAsset(toSend);
                     displayFeedback("Asset successfully created", "Click OK to return to admin portal");
                     shellPanel(adminHome(),false);

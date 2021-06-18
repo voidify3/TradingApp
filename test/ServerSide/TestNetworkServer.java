@@ -34,9 +34,9 @@ public class TestNetworkServer {
         server = new NetworkServer();
         assertAll(
                 ()->assertEquals(1, server.simulateNonselect(INSERT,
-                        new DataPacket(UNIT, null, new OrgUnit(TEST_ORG_1), false))),
+                        new DataPacket(UNIT, null, DataObjectFactory.newOrgUnitValidated(TEST_ORG_1), false))),
                 ()-> assertEquals(1, server.simulateNonselect(INSERT,
-                        new DataPacket(UNIT, null, new OrgUnit(TEST_ORG_2), false))),
+                        new DataPacket(UNIT, null, DataObjectFactory.newOrgUnitValidated(TEST_ORG_2), false))),
                 ()-> assertEquals(1, server.simulateNonselect(INSERT,
                         new DataPacket(USER, null,
                                 new User(TEST_USER, "password", false, TEST_ORG_1),
@@ -46,11 +46,11 @@ public class TestNetworkServer {
                                 new User(TEST_USER_2, "password", false, TEST_ORG_2),
                                 false))),
                 ()->assertEquals(1, server.simulateNonselect(INSERT,
-                        new DataPacket(ASSET, null, new Asset("test"), false))),
+                        new DataPacket(ASSET, null, new Asset(0, "test"), false))),
                 ()->assertEquals(1, server.simulateNonselect(INSERT,
-                        new DataPacket(ASSET, null, new Asset(TEST_ASSET_2), false))),
+                        new DataPacket(ASSET, null, new Asset(0, TEST_ASSET_2), false))),
                 ()->assertEquals(1, server.simulateNonselect(INSERT,
-                        new DataPacket(ASSET, null, new Asset(TEST_ASSET_3), false)))
+                        new DataPacket(ASSET, null, new Asset(0, TEST_ASSET_3), false)))
         );
         //server.start();
     }
@@ -62,7 +62,7 @@ public class TestNetworkServer {
     @Test
     void failInsert() throws SQLException, IllegalString {
         assertEquals(0, server.simulateNonselect(INSERT,
-                new DataPacket(UNIT, null, new OrgUnit(TEST_ORG_1), false)));
+                new DataPacket(UNIT, null, DataObjectFactory.newOrgUnitValidated(TEST_ORG_1), false)));
         //should give 0
     }
     @Test

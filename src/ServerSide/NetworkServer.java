@@ -228,13 +228,7 @@ class NetworkServer {
                 info.table.getColumns()[0], info.table.getColumns()[1]);
         ResultSet queryResults = executeSelectQuery(connection.prepareStatement(queryString));
         switch(info.table) {
-            case UNIT -> {
-                try {
-                    results = populateUnits(queryResults);
-                } catch (IllegalString illegalString) {
-                    illegalString.printStackTrace();
-                }
-            }
+            case UNIT -> results = populateUnits(queryResults);
             case ASSET -> results = populateAssets(queryResults);
             case INV -> results = populateInv(queryResults);
             case USER -> results = populateUsers(queryResults);
@@ -243,10 +237,10 @@ class NetworkServer {
         }
         return results;
     }
-    private ArrayList<OrgUnit> populateUnits(ResultSet r) throws SQLException, IllegalString {
+    private ArrayList<OrgUnit> populateUnits(ResultSet r) throws SQLException {
         ArrayList<OrgUnit> output = new ArrayList<>();
         while (r.next()) {
-            output.add(new OrgUnit(r.getString(1), r.getInt(2)));
+            output.add(DataObjectFactory.newOrgUnitNaive(r.getString(1), r.getInt(2)));
         }
         return output;
     }

@@ -31,32 +31,17 @@ public class Asset extends DataObject {
         // Store the asset description locally
         this.description = description;
     }
-
-    public Asset(String description) throws IllegalString {
-        if (description.length() > 60) {
-            throw new IllegalString("Asset description exceeds the maximum length of 60. Please try again");
-        } else if (description.trim().equals("")) {
-            throw new IllegalString("Asset description should not be empty or all whitespace");
-        }
-        this.id = 0;
-        this.description = description;
-    }
-
     // GETTERS & SETTERS------------------------------------------------------------------------------------------------
     /***
      * Method used to get the assets description
      * @return assetDesc
      */
     public String getDescription() { return description; }
-
-
     /***
      * Method used to get the assets ID
      * @return assetID
      */
     public int getId() { return id; }
-
-
 
     /***
      * Method used to get the assets ID as a string
