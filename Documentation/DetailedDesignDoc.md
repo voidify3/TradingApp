@@ -2,6 +2,15 @@
 ____
 
 ## Common package
+There are also some custom exceptions but none of them do anything very non-straightforward
+
+###DataObjectFactory
+This class was introduced very late in the game to be the factory pattern for all DataObject subclasses. I ran out of 
+time before I could finish it. 
+
+Basically the idea is that it covers validation for data objects so that exceptions are only checked for when necessary.
+
+[Go to JavaDoc]
 
 ###DataObject
 This class's reason for existence is to serve as a shared superclass for all the classes representing database records
@@ -9,7 +18,6 @@ so that the serialised `ArrayList`s that result from a SELECT query would be of 
 
 It has no fields or methods; the only thing of note about it is that it `implements Serializable`.
 
-A possible improvement in future versions would be to refactor the creation of DataObject subclasses to involve the factory pattern.
 
 ###User
 This DataObject subclass represents a record in the `User` table. Its non-static fields are the following (all private
@@ -228,7 +236,7 @@ their credit balance. It has two columns:
 This table is used to store the assets that can be traded in the application.
 It has two columns:
 - idx (int)
-- assetDesc (String)
+- description (String)
 
 ### Inventories Table
 This table stores information about the quantities of assets owned
@@ -271,40 +279,37 @@ so it makes the most sense to model it like this.
 
 ## Client program
 ###Main
-This is where client execution will start. For debug purposes, if run with an args array containing only "MOCK", the
-mock database will be used instead of the real one.
+This is where client execution will start. For debug purposes, if run with an args array starting with "MOCK", the
+mock database will be used instead of the real one, and if run with an args array ending with "TESTDATA", it will
+populate a lot of test data (otherwise it will just populate one admin and one non-admin user).
+
 ###TradingAppGUI
-This is the GUI class. It is a Swing GUI containing the following:
-* A menu bar 
-* A login page to enter credentials
-* Popups happen when there is an error
-* Homepage, accessible by both users and admins, containing:
-    * Info on user's unit's holdings
-    * Info on all assets
-* "Admin home" page, accessible to only admins, containing:
-    * Bar with user search, containing buttons "create new user" and "view/modify selected" which go to different
-    configurations of the user editing page
-    * Bar with orgunit search, containing buttons "create new organisational unit", "view/modify selected" 
-      (both go to configurations of the unit editing page),
-        "view selected unit's holdings" (go to inventory editing page)
-    * Bar with asset search, containing buttons "create new asset", "view/modify selected"
-      (both go to asset editing page), "view holdings of selected asset"
-* Asset page
-    * Buttons to generate graph for each time unit
-* "Place order" page
-* Order editing page
-* "View orders" page
-    * Toggle available between "me", "my unit", "everyone" 
-    * Toggle available between "buy", "sell"
-    * Toggle available between "outstanding", "resolved" 
-    * for users, "delete" button is available only in "me">"outstanding" views (TODO: CHECK NEVER NEGATIVE)
-    * for admins, it's available in all views
-* User editing page
-* Asset editing page
-* Unit editing page
-* Inventory editing page
+This is the GUI class. It is a Swing GUI implemented as a JFrame subclass, and has the following pages, implemented
+using inner JPanel subclasses:
+
+| Page | Image | Behaviour |
+| :--- | :---                 | :---:      |
+| Login page |![image](GuiScreenshots/loginPage.png) | lets you log in. Menu bar (also present in rest of screenshots) has Logout, Exit, Change Password, Master User Key, Master Admin Key |
+| Home page | ![img.png](GuiScreenshots/homePage.png) | Home page with your unit's assets (table blank if no unit). In shell panel top bar (present in rest of screenshots), "home" button goes to this page, "all assets" goes to asset list page, "orders" goes to order list page. Clciking on a row of the table takes you to asset info page for the asset. |
+| Admin portal | ![img.png](GuiScreenshots/adminPortal.png) | Admin home accessible to only admins. As you can see a button to go to it is available if you are logged in as an admin. The dropdowns are GuiSearches of the appropriate tables; the buttons do what they suggest |
+| Change password page | ![img.png](GuiScreenshots/changePassPage.png) | Page where a user can change their own password. Current password must be entered and it only accepts the change if the two lower fields match and are valid. |
+| Asset info page |![img.png](GuiScreenshots/assetInfoPage.png) | Page for an asset. Buy and sell buttons take you to the order placing page. Buttons with time intervals are supposed to show a graph but this could not be implemented in time so they print the data instead. |
+| Order list page |![img.png](GuiScreenshots/orderListPage.png) | Page showing a list of orders according to the specifications. Clicking a row takes you to the order details page in deleting mode, IF AND ONLY IF it is either true that the order is an outstanding order from your org unit or you are an admin |
+| Order placing/viewing page |![img.png](GuiScreenshots/buyPlacing.png)![img.png](GuiScreenshots/sellPlacing.png)![img.png](GuiScreenshots/buyDeleting.png)![img.png](GuiScreenshots/sellDeleting.png) | This page is a form for orders. It has 4 types as seen. Clicking discard gives you the choice to go back to the order list or asset page. |
+| Asset list page | ![img.png](GuiScreenshots/assetListPage.png) | Page with a list of all assets. Clicking on a row takes you to the asset's info page like in the home page |
+| Unit editing page |![img.png](GuiScreenshots/unitCreating.png) ![img_1.png](GuiScreenshots/unitEditing.png) | Page to create or edit an organisational unit, only accessible via the admin portal. It has two versions as shown |
+| User editing page |![img.png](GuiScreenshots/userCreating.png) ![img_1.png](GuiScreenshots/userEditing.png) | Page to create or edit a user, only accessible from admin portal. It has two versions as shown |
+| Asset editing page | ![img.png](GuiScreenshots/assetCreating.png)![img_1.png](GuiScreenshots/assetEditing.png) | Page to create or edit an asset, only accessible from admin portal. It has two version as show |
+| Inventory list/edit page | ![img.png](GuiScreenshots/invListPage.png) ![img.png](GuiScreenshots/invEdit.png) ![img.png](GuiScreenshots/invCreate.png)| Page showing inventory holdings, only accessible from admin portal from either of the "holdings" buttons. When a row is clicked a dialog appears to edit quantity or delete. The "new record" button is only available when a valid filter is applied fore either unit or asset, and it opens a dialog as shown with the dropdown allowing any units (for asset) or assets (for unit) where there isn't already a record with the filter thing |
+
+
+This is an old diagram of the GUI data flow. It is outdated but still has some useful information.
+![image](Diagrams/GUI_Diagram.jpg)
+
 
 ##GuiSearch
+This is a JComboBox subclass used for dropdowns in the GUI. I'm not entirely sure why we needed it,
+but the boys implemented it before the group split and I assumed it was useful
 
 ###TradingAppData
 This class mediates between the GUI and NetworkDataSource. The GUI owns an instance of this class, and this

@@ -26,6 +26,7 @@ import static java.lang.Integer.parseInt;
  * @author Sophia Walsh Long, with some code borrowed from vastly different implementation by Johnny and Scott
  */
 class NewTradingAppGUI extends JFrame {
+    public static final String TITLE = "Trading App";
     // Logged in user for the session
     private User user = null;
     private TradingAppData data;
@@ -41,7 +42,7 @@ class NewTradingAppGUI extends JFrame {
     JMenuBar menuBar;
 
     public NewTradingAppGUI(TradingAppData data) {
-        setTitle("STONK MACHINE");
+        setTitle(TITLE);
         this.data = data;
     }
 
@@ -61,6 +62,9 @@ class NewTradingAppGUI extends JFrame {
     void populateTestData()  throws IllegalString, DoesNotExist, InvalidAmount, OrderException {
         System.out.println("Populating test data...");
         data.mockObjectsWithPrices(50);
+    }
+    void populateInitialUsers() throws IllegalString {
+        data.initialUsers();
     }
 
     // Menu Bar---------------------------------------------------------------------------------------------------------
@@ -103,7 +107,7 @@ class NewTradingAppGUI extends JFrame {
             BufferedImage newImg = resizeImg(img, 350,62, false);
             bannerLabel = new JLabel(new ImageIcon(newImg));
         } catch (IOException e) {
-            bannerLabel.setText("STONK MACHINE");
+            bannerLabel.setText(TITLE);
         }
         InnerLoginPage login = new InnerLoginPage();
         login.formatButton();
@@ -904,7 +908,7 @@ class NewTradingAppGUI extends JFrame {
             data.getUnitByKey(unit); //exception if it doesn't exist
             unitfilter = unit;
             assetfilter = 0;
-            setEnableds(false,true,false);
+            setEnableds(false,true,true);
             unitSearch.setSelectedItem(unit);
             byUnit.setSelected(true);
         }
@@ -1302,6 +1306,8 @@ class NewTradingAppGUI extends JFrame {
             infoLabel = new JLabel("Creating new unit with name:");
             nameField = new JTextField(30);
             creditsInput = new JSpinner(new SpinnerNumberModel(1, 1, null, 1));
+            JFormattedTextField qtyTF = ((JSpinner.DefaultEditor) creditsInput.getEditor()).getTextField();
+            qtyTF.setColumns(4);
         }
 
         @Override
