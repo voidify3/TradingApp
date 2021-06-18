@@ -46,14 +46,16 @@
   - [x] dot points of video scripts
   - [x] check that trade rec actually happens
   - [ ] finish unit tests for TradingAppData
-  - [ ] generate javadoc for everything
+  - [x] generate javadoc for everything
 * SATURDAY
   - [ ] write unit tests for data object validation
   - [ ] record individual video
-  - [ ] rehearse group video
+  - [ ] rehearse group video for time
   - [ ] write build script
+  - [ ] record requirements and design doc part of video
 SUNDAY
-    
+  - [ ] record demonstration and build script part of video
+  - [ ] edit video
   
 ##TASKS BELOW THIS POINT ARE HEREBY CANCELLED FOR TIME REASONS
 * [ ] THIRD PRIORITY: have socket and hostname read from a file
