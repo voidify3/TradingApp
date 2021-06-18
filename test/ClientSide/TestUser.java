@@ -29,7 +29,7 @@ public class TestUser {
     public void newMockUsers() throws AlreadyExists, IllegalString {
         mockAdminUser = TradingAppData.adminDev; //sophia
         mockGenericUser = TradingAppData.userDev; //scott
-        mockUnit = new OrgUnit("devs");
+        mockUnit = new OrgUnit("devs", 0);
     }
 
 //    /***

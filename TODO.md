@@ -3,7 +3,7 @@
     - [x] Fix code
     - [x] Fix ERD
     - [x] Fix class diagram
-    - [ ] Merge
+    - [x] Merge
 * Fix the class diagram (ensure arrows are correct)
     - [x] add package shapes
     - [x] add enums
@@ -40,10 +40,10 @@
     - [ ] convert login page outer part
     - [ ] convert shell panel
     - [x] `TradingAppGUI extends JFrame`
-    - [ ] JavaDoc for TradingAppData
+    - [x] JavaDoc for TradingAppData
     - [ ] unit tests for TradingAppData
     - [ ] unit test file for object class AssertThrows cases
-    - [ ] Fix order placing problems
+    - [x] Fix order placing bug!!!
 * [ ] THIRD PRIORITY: have socket and hostname read from a file
 * FOURTH PRIORITY: implement GUI content and protocol contingency for resolution notification
     - [x] third type of SPECIAL query, executed at data source setup, returning how long until the next res time

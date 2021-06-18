@@ -63,7 +63,7 @@ public class OrgUnit extends DataObject implements Comparable<OrgUnit> {
      * @throws InvalidAmount if the amount to add will take the balance to less than 0
      */
     public void adjustBalance(int amount) throws InvalidAmount {
-        setCredits(orgCredits + amount);
+        setBalance(orgCredits + amount);
     }
 
 

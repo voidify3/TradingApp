@@ -499,8 +499,8 @@ class TradingAppData {
         InventoryRecord inventoryRecord = getInv(s.getUnit(), s.getAsset());
         int quantity = inventoryRecord.getQuantity();
         if (quantity < s.getQty()) {
-            throw new OrderException("Insufficient quantity of asset- unit %s has %d but %d are needed to" +
-                    "place this order", inventoryRecord.getUnitName(), quantity, s.getQty());
+            throw new OrderException("Insufficient quantity of asset- unit %s has %d but %d are needed to " +
+                    "place this sell order", inventoryRecord.getUnitName(), quantity, s.getQty());
         } else {
             inventoryRecord.setQuantity(inventoryRecord.getQuantity() - s.getQty());
             dataSource.insertOrUpdateInventory(inventoryRecord);
@@ -518,11 +518,11 @@ class TradingAppData {
         OrgUnit unitInQuestion = getUnitByKey(s.getUnit());
         int neededCredits = s.getQty() * s.getPrice();
         try{
-            unitInQuestion.adjustBalance(-s.getQty());
+            unitInQuestion.adjustBalance(-1*neededCredits);
             dataSource.updateUnit(unitInQuestion);
             dataSource.insertBuyOrder(s);
         } catch (InvalidAmount i) {
-            throw new OrderException("Insufficient credits- unit %s has %d but %d are needed to" +
+            throw new OrderException("Insufficient credits- unit %s has %d but %d are needed to " +
                     "place this buy order",
                     unitInQuestion.getName(), unitInQuestion.getCredits(), neededCredits);
         }

@@ -1375,7 +1375,7 @@ class NewTradingAppGUI extends JFrame {
         JSpinner priceInput;
         OrderFormPage(int id, boolean isCreate, boolean isBuy) throws DoesNotExist {
             super(isCreate);
-            saveEditButton.getParent().remove(saveEditButton);
+            buttonRow.remove(saveEditButton);
             this.isBuy = isBuy;
             String typeText = isBuy?"buy":"sell";
             infoLabel.setText(String.format("Placing new %s order for asset: ", typeText));
@@ -1385,7 +1385,8 @@ class NewTradingAppGUI extends JFrame {
                             "will also be deleted");
             if (isCreate){
                 this.id = id;
-                this.remove(extraInfoLabel);
+                extraInfoLabel.setText("Your organisational unit has " + (isBuy? (data.getUnitByKey(user.getUnit()).getCredits())
+                        + " credits." : (data.getInv(user.getUnit(), id)).getQuantity() + " of this asset."));
             }
             else {
                 o = data.getBuyByKey(id);
