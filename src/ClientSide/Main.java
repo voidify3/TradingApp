@@ -8,7 +8,8 @@ class Main {
     /***
      * Invokes the Client-Side GUI & holds the date/time
      * @param args CLI arguments. If the first argument is "MOCK", use the mock data source instead of the network.
-     *             If the last argument is "TESTDATA", populate test data on startup.
+     *             If the last argument is "TESTDATA", populate test data in all tables on startup-- otherwise, just
+     *             the bare minimum, i.e. one admin and one non-admin user for the menu bar master keys.
      */
     public static void main(String[] args) {
 
@@ -25,6 +26,7 @@ class Main {
             try {
                 NewTradingAppGUI gui = new NewTradingAppGUI(new TradingAppData(t));
                 if (args.length >= 1 && args[args.length-1].equals("TESTDATA")) gui.populateTestData();
+                else gui.populateInitialUsers();
                 gui.createAndShowGUI();
             } catch (Throwable ex) {
                 ex.printStackTrace();

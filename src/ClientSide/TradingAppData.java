@@ -61,6 +61,12 @@ class TradingAppData {
         }
     }
 
+    void initialUsers() throws IllegalString {
+        adminDev = new User("sophia", "bo$$", true, null);
+        userDev = new User("scott", "scotty", false, null);
+        dataSource.insertUser(adminDev);
+        dataSource.insertUser(userDev);
+    }
     void mockObjects() throws IllegalString, OrderException, DoesNotExist {
         unitDev = new OrgUnit("Developers", 1000);
         unitDev2 = new OrgUnit("Marketing", 1000);
