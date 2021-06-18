@@ -1,0 +1,30 @@
+<project name="majorProjectNew" basedir=".">
+    <property name="base" value="artifacts" />
+    <property name="testBase" value="testFiles" />
+    <property name="doc" value="doc" />
+    <property name="testClasses" value="utestclasses" />
+
+    <property name="junitJar" value="lib/junit-jupiter-api-5.4.2.jar" />
+    <property name="junitPlatformJar" value="lib/junit-platform-commons-1.4.2.jar" />
+    <property name="opentestJar" value="lib/opentest4j-1.1.1.jar" />
+    <property name="apiguardianJar" value="lib/apiguardian-api-1.0.0.jar" />
+
+    <property name="junitpath" value="${junitJar}:${junitPlatformJar}:${opentestJar}:${apiguardianJar}" />
+
+    <target name="prepare">
+        <mkdir dir="${base}"/>
+        <mkdir dir="${testBase}"/>
+        <mkdir dir="${doc}"/>
+        <mkdir dir="${testClasses}"/>
+    </target>
+
+
+
+
+    <target name="clean">
+        <delete dir="${base}"/>
+        <delete dir="${testBase}"/>
+        <delete dir="${doc}"/>
+        <delete dir="${testClasses}"/>
+    </target>
+</project>

@@ -40,11 +40,22 @@
     - [x] `TradingAppGUI extends JFrame`
     - [x] JavaDoc for TradingAppData
     - [x] Fix order placing bug!!!
-* Part 2.5
+* FRIDAY
+  - [x] create unit test file for data object validation
+  - [x] create build script file
+  - [x] dot points of video scripts
+  - [ ] check that trade rec actually happens
   - [ ] finish unit tests for TradingAppData
-  - [ ] unit test file for object class AssertThrows cases
-
-TASKS BELOW THIS POINT ARE HEREBY CANCELLED FOR TIME REASONS
+  - [ ] generate javadoc for everything
+* SATURDAY
+  - [ ] write unit tests for data object validation
+  - [ ] record individual video
+  - [ ] rehearse group video
+  - [ ] write build script
+SUNDAY
+    
+  
+##TASKS BELOW THIS POINT ARE HEREBY CANCELLED FOR TIME REASONS
 * [ ] THIRD PRIORITY: have socket and hostname read from a file
 * FOURTH PRIORITY: implement GUI content and protocol contingency for resolution notification
     - [x] third type of SPECIAL query, executed at data source setup, returning how long until the next res time
