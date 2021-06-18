@@ -32,11 +32,15 @@ class MockDatabase {
                 && (inQuestion.isBefore(end) || inQuestion.isEqual(end)));
     }
 
+    /**
+     * Construct the mock database and reset all auto increment keys
+     */
     MockDatabase() {
         nextAssetID = 1;
         nextBuyID = 1;
         nextSellID = 1;
     }
+
 
     int deleteEverything() {
         int result = allUnits.size() + allAssets.size() + allUsers.size() + inventories.size() + sellOrders.size() + buyOrders.size();
@@ -51,6 +55,7 @@ class MockDatabase {
         nextSellID = 1;
         return result;
     }
+
     int addUser(User data) {
         //FK check
         if (data.getUnit() != null && getUnit(data.getUnit()) == null) return -1;

@@ -27,6 +27,9 @@ import static java.lang.Integer.parseInt;
  * @author Sophia Walsh Long, with some code borrowed from vastly different implementation by Johnny and Scott
  */
 class NewTradingAppGUI extends JFrame {
+    /**
+     * GUI title
+     */
     public static final String TITLE = "Trading App";
     // Logged in user for the session
     private User user = null;
@@ -51,7 +54,9 @@ class NewTradingAppGUI extends JFrame {
         this.data = data;
     }
 
-
+    /**
+     * Finish initialising GUI, set up the menu bar and load the login page
+     */
     void createAndShowGUI() {
         setPreferredSize(new Dimension(WIDTH, HEIGHT));
         setResizable(false);
@@ -64,10 +69,19 @@ class NewTradingAppGUI extends JFrame {
         setLocationRelativeTo(null);
         setVisible(true);
     }
+
+    /**
+     * Populate the data source with test data specified in TradingAppData
+     */
     void populateTestData()  {
         System.out.println("Populating test data...");
         data.mockObjectsWithPrices(50);
     }
+
+    /**
+     * Populate two unitless users so that login will be possible even if populateTestData hasn't been called
+     * since the last time the database was reset
+     */
     void populateInitialUsers() {
         data.initialUsers();
     }
@@ -193,7 +207,7 @@ class NewTradingAppGUI extends JFrame {
         }
     }
     //helpers
-    String[][] populateTable(ArrayList<InventoryRecord> a, boolean isHomepage) throws DoesNotExist {
+    private String[][] populateTable(ArrayList<InventoryRecord> a, boolean isHomepage) throws DoesNotExist {
         String[][] info = new String[0][4];
         for (InventoryRecord inventoryRecord : a) {
             //Get information on the asset of the inventory record
@@ -220,7 +234,7 @@ class NewTradingAppGUI extends JFrame {
         }
         return info;
     }
-    String[][] populateOrderTable(ArrayList<Order> a) {
+    private String[][] populateOrderTable(ArrayList<Order> a) {
         String[][] info = new String[0][7];
         for (Order o : a) {
             String[] infoNew = new String[]{String.valueOf(o.getId()), o.getUnit(), String.valueOf(o.getAsset()),
@@ -232,7 +246,7 @@ class NewTradingAppGUI extends JFrame {
 
         return info;
     }
-    String[][] populateTable(ArrayList<Asset> a) throws DoesNotExist {
+    private String[][] populateTable(ArrayList<Asset> a) throws DoesNotExist {
         String[][] info = new String[0][3];
         for (Asset x : a) {
             ArrayList<BuyOrder> assetPriceHistory = data.getResolvedBuysByAsset(x.getId());
@@ -248,26 +262,45 @@ class NewTradingAppGUI extends JFrame {
     }
 
 
-    void messageDialogFormatted(String title, String message, int type) {
+    private void messageDialogFormatted(String title, String message, int type) {
         JOptionPane.showMessageDialog(this,
                 String.format(WRAP_DIALOG, message),
                 title, type);
     }
+
+    /**
+     * Display an error message
+     * @param title Dialog title
+     * @param message Message
+     */
     void displayError(String title, String message) {
         messageDialogFormatted(title, message, JOptionPane.ERROR_MESSAGE);
     }
-    int displayConfirm(String title, String message) {
-        return JOptionPane.showConfirmDialog(NewTradingAppGUI.this, String.format(WRAP_DIALOG, message),
-                title, JOptionPane.YES_NO_OPTION);
-    }
 
+    /**
+     * Display an information message
+     * @param title Dialog title
+     * @param message Message
+     */
     void displayFeedback(String title, String message) {
         messageDialogFormatted(title, message, JOptionPane.INFORMATION_MESSAGE);
         //JOptionPane.showMessageDialog(TradingAppGUI.this,message, title, JOptionPane.PLAIN_MESSAGE);
     }
 
+    /**
+     * Display a confirm dialog with "yes/no" options
+     * @param title Title
+     * @param message Message
+     * @return value equal to JOptionPane.YES_OPTION if yes, value equal to JOptionPane.NO_OPTION if no
+     */
+    int displayConfirm(String title, String message) {
+        return JOptionPane.showConfirmDialog(NewTradingAppGUI.this, String.format(WRAP_DIALOG, message),
+                title, JOptionPane.YES_NO_OPTION);
+    }
+
+
     //Helper to throw NotAuthorised
-    void failIfNotAdmin(String thingAttempted) throws NotAuthorised {
+    private void failIfNotAdmin(String thingAttempted) throws NotAuthorised {
         if (!user.getAdminAccess()) throw new NotAuthorised("You do not have permission to: " + thingAttempted);
     }
 
@@ -278,7 +311,7 @@ class NewTradingAppGUI extends JFrame {
      * If seed contains no opening parenthesis, or the substring prior to the opening parenthesis could not be
      * parsed as an int, the method returns -1 to induce a DoesNotExist when the return value is used to query asset
      */
-    int parseAssetString(String seed) {
+    private int parseAssetString(String seed) {
         if (seed == null) return -1;
         int i = seed.indexOf('(');
         if (i<1) return -1;
@@ -290,21 +323,14 @@ class NewTradingAppGUI extends JFrame {
     private void doLogin() throws DoesNotExist {
         shellPanel(new HomePage(), true);
     }
-
     private void doLogout() {
         user = null; // reset session user data
         loginPanel(); // creates & shows login portal
     }
-    class ShellPanel extends JPanel implements ActionListener {
 
-        @Override
-        public void actionPerformed(ActionEvent e) {
-
-        }
-    }
-    class OuterLogin extends JPanel {
-
-    }
+    /**
+     * JMenuBar subclass with all the needed menu bar items
+     */
     class MyMenuBar extends JMenuBar implements ActionListener {
         JMenuItem logoutMenu = new JMenuItem("Logout");
         JMenuItem exitMenu = new JMenuItem("Exit");
@@ -364,6 +390,10 @@ class NewTradingAppGUI extends JFrame {
             else if (e.getSource() == changePassword && NewTradingAppGUI.this.user != null) shellPanel(new ChangePasswordPage(), false);
         }
     }
+
+    /**
+     * JPanel subclass for the first row of the shell panel (the part with the nav buttons)
+     */
     class ShellFirstRow extends JPanel implements ActionListener {
         JButton homeButton = new JButton("Home");
         JButton adminButton = new JButton("Admin portal");
@@ -421,6 +451,10 @@ class NewTradingAppGUI extends JFrame {
             }
         }
     }
+
+    /**
+     * JPanel subclass for the admin portal
+     */
     class AdminPortal extends JPanel implements ActionListener {
         JButton newUserButton = new JButton("New user");
         JButton editUserButton = new JButton("Edit selected");
@@ -481,6 +515,10 @@ class NewTradingAppGUI extends JFrame {
                 displayError("Could not load page due to unexpected error", d.getMessage());}
         }
     }
+
+    /**
+     * JPanel subclass for the asset info page
+     */
     class AssetInfoPage extends JPanel implements ActionListener {
         int asset;
         JButton daysButton = new JButton("Days");
@@ -540,6 +578,10 @@ class NewTradingAppGUI extends JFrame {
             } catch (DoesNotExist d) { displayError("Unexpected error", d.getMessage()); }
         }
     }
+
+    /**
+     * JPanel subclass for the interactive bit of the login page
+     */
     class InnerLoginPage extends JPanel implements ActionListener, ItemListener, KeyListener {
         JCheckBox passwordHide = new JCheckBox();
         JButton loginButton = new JButton("Login");
@@ -621,6 +663,10 @@ class NewTradingAppGUI extends JFrame {
         }
         @Override public void keyReleased(KeyEvent e) {}
     }
+
+    /**
+     * The change password page is just the inner login page plus/minus a few widgets
+     */
     class ChangePasswordPage extends InnerLoginPage {
         JLabel newPasswordLabel = new JLabel("New password");
         JLabel confirmNewPasswordLabel = new JLabel("Confirm new password");
@@ -703,6 +749,10 @@ class NewTradingAppGUI extends JFrame {
             if (e.getSource() == changePassButton) checkPassChange();
         }
     }
+
+    /**
+     * Abstract JPanel subclass for all the pages with tables in
+     */
     abstract class TablePage extends JPanel implements MouseListener {
         JTable table;
         JPanel beforePanel;
@@ -742,6 +792,10 @@ class NewTradingAppGUI extends JFrame {
         @Override public void mouseEntered(MouseEvent e) {}
         @Override public void mouseExited(MouseEvent e) {}
     }
+
+    /**
+     * Home page (holdings of the unit of the logged in user, with recent prices)
+     */
     class HomePage extends TablePage {
         private HomePage(String[][] info) {
             super(new String[]{"Asset ID", "Description", "Qty", "$ Current"}, info,
@@ -756,6 +810,10 @@ class NewTradingAppGUI extends JFrame {
         void onRowClick(String col1, String col2) {
             shellPanel(new AssetInfoPage(parseInt(col1)), false, col2.toUpperCase()); }
     }
+
+    /**
+     * Orders page with toggles
+     */
     class OrdersTablePage extends TablePage implements ActionListener {
         boolean isBuy;
         boolean justOurs;
@@ -826,6 +884,10 @@ class NewTradingAppGUI extends JFrame {
             }
         }
     }
+
+    /**
+     * Asset table page
+     */
     class AssetTablePage extends TablePage {
 
         AssetTablePage(String[][] info) {
@@ -843,6 +905,10 @@ class NewTradingAppGUI extends JFrame {
                     false, col2.toUpperCase());
         }
     }
+
+    /**
+     * Inventory table page with toggles
+     */
     class InventoryTablePage extends TablePage implements ActionListener{
         String unitfilter = null;
         int assetfilter = 0;
@@ -1042,6 +1108,10 @@ class NewTradingAppGUI extends JFrame {
                     newRecordButton.setEnabled(false);
         }
     }
+
+    /**
+     * Abstract JPanel subclass for all the "create/edit record" pages
+     */
     abstract class FormPage extends JPanel implements ActionListener {
         String deletePromptText;
         JButton saveEditButton = new JButton("Save");
@@ -1085,6 +1155,10 @@ class NewTradingAppGUI extends JFrame {
             else if (e.getSource()==cancelEditButton) cancel();
         }
     }
+
+    /**
+     * Asset creating/editing page
+     */
     class AssetFormPage extends FormPage {
         JLabel infoLabel;
         JLabel numberKeyLabel;
@@ -1172,6 +1246,10 @@ class NewTradingAppGUI extends JFrame {
             }
         }
     }
+
+    /**
+     * User creating/editing page
+     */
     class UserFormPage extends FormPage {
         public static final String NO_UNIT = "[NO UNIT]";
         JLabel infoLabel;
@@ -1287,6 +1365,10 @@ class NewTradingAppGUI extends JFrame {
             }
         }
     }
+
+    /**
+     * Unit creating/editing page
+     */
     class UnitFormPage extends FormPage {
         JLabel infoLabel;
         JTextField nameField;
@@ -1378,6 +1460,10 @@ class NewTradingAppGUI extends JFrame {
             }
         }
     }
+
+    /**
+     * Order creating/"editing" page
+     */
     class OrderFormPage extends FormPage {
         int id; //asset id if creating, order id if viewing existing order
         Order o;

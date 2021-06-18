@@ -11,7 +11,7 @@ import java.time.temporal.WeekFields;
 import java.util.*;
 
 /**
- * Middle end of the client program. Owns a data source and is owned by the GUI
+ * Middle end of the client program; owns a data source and is owned by the GUI
  */
 class TradingAppData {
     private final TradingAppDataSource dataSource;
