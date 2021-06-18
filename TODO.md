@@ -45,14 +45,15 @@
   - [x] create build script file
   - [x] dot points of video scripts
   - [x] check that trade rec actually happens
-  - [ ] finish unit tests for TradingAppData
   - [x] generate javadoc for everything
-* SATURDAY
+* SATURDAY  
+  - [ ] finish unit tests for TradingAppData
   - [ ] write unit tests for data object validation
   - [ ] record individual video
   - [ ] rehearse group video for time
   - [ ] write build script
   - [ ] record requirements and design doc part of video
+  - [ ] finish javadoc
 SUNDAY
   - [ ] record demonstration and build script part of video
   - [ ] edit video
