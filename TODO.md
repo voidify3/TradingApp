@@ -37,13 +37,14 @@
     - [x] convert login page inner part
     - [x] convert menu bar
     - [x] convert shell panel first row and get rid of guilisteners
-    - [ ] convert login page outer part
-    - [ ] convert shell panel
     - [x] `TradingAppGUI extends JFrame`
     - [x] JavaDoc for TradingAppData
-    - [ ] unit tests for TradingAppData
-    - [ ] unit test file for object class AssertThrows cases
     - [x] Fix order placing bug!!!
+* Part 2.5
+  - [ ] finish unit tests for TradingAppData
+  - [ ] unit test file for object class AssertThrows cases
+
+TASKS BELOW THIS POINT ARE HEREBY CANCELLED FOR TIME REASONS
 * [ ] THIRD PRIORITY: have socket and hostname read from a file
 * FOURTH PRIORITY: implement GUI content and protocol contingency for resolution notification
     - [x] third type of SPECIAL query, executed at data source setup, returning how long until the next res time
@@ -54,3 +55,7 @@
     - [ ] display mini summary in a row of the screen, clickable to view full summary
 * [ ] FIFTH PRIORITY: implement graph view
 * SIXTH PRIORITY: make everything nice and cute
+    - [ ] convert login page outer part
+    - [ ] convert shell panel
+    - [ ] make factory use consistent
+    - [ ] observer pattern for manual resolution

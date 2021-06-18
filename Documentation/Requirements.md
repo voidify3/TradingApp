@@ -41,7 +41,7 @@ Requirements that are needed for the Client-side to be functional.
 | Requirement               | Description                                                   | Priority   |
 | :---                      | :---                                                          | :---:      |
 | Order placing checks | The total price of a buy order, and quantity of a sell order, shouldn't be allowed to exceed the unit's available credits/holding of the asset | Must have |
-| Password hashing
+| Password hashing | Passwords are hashed so plaintext passwords are never sent | Should have |
 | Graphical User Interface  | A more user friendly UI instead of the terminal               | Could have |
 | Generate visual graph     | A (stock-like) graph showing an asset's value fluctuating     | Could have |
 | Trade executed alert      | Push an alert to online members of that organisational unit   | Could have |
@@ -79,7 +79,7 @@ These requirements will be enforced on the client side of the client-server comm
 
 ----
 
-## GUI Requirements
+## GUI ideas
 - Users to receive a message upon fulfilment of an order.
 - Current orders graph 
 
