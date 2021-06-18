@@ -7,6 +7,10 @@ import java.util.ArrayList;
 import java.util.Set;
 import java.util.TreeSet;
 
+/**
+ * Implements the same abstract class as NetworkDataSource but uses Java collections instead of the server and database
+ * Useful for unit testing
+ */
 class MockDataSource extends TradingAppDataSource {
     MockDatabase db;
 

@@ -22,7 +22,8 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import static java.lang.Integer.parseInt;
 
-/***
+/**
+ * The client program's GUI
  * @author Sophia Walsh Long, with some code borrowed from vastly different implementation by Johnny and Scott
  */
 class NewTradingAppGUI extends JFrame {
@@ -41,6 +42,10 @@ class NewTradingAppGUI extends JFrame {
     JPanel shellPanel;
     JMenuBar menuBar;
 
+    /**
+     * Initialise the frame title and set the data
+     * @param data TradingAppData object from which the GUI's data will be sourced
+     */
     public NewTradingAppGUI(TradingAppData data) {
         setTitle(TITLE);
         this.data = data;
@@ -59,11 +64,11 @@ class NewTradingAppGUI extends JFrame {
         setLocationRelativeTo(null);
         setVisible(true);
     }
-    void populateTestData()  throws IllegalString, DoesNotExist, InvalidAmount, OrderException {
+    void populateTestData()  {
         System.out.println("Populating test data...");
         data.mockObjectsWithPrices(50);
     }
-    void populateInitialUsers() throws IllegalString {
+    void populateInitialUsers() {
         data.initialUsers();
     }
 

@@ -13,9 +13,9 @@ import static common.DatabaseTables.*;
 import static common.ProtocolKeywords.*;
 import static java.lang.String.valueOf;
 
-//Please ignore all the hideous ArrayList downcasts, I promise it's fine, server-side logic handles it so that
-//all of these downcasts must be possible in the circumstances that they're attempted
-
+/**
+ * Back end of the client program, interacting with the server over the host and port
+ */
 class NetworkDataSource extends TradingAppDataSource {
     private static final String HOSTNAME = "127.0.0.1";
     private static final int PORT = 10000;

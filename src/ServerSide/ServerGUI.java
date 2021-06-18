@@ -14,19 +14,31 @@ import java.util.TimerTask;
 
 
 /**
- * Most code borrowed from week 8 address book exercise
+ * The place where the server program's execution begins. Rudimentary GUI for debug purposes
+ * Code inspired from week 8 address book exercise.
  */
 class ServerGUI {
+    /**
+     * Static because it needs to be modified by an inner TimerTask
+     */
     static JLabel tradeLabel = new JLabel("Trade reconciliation not yet performed");
 
-    public static void main(String[] args) throws SQLException {
+    /**
+     * Start execution of the server program
+     * @param args Command line arguments. Run with {"RESET"} to drop and recreate all tables
+     */
+    public static void main(String[] args) {
         NetworkServer server = new NetworkServer();
         SwingUtilities.invokeLater(() -> createAndShowGUI(server));
         if (args.length == 1 && args[0].equals("RESET")) {
             //args={"RESET"} mean that the tables will be dropped and recreated upon startup,
             //removing all data and resetting auto increment keys
-            server.resetEverything();
-            server.setupTables();
+            try {
+                server.resetEverything();
+                server.setupTables();
+            } catch (SQLException throwables) {
+                throwables.printStackTrace();
+            }
         }
         try {
             server.tradeReconciliation.schedule(new TimerTask() {
@@ -50,6 +62,11 @@ class ServerGUI {
             });
         }
     }
+
+    /**
+     * Create and show the GUI with all GUI elements needed for server debug operations
+     * @param server NetworkServer object being run
+     */
     private static void createAndShowGUI(NetworkServer server) {
         JDialog dialog = new JDialog();
         Container mainPanel = dialog.getContentPane();

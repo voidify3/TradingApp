@@ -10,10 +10,16 @@ import java.time.temporal.TemporalAdjusters;
 import java.time.temporal.WeekFields;
 import java.util.*;
 
+/**
+ * Middle end of the client program. Owns a data source and is owned by the GUI
+ */
 class TradingAppData {
-    TradingAppDataSource dataSource;
-    Locale locale = Locale.ENGLISH;
+    private final TradingAppDataSource dataSource;
+    private static final Locale locale = Locale.ENGLISH;
 
+    /**
+     * Used for getHistoricalPrices
+     */
     enum Intervals {
         DAYS(),
         WEEKS(),
@@ -21,6 +27,10 @@ class TradingAppData {
         YEARS()
     }
 
+    /**
+     * Initialise the data interface for the given data source
+     * @param dataSource either of the TradingAppDataSource subtypes
+     */
     TradingAppData(TradingAppDataSource dataSource) {
         this.dataSource = dataSource;
     }
@@ -40,6 +50,14 @@ class TradingAppData {
     static SellOrder testSellOrder;
 
 
+    /**
+     * Add a dummy "historical" transaction
+     * @param idUpTo ID to use for the buy order's BoughtFrom, assumed to be the sell ID
+     * @param assetID Asset for the transaction
+     * @param unitResponsible Unit to attach to both the buy and sell order
+     * @param price Price to put for both orders
+     * @param dateTime Datetime to put for both orders' dates placed and resolved
+     */
     void addHistoricalPrice(int idUpTo, int assetID, String unitResponsible, int price, LocalDateTime dateTime) {
         SellOrder sell = new SellOrder(0, unitResponsible, assetID, 0, price, dateTime, dateTime);
         BuyOrder buy = new BuyOrder(0, unitResponsible, assetID, 0, price, dateTime, dateTime, idUpTo);
@@ -48,54 +66,75 @@ class TradingAppData {
 
     }
 
-    public void mockObjectsWithPrices(int numdays) throws IllegalString, InvalidAmount, DoesNotExist, OrderException {
+    /**
+     * Populate test data, plus historical prices for two assets going back a specified number of days
+     * starting at buy and sell ID 2
+     * @param numdays How many days back to do the prices
+     */
+    void mockObjectsWithPrices(int numdays) {
         mockObjects();
         LocalDateTime begin = LocalDateTime.now().minusDays(numdays);
         for (int i = 1; i <= numdays; i++) {
             LocalDateTime theDay = begin.plusDays(i);
-            addHistoricalPrice(i*6-5, assetDev1.getId(), unitDev.getName(), 10, theDay);
-            addHistoricalPrice(i*6-4, assetDev1.getId(), unitDev.getName(), 15, theDay);
-            addHistoricalPrice(i*6-3, assetDev1.getId(), unitDev.getName(), 20, theDay);
-            addHistoricalPrice(i*6-2, assetDev2.getId(), unitDev.getName(), 10, theDay);
-            addHistoricalPrice(i*6-1, assetDev2.getId(), unitDev.getName(), 30, theDay);
-            addHistoricalPrice(i*6, assetDev2.getId(), unitDev.getName(), 50, theDay);
+            addHistoricalPrice(i*6-4, assetDev1.getId(), unitDev.getName(), 10, theDay);
+            addHistoricalPrice(i*6-3, assetDev1.getId(), unitDev.getName(), 15, theDay);
+            addHistoricalPrice(i*6-2, assetDev1.getId(), unitDev.getName(), 20, theDay);
+            addHistoricalPrice(i*6-1, assetDev2.getId(), unitDev.getName(), 10, theDay);
+            addHistoricalPrice(i*6, assetDev2.getId(), unitDev.getName(), 30, theDay);
+            addHistoricalPrice(i*6+1, assetDev2.getId(), unitDev.getName(), 50, theDay);
         }
     }
 
-    void initialUsers() throws IllegalString {
-        adminDev = new User("sophia", "bo$$", true, null);
-        userDev = new User("scott", "scotty", false, null);
-        dataSource.insertUser(adminDev);
-        dataSource.insertUser(userDev);
+    /**
+     * Set up two users so that the master keys will work even if the client has never been run with a TESTDATA arg
+     * since the database was last reset
+     */
+    void initialUsers() {
+        try {
+            adminDev = new User("sophia", "bo$$", true, null);
+            userDev = new User("scott", "scotty", false, null);
+            dataSource.insertUser(adminDev);
+            dataSource.insertUser(userDev);
+        } catch (IllegalString illegalString) {
+            illegalString.printStackTrace();
+        }
     }
-    void mockObjects() throws IllegalString, OrderException, DoesNotExist {
-        unitDev = new OrgUnit("Developers", 1000);
-        unitDev2 = new OrgUnit("Marketing", 1000);
-        adminDev = new User("sophia", "bo$$", true, unitDev2.getName());
-        userDev = new User("scott", "scotty", false, unitDev.getName());
-        userDev2 = new User("johnny", "john", false, unitDev.getName());
-        userDev3 = new User("alistair", "allstar", false, unitDev2.getName());
-        userDev4 = new User("nullman", "nothing", false, null);
-        assetDev1 = new Asset(1, "Test asset for development!");
-        assetDev2 = new Asset(2, "Another test asset for development!");
-        dataSource.insertUnit(unitDev);
-        dataSource.insertUnit(unitDev2);
-        dataSource.insertUser(adminDev);
-        dataSource.insertUser(userDev);
-        dataSource.insertUser(userDev2);
-        dataSource.insertUser(userDev3);
-        dataSource.insertUser(userDev4);
-        dataSource.insertAsset(assetDev1);
-        dataSource.insertAsset(assetDev2);
-        dataSource.insertOrUpdateInventory(new InventoryRecord(unitDev2.getName(), assetDev1.getId(), 800));
-        dataSource.insertOrUpdateInventory(new InventoryRecord(unitDev.getName(), assetDev1.getId(), 500));
-        dataSource.insertOrUpdateInventory(new InventoryRecord(unitDev.getName(), assetDev2.getId(), 3500));
-        testBuyOrder = new BuyOrder(unitDev.getName(), assetDev1.getId(), 20, 13);
-        testBuyOrder2 = new BuyOrder(unitDev2.getName(), assetDev1.getId(), 30, 15);
-        testSellOrder = new SellOrder(unitDev.getName(), assetDev1.getId(), 6, 47);
-        placeBuyOrder(testBuyOrder);
-        placeBuyOrder(testBuyOrder2);
-        placeSellOrder(testSellOrder);
+
+    /**
+     * Populate some test data in all tables, storing values in the class's static variables
+     */
+    void mockObjects() {
+        try {
+            unitDev = new OrgUnit("Developers", 1000);
+            unitDev2 = new OrgUnit("Marketing", 1000);
+            adminDev = new User("sophia", "bo$$", true, unitDev2.getName());
+            userDev = new User("scott", "scotty", false, unitDev.getName());
+            userDev2 = new User("johnny", "john", false, unitDev.getName());
+            userDev3 = new User("alistair", "allstar", false, unitDev2.getName());
+            userDev4 = new User("nullman", "nothing", false, null);
+            assetDev1 = new Asset(1, "Test asset for development!");
+            assetDev2 = new Asset(2, "Another test asset for development!");
+            dataSource.insertUnit(unitDev);
+            dataSource.insertUnit(unitDev2);
+            dataSource.insertUser(adminDev);
+            dataSource.insertUser(userDev);
+            dataSource.insertUser(userDev2);
+            dataSource.insertUser(userDev3);
+            dataSource.insertUser(userDev4);
+            dataSource.insertAsset(assetDev1);
+            dataSource.insertAsset(assetDev2);
+            dataSource.insertOrUpdateInventory(new InventoryRecord(unitDev2.getName(), assetDev1.getId(), 800));
+            dataSource.insertOrUpdateInventory(new InventoryRecord(unitDev.getName(), assetDev1.getId(), 500));
+            dataSource.insertOrUpdateInventory(new InventoryRecord(unitDev.getName(), assetDev2.getId(), 3500));
+            testBuyOrder = new BuyOrder(unitDev.getName(), assetDev1.getId(), 20, 13);
+            testBuyOrder2 = new BuyOrder(unitDev2.getName(), assetDev1.getId(), 30, 15);
+            testSellOrder = new SellOrder(unitDev.getName(), assetDev1.getId(), 6, 47);
+            placeBuyOrder(testBuyOrder);
+            placeBuyOrder(testBuyOrder2);
+            placeSellOrder(testSellOrder);
+        } catch (DoesNotExist | IllegalString | OrderException doesNotExist) {
+            doesNotExist.printStackTrace();
+        }
     }
 
     /**
@@ -106,7 +145,10 @@ class TradingAppData {
         dataSource.recreate();
     }
 
-
+    /**
+     * Delegate for refreshDelay
+     * @return the refresh
+     */
     int getTradeDelay() {
         return dataSource.refreshDelay;
     }
@@ -222,6 +264,12 @@ class TradingAppData {
         return output;
     }
 
+    /**
+     * Get all users in an org unit
+     * @param unit Unit name
+     * @return ArrayList of all users in the unit
+     * @throws DoesNotExist if the unit does not exist
+     */
     ArrayList<User> getMembers(String unit) throws DoesNotExist {
         return dataSource.usersByUnit(unit);
     }
@@ -287,7 +335,7 @@ class TradingAppData {
     }
 
     /**
-     *
+     * Get an inventory record by its composite key
      * @param unit Unit name
      * @param asset Asset ID
      * @return InventoryRecord object if the unit and asset are real. If the unit and asset are real but have no inventory
@@ -423,10 +471,6 @@ class TradingAppData {
         }
         return results;
     }
-
-    //TODO: methods to get the buys resolved in the last session
-    // and the sells affected by it
-
 
     //DELETE METHODS
 
@@ -686,7 +730,7 @@ class TradingAppData {
         updateUnit(unitInQuestion);
     }
 
-    /***
+    /**
      * Method to get the average price of an asset between a start date and end date.
      * @param startDate the date at which the user wants to start reading data.
      * @param endDate the date at which the user wants to finish reading data.
@@ -725,7 +769,7 @@ class TradingAppData {
         return (double)sum / count;
     }
 
-    /***
+    /**
      * Method that collects average prices between specified intervals for the entire data set and places them into a
      * TreeMap. This may be used to create a price history graph.
      * @param timeInterval the time interval in which the data will be split before calculating the averages of each

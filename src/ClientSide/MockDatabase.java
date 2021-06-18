@@ -6,6 +6,9 @@ import java.sql.Timestamp;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 
+/**
+ * Mock database used by MockDataSource to imitate the behaviour of the server
+ */
 class MockDatabase {
     //Stub data structures
     private ArrayList<User> allUsers = new ArrayList<>();

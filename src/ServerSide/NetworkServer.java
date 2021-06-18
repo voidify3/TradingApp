@@ -21,33 +21,48 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 
 /**
+ * The heart and soul of the server program. Inspired heavily by week 7 and 8 exercises.
+ * Listens for requests infinitely
  * @author Sophia Walsh Long
  */
 class NetworkServer {
-
+    /**
+     * Port number (SHOULD MATCH THE ONE IN NETWORKSERVER)
+     */
     private static final int PORT = 10000;
+    /**
+     * Socket timeout number
+     */
     private static final int SOCKET_TIMEOUT = 100;
-
+    /**
+     * Atomic boolean used to shut down the server from another thread
+     */
     private AtomicBoolean running = new AtomicBoolean(true);
-    //private JDBCDataSource dataSource;
+    /**
+     * Timer (initialised in the ServerGUI thread)
+     */
     Timer tradeReconciliation;
-    Connection getConnection() {
-        return connection;
-    }
+
+    /**
+     * JDBC connection, pulled upon construction from the DBConnection singleton
+     */
     private final Connection connection;
+    /**
+     * Time of last trade reconciliation
+     */
     LocalDateTime lastReconciliation;
     //Create Table scripts for all tables, using table and column names from the enum
     // week 7 address book exercise used as reference for syntax; "from stackoverflow" comment is from that
-    static final String CREATE_TABLE_UNIT =
+    private static final String CREATE_TABLE_UNIT =
             "CREATE TABLE IF NOT EXISTS " + UNIT.getName() + " ("
                     + UNIT.getColumns()[0] + " VARCHAR(30) PRIMARY KEY NOT NULL UNIQUE," //name
                     + UNIT.getColumns()[1] + " INTEGER" + ");"; //credits
-    static final String CREATE_TABLE_ASSET =
+    private static final String CREATE_TABLE_ASSET =
             "CREATE TABLE IF NOT EXISTS " + ASSET.getName() + " ("
                     + ASSET.getColumns()[0] + " INTEGER "
                     + "PRIMARY KEY /*!40101 AUTO_INCREMENT */ NOT NULL UNIQUE," //from https://stackoverflow.com/a/41028314
                     + ASSET.getColumns()[1] + " VARCHAR(60)" + ");"; //description
-    static final String CREATE_TABLE_USER =
+    private static final String CREATE_TABLE_USER =
             "CREATE TABLE IF NOT EXISTS " + USER.getName() + " ("
                     + USER.getColumns()[0] + " VARCHAR(30) PRIMARY KEY NOT NULL UNIQUE," //name
                     + USER.getColumns()[1] + " VARCHAR(128) NOT NULL," //hashed password
@@ -57,7 +72,7 @@ class NetworkServer {
                     + "CONSTRAINT fk_user_orgunit FOREIGN KEY (" + USER.getColumns()[3]
                     + ") REFERENCES " + UNIT.getName() + " (" + UNIT.getColumns()[0]
                     + ") ON DELETE SET NULL ON UPDATE CASCADE" + ");";
-    static final String CREATE_TABLE_INV =
+    private static final String CREATE_TABLE_INV =
             "CREATE TABLE IF NOT EXISTS " + INV.getName() + " ("
                     + INV.getColumns()[0] + " VARCHAR(30) NOT NULL," //orgunit
                     + INV.getColumns()[1] + " INTEGER NOT NULL," //asset
@@ -70,7 +85,7 @@ class NetworkServer {
                     + ") ON DELETE CASCADE ON UPDATE CASCADE,"
                     + "PRIMARY KEY(" + INV.getColumns()[0] + "," + INV.getColumns()[1] + ")"
                     + ");";
-    static final String CREATE_TABLE_SELL =
+    private static final String CREATE_TABLE_SELL =
             "CREATE TABLE IF NOT EXISTS " + SELL.getName() + " ("
                     + SELL.getColumns()[0] + " INTEGER PRIMARY KEY /*!40101 AUTO_INCREMENT */ NOT NULL UNIQUE,"
                     + SELL.getColumns()[1] + " VARCHAR(30) NOT NULL," //unit
@@ -85,7 +100,7 @@ class NetworkServer {
                     + "CONSTRAINT fk_sell_asset FOREIGN KEY (" + SELL.getColumns()[2]
                     + ") REFERENCES " + ASSET.getName() + " (" + ASSET.getColumns()[0]
                     + ") ON DELETE CASCADE ON UPDATE CASCADE" + ");";
-    static final String CREATE_TABLE_BUY =
+    private static final String CREATE_TABLE_BUY =
             "CREATE TABLE IF NOT EXISTS " + BUY.getName() + " ("
                     + BUY.getColumns()[0] + " INTEGER PRIMARY KEY /*!40101 AUTO_INCREMENT */ NOT NULL UNIQUE,"
                     + BUY.getColumns()[1] + " VARCHAR(30) NOT NULL," //unit
@@ -108,9 +123,9 @@ class NetworkServer {
         static final String CREATE_TABLES = CREATE_TABLE_UNIT + CREATE_TABLE_ASSET + CREATE_TABLE_USER +
                 CREATE_TABLE_INV + CREATE_TABLE_SELL + CREATE_TABLE_BUY;
     */
-    static final String TOTAL_RECORDS_WRAPPER = "SELECT %s AS SUM;";
-    static final String TOTAL_RECORDS_INNER = "(SELECT COUNT(*) FROM %s)";
-    static final String[] CLEAR_DATA = {"DROP TABLE " + BUY.getName() + ";", "DROP TABLE " + SELL.getName()
+    private static final String TOTAL_RECORDS_WRAPPER = "SELECT %s AS SUM;";
+    private static final String TOTAL_RECORDS_INNER = "(SELECT COUNT(*) FROM %s)";
+    private static final String[] CLEAR_DATA = {"DROP TABLE " + BUY.getName() + ";", "DROP TABLE " + SELL.getName()
             + ";", "DROP TABLE " + INV.getName() + ";", "DROP TABLE " + ASSET.getName() + ";",
             "DROP TABLE " + USER.getName() + ";", "DROP TABLE " + UNIT.getName() + ";"};
 
@@ -147,22 +162,9 @@ class NetworkServer {
     private PreparedStatement insertUpdateInv;
     private PreparedStatement insertAdjustInv;
 
-
-/*
-    public NetworkServer(JDBCDataSource dataSource) {
-        this.dataSource = dataSource;
-        tradeReconciliation = new Timer();
-        Connection conn = dataSource.getConnection();
-        try {
-            getAssets = conn.prepareStatement(GET_ASSETS);
-            getSellsReconciliation = conn.prepareStatement(RECONCILIATION_GET_SELLS);
-            getBuysReconciliation = conn.prepareStatement(RECONCILIATION_GET_BUYS);
-        }
-        catch (SQLException ex){
-            ex.printStackTrace();
-        }
-    }
-*/
+    /**
+     * Constructor. Gets connection, sets up tables, prepares statements
+     */
     NetworkServer() {
         tradeReconciliation = new Timer();
         connection = DBConnection.getInstance();
@@ -181,6 +183,10 @@ class NetworkServer {
         }
     }
 
+    /**
+     * Run all create table scripts
+     * @throws SQLException if a SQL error occurred (shouldn't happen)
+     */
     void setupTables() throws SQLException {
         Statement st = connection.createStatement();
         st.addBatch(CREATE_TABLE_UNIT);
@@ -194,6 +200,66 @@ class NetworkServer {
         System.out.println("Create table script executed");
     }
 
+    /**
+     * Returns the port the server is configured to use
+     *
+     * @return The port number
+     */
+    static int getPort() {
+        return PORT;
+    }
+
+    /**
+     * Starts the server running on the default port, code borrowed from week 7 exercise
+     */
+    void start() throws IOException {
+        try (ServerSocket serverSocket = new ServerSocket(PORT)) {
+            serverSocket.setSoTimeout(SOCKET_TIMEOUT);
+            for (;;) {
+                if (!running.get()) {
+                    // The server is no longer running
+                    break;
+                }
+                try {
+                    Socket socket = serverSocket.accept();
+                    handleConnection(socket);
+                } catch (SocketTimeoutException ignored) {
+                    // Do nothing. A timeout is normal- we just want the socket to
+                    // occasionally timeout so we can check if the server is still running
+                } catch (Exception e) {
+                    // We will report other exceptions by printing the stack trace, but we
+                    // will not shut down the server. A exception can happen due to a
+                    // client malfunction (or malicious client)
+                    e.printStackTrace();
+                }
+            }
+        } catch (IOException e) {
+            // If we get an error starting up, show an error dialog then exit
+            e.printStackTrace();
+            System.exit(1);
+        }
+
+        // Close down the server
+        System.exit(0);
+    }
+
+    /**
+     * Requests the server to shut down
+     */
+    void shutdown() {
+        System.out.println("Shutting down server");
+        //Stop firing trade reconciliation
+        tradeReconciliation.cancel();
+        //Close the database connection
+        //dataSource.close();
+        try {
+            connection.close();
+        } catch (SQLException ex) {
+            ex.printStackTrace();
+        }
+        // Shut the server down
+        running.set(false);
+    }
 
     /**
      * Handles the connection received from ServerSocket
@@ -215,6 +281,147 @@ class NetworkServer {
             }
 
         }
+    }
+    /**
+     * Do trade reconciliation. Both the outer loop over sell orders and the inner loop over buy orders are conducted
+     * from oldest to newest. Feedback is printed to the console
+     */
+    void reconcileTrades() {
+        int resolutionCount = 0;
+        try {
+            lastReconciliation = LocalDateTime.now();
+            Timestamp now = Timestamp.valueOf(lastReconciliation);
+            ResultSet assets = executeSelectQuery(getAssets);
+
+            while (assets.next()) {
+                int assetid = assets.getInt(1);
+                String assetdesc = assets.getString(2);
+                getSellsReconciliation.setInt(1, assetid);
+                getBuysReconciliation.setInt(1, assetid);
+                ResultSet sells = executeSelectQuery(getSellsReconciliation);
+                ResultSet buys = executeSelectQuery(getBuysReconciliation);
+                ArrayList<Integer> ignoredBuys = new ArrayList<>();
+                while (sells.next()) {
+                    buys.beforeFirst();
+                    int sellID = sells.getInt(1);
+                    int sellQty = sells.getInt(4);
+                    int sellPrice = sells.getInt(5);
+                    String sellUnit = sells.getString(2);
+                    while (buys.next()) {
+                        int buyID = buys.getInt(1);
+                        if (ignoredBuys.contains(buyID)) continue;
+                        int buyQty = buys.getInt(4);
+                        int buyPrice = buys.getInt(5);
+                        String buyUnit = buys.getString(2);
+                        System.out.printf("Comparing sell order %d (%d, $%d) and buy order %d (%d, $%d)...",
+                                sellID, sellQty, sellPrice, buyID, buyQty, buyPrice);
+                        if (buyQty <= sellQty && buyPrice >= sellPrice) {
+                            //System.out.printf("Resolving sell order %d and buy order %d...", sellID, buyID);
+                            int refundAmount = (buyPrice - sellPrice) * buyQty;
+                            buys.updateInt(5, sellPrice);
+                            buys.updateTimestamp(7, now);
+                            buys.updateInt(8, sellID);
+                            buys.updateRow();
+
+                            sellQty -= buyQty;
+                            sells.updateInt(4, sellQty);
+                            if (sellQty==0) sells.updateTimestamp(7, now);
+                            sells.updateRow();
+
+                            int totalPrice = buyQty * sellPrice;
+                            adjustBalance.setInt(1, totalPrice); //total credits gained by seller
+                            adjustBalance.setString(2, sellUnit);
+                            adjustBalance.addBatch();
+                            if (buyPrice > sellPrice){
+                                //credits were deducted upon buy order placement, so refund the difference if needed
+                                adjustBalance.setInt(1, refundAmount);
+                                adjustBalance.setString(2, buyUnit);
+                                adjustBalance.addBatch();
+                            }
+                            adjustBalance.executeBatch();
+
+                            insertAdjustInv.setString(1, buyUnit);
+                            insertAdjustInv.setInt(2, assetid);
+                            insertAdjustInv.setInt(3, buyQty);
+                            insertAdjustInv.execute();
+                            connection.commit();
+                            ignoredBuys.add(buyID);
+                            System.out.println(" Resolved!");
+                            resolutionCount++;
+                        }
+                        else {
+                            System.out.println(" Didn't resolve.");
+                        }
+                        if (sellQty == 0) break;
+                    }
+                }
+                System.out.printf("Reconciliation done for asset %d (%s)\n", assetid, assetdesc);
+            }
+            System.out.printf("Trade reconciliation complete! %d transactions processed\n", resolutionCount);
+        } catch (SQLException throwables) {
+            throwables.printStackTrace();
+            System.out.printf("Trade reconciliation interrupted by an error. %d transactions were processed.",
+                    resolutionCount);
+            try {
+                connection.rollback();
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
+        }
+    }
+
+    private int totalRecordCount() throws SQLException {
+        return totalRecordCount(DatabaseTables.values());
+    }
+    private int totalRecordCount(DatabaseTables[] d) throws SQLException {
+        String[] s = new String[d.length];
+        for (int i = 0; i<d.length;i++) {
+            s[i]=d[i].getName();
+        }
+        return totalRecordCount(s);
+    }
+    private int totalRecordCount(String[] d) throws SQLException {
+        ArrayList<String> inners = new ArrayList<>();
+        for (String t : d) {
+            inners.add(String.format(TOTAL_RECORDS_INNER, t));
+        }
+        String query = String.format(TOTAL_RECORDS_WRAPPER, String.join(" + ", inners));
+        ResultSet rs = connection.prepareStatement(query).executeQuery();
+        rs.next();
+        return rs.getInt(1);
+    }
+
+    /**
+     * Non-private wrapper for testing SELECT queries
+     * @param info DataPacket of query
+     * @return ArrayList of results
+     */
+    ArrayList<DataObject> simulateSelect(DataPacket info) throws SQLException {
+        return handleSelect(info);
+    }
+
+    /**
+     * Non-private wrapper for testing INSERT, UPDATE, DELETE queries
+     * @param keyword Query type
+     * @param info DataPacket of query
+     * @return Query status number (1 for "success", 0 for "failure due to existence/nonexistence of matching record",
+     * -1 for "failure due to constraints", 2 for "INSERT ON DUPLICATE KEY UPDATE query didn't insert but updated")
+     */
+    int simulateNonselect(ProtocolKeywords keyword, DataPacket info) throws SQLException {
+        return handleNonselect(keyword, info);
+    }
+
+    /**
+     * Empty the database. Only exists for test and debug convenience, may deprecate later due to unsafeness
+     */
+    int resetEverything() throws SQLException {
+        int count = totalRecordCount();
+        for (String drop : CLEAR_DATA) {
+            connection.prepareStatement(drop).execute();
+        }
+        connection.commit();
+        System.out.println("All tables dropped");
+        return count;
     }
 
     private void handleRequest(ProtocolKeywords keyword, DataPacket info, ObjectOutputStream out) throws IOException, SQLException {
@@ -407,67 +614,6 @@ class NetworkServer {
         }
     }
 
-    /**
-     * Returns the port the server is configured to use
-     *
-     * @return The port number
-     */
-    static int getPort() {
-        return PORT;
-    }
-
-    /**
-     * Starts the server running on the default port, code borrowed from week 7 exercise
-     */
-    void start() throws IOException {
-        try (ServerSocket serverSocket = new ServerSocket(PORT)) {
-            serverSocket.setSoTimeout(SOCKET_TIMEOUT);
-            for (;;) {
-                if (!running.get()) {
-                    // The server is no longer running
-                    break;
-                }
-                try {
-                    Socket socket = serverSocket.accept();
-                    handleConnection(socket);
-                } catch (SocketTimeoutException ignored) {
-                    // Do nothing. A timeout is normal- we just want the socket to
-                    // occasionally timeout so we can check if the server is still running
-                } catch (Exception e) {
-                    // We will report other exceptions by printing the stack trace, but we
-                    // will not shut down the server. A exception can happen due to a
-                    // client malfunction (or malicious client)
-                    e.printStackTrace();
-                }
-            }
-        } catch (IOException e) {
-            // If we get an error starting up, show an error dialog then exit
-            e.printStackTrace();
-            System.exit(1);
-        }
-
-        // Close down the server
-        System.exit(0);
-    }
-
-    /**
-     * Requests the server to shut down
-     */
-    void shutdown() {
-        System.out.println("Shutting down server");
-        //Stop firing trade reconciliation
-        tradeReconciliation.cancel();
-        //Close the database connection
-        //dataSource.close();
-        try {
-            connection.close();
-        } catch (SQLException ex) {
-            ex.printStackTrace();
-        }
-        // Shut the server down
-        running.set(false);
-    }
-
     private ResultSet executeSelectQuery(PreparedStatement statement) throws SQLException , SQLTimeoutException {
         return statement.executeQuery();
 
@@ -478,141 +624,4 @@ class NetworkServer {
         return returnval;
     }
 
-    void reconcileTrades() {
-        int resolutionCount = 0;
-        try {
-            lastReconciliation = LocalDateTime.now();
-            Timestamp now = Timestamp.valueOf(lastReconciliation);
-            ResultSet assets = executeSelectQuery(getAssets);
-
-            while (assets.next()) {
-                int assetid = assets.getInt(1);
-                String assetdesc = assets.getString(2);
-                getSellsReconciliation.setInt(1, assetid);
-                getBuysReconciliation.setInt(1, assetid);
-                ResultSet sells = executeSelectQuery(getSellsReconciliation);
-                ResultSet buys = executeSelectQuery(getBuysReconciliation);
-                ArrayList<Integer> ignoredBuys = new ArrayList<>();
-                while (sells.next()) {
-                    buys.beforeFirst();
-                    int sellID = sells.getInt(1);
-                    int sellQty = sells.getInt(4);
-                    int sellPrice = sells.getInt(5);
-                    String sellUnit = sells.getString(2);
-                    while (buys.next()) {
-                        int buyID = buys.getInt(1);
-                        if (ignoredBuys.contains(buyID)) continue;
-                        int buyQty = buys.getInt(4);
-                        int buyPrice = buys.getInt(5);
-                        String buyUnit = buys.getString(2);
-                        System.out.printf("Comparing sell order %d (%d, $%d) and buy order %d (%d, $%d)...",
-                                sellID, sellQty, sellPrice, buyID, buyQty, buyPrice);
-                        if (buyQty <= sellQty && buyPrice >= sellPrice) {
-                            //System.out.printf("Resolving sell order %d and buy order %d...", sellID, buyID);
-                            int refundAmount = (buyPrice - sellPrice) * buyQty;
-                            buys.updateInt(5, sellPrice);
-                            buys.updateTimestamp(7, now);
-                            buys.updateInt(8, sellID);
-                            buys.updateRow();
-
-                            sellQty -= buyQty;
-                            sells.updateInt(4, sellQty);
-                            if (sellQty==0) sells.updateTimestamp(7, now);
-                            sells.updateRow();
-
-                            int totalPrice = buyQty * sellPrice;
-                            adjustBalance.setInt(1, totalPrice); //total credits gained by seller
-                            adjustBalance.setString(2, sellUnit);
-                            adjustBalance.addBatch();
-                            if (buyPrice > sellPrice){
-                                //credits were deducted upon buy order placement, so refund the difference if needed
-                                adjustBalance.setInt(1, refundAmount);
-                                adjustBalance.setString(2, buyUnit);
-                                adjustBalance.addBatch();
-                            }
-                            adjustBalance.executeBatch();
-
-                            insertAdjustInv.setString(1, buyUnit);
-                            insertAdjustInv.setInt(2, assetid);
-                            insertAdjustInv.setInt(3, buyQty);
-                            insertAdjustInv.execute();
-                            connection.commit();
-                            ignoredBuys.add(buyID);
-                            System.out.println(" Resolved!");
-                            resolutionCount++;
-                        }
-                        else {
-                            System.out.println(" Didn't resolve.");
-                        }
-                        if (sellQty == 0) break;
-                    }
-                }
-                System.out.printf("Reconciliation done for asset %d (%s)\n", assetid, assetdesc);
-            }
-            System.out.printf("Trade reconciliation complete! %d transactions processed\n", resolutionCount);
-        } catch (SQLException throwables) {
-            throwables.printStackTrace();
-            System.out.printf("Trade reconciliation interrupted by an error. %d transactions were processed.",
-                    resolutionCount);
-            try {
-                connection.rollback();
-            } catch (SQLException e) {
-                e.printStackTrace();
-            }
-        }
-    }
-
-    int totalRecordCount() throws SQLException {
-        return totalRecordCount(DatabaseTables.values());
-    }
-    int totalRecordCount(DatabaseTables[] d) throws SQLException {
-        String[] s = new String[d.length];
-        for (int i = 0; i<d.length;i++) {
-            s[i]=d[i].getName();
-        }
-        return totalRecordCount(s);
-    }
-    int totalRecordCount(String[] d) throws SQLException {
-        ArrayList<String> inners = new ArrayList<>();
-        for (String t : d) {
-            inners.add(String.format(TOTAL_RECORDS_INNER, t));
-        }
-        String query = String.format(TOTAL_RECORDS_WRAPPER, String.join(" + ", inners));
-        ResultSet rs = connection.prepareStatement(query).executeQuery();
-        rs.next();
-        return rs.getInt(1);
-    }
-
-    /**
-     * Non-private wrapper for testing SELECT queries
-     * @param info DataPacket of query
-     * @return ArrayList of results
-     */
-    ArrayList<DataObject> simulateSelect(DataPacket info) throws SQLException {
-        return handleSelect(info);
-    }
-
-    /**
-     * Non-private wrapper for testing INSERT, UPDATE, DELETE queries
-     * @param keyword Query type
-     * @param info DataPacket of query
-     * @return Query status number (1 for "success", 0 for "failure due to existence/nonexistence of matching record",
-     * -1 for "failure due to constraints", 2 for "INSERT ON DUPLICATE KEY UPDATE query didn't insert but updated"
-     */
-    int simulateNonselect(ProtocolKeywords keyword, DataPacket info) throws SQLException {
-        return handleNonselect(keyword, info);
-    }
-
-    /**
-     * Empty the database. Only exists for test and debug convenience, may deprecate later due to unsafeness
-     */
-    int resetEverything() throws SQLException {
-        int count = totalRecordCount();
-        for (String drop : CLEAR_DATA) {
-            connection.prepareStatement(drop).execute();
-        }
-        connection.commit();
-        System.out.println("All tables dropped");
-        return count;
-    }
 }

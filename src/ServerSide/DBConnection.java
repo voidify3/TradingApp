@@ -9,7 +9,8 @@ import java.sql.SQLException;
 import java.util.Properties;
 
 /**
- * Entire class borrowed from the Week 7 Address Book Exercise
+ * Entire class borrowed from the Week 7 Address Book Exercise. Singleton database connection.
+ * This is the class where db.props is read
  */
 class DBConnection {
     /**

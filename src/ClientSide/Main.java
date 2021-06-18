@@ -1,7 +1,7 @@
 package ClientSide;
 
 /***
- * @author Johnny, Alistair, Scott and Sophia
+ * Execution for the client program begins here
  */
 class Main {
 
