@@ -53,3 +53,4 @@
     - [ ] Logic to generate user-friendly summary
     - [ ] display mini summary in a row of the screen, clickable to view full summary
 * [ ] FIFTH PRIORITY: implement graph view
+* SIXTH PRIORITY: make everything nice and cute

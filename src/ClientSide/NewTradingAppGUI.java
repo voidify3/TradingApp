@@ -46,18 +46,21 @@ class NewTradingAppGUI extends JFrame {
     }
 
 
-    void createAndShowGUI() throws IllegalString, AlreadyExists, IOException, DoesNotExist, InvalidDate, InvalidAmount, OrderException {
+    void createAndShowGUI() {
         setPreferredSize(new Dimension(WIDTH, HEIGHT));
         setResizable(false);
         setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
 
-        data.mockObjectsWithPrices();
         loginPanel(); // creates & shows login portal as the first screen
         menuBar(); // declare the menu-bar once here
 
         pack();
         setLocationRelativeTo(null);
         setVisible(true);
+    }
+    void populateTestData()  throws IllegalString, DoesNotExist, InvalidAmount, OrderException {
+        System.out.println("Populating test data...");
+        data.mockObjectsWithPrices(50);
     }
 
     // Menu Bar---------------------------------------------------------------------------------------------------------
@@ -212,7 +215,7 @@ class NewTradingAppGUI extends JFrame {
         String[][] info = new String[0][7];
         for (Order o : a) {
             String[] infoNew = new String[]{String.valueOf(o.getId()), o.getUnit(), String.valueOf(o.getAsset()),
-                    String.valueOf(o.getQty()), String.valueOf(o.getPrice()), o.getDatePlaced().toString(),
+                    String.valueOf(o.getQty()), "$" + o.getPrice(), o.getDatePlaced().toString(),
                     (o.getDateResolved() == null? "N/A" : o.getDateResolved().toString())};
             info = Arrays.copyOf(info, info.length + 1);
             info[info.length - 1] = infoNew;
@@ -763,7 +766,7 @@ class NewTradingAppGUI extends JFrame {
         JRadioButton fromAllUnits = new JRadioButton("From all organisational units");
         JButton applyButton = new JButton("Apply filters");
         private OrdersTablePage(String[][] info) {
-            super(new String[]{"ID", "Unit", "Asset", "Price", "Quantity", "Placed", "Resolved"}, info,
+            super(new String[]{"ID", "Unit", "Asset", "Quantity", "Price", "Placed", "Resolved"}, info,
                     new int[]{50,50,50,50,50,50,50}, new boolean[7]);
             isResolved.add(resolved);
             isResolved.add(unresolved);

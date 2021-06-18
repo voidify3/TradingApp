@@ -12,7 +12,7 @@ public class TestTradingAppData {
     TradingAppData i = new TradingAppData(new MockDataSource());
     @BeforeEach
     void setupData() throws IllegalString, InvalidAmount, DoesNotExist, OrderException {
-        i.mockObjectsWithPrices();
+        i.mockObjectsWithPrices(4*365);
     }
     @AfterEach
     void reset() {

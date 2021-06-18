@@ -47,9 +47,8 @@ class TradingAppData {
 
     }
 
-    void mockObjectsWithPrices() throws IllegalString, InvalidAmount, DoesNotExist, OrderException {
+    public void mockObjectsWithPrices(int numdays) throws IllegalString, InvalidAmount, DoesNotExist, OrderException {
         mockObjects();
-        int numdays = 365 * 2;
         LocalDateTime begin = LocalDateTime.now().minusDays(numdays);
         for (int i = 1; i <= numdays; i++) {
             LocalDateTime theDay = begin.plusDays(i);
