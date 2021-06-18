@@ -4,13 +4,16 @@ ____
 ## Common package
 There are also some custom exceptions but none of them do anything very non-straightforward
 
+[Go to JavaDoc](../doc/common/package-summary.html)
+
+
 ###DataObjectFactory
 This class was introduced very late in the game to be the factory pattern for all DataObject subclasses. I ran out of 
 time before I could finish it. 
 
 Basically the idea is that it covers validation for data objects so that exceptions are only checked for when necessary.
 
-[Go to JavaDoc]
+[Go to JavaDoc](../doc/common/DataObjectFactory.html)
 
 ###DataObject
 This class's reason for existence is to serve as a shared superclass for all the classes representing database records
@@ -101,6 +104,7 @@ It has values for SELECT, INSERT, UPDATE, DELETE and also SPECIAL which is used 
 
 
 ## Protocol
+
 The protocol connecting the server and client programs works like this:
 * The sockets used are governed by the PORT final variables in NetworkServer and NetworkDataSource
 * The server is expected to run on the address specified in NetworkDataSource.HOSTNAME
@@ -131,7 +135,12 @@ The protocol connecting the server and client programs works like this:
        
 ## Server program
 
+[Go to JavaDoc](../doc/ServerSide/package-summary.html)
+
 ###ServerGUI
+
+[Go to JavaDoc](../doc/ServerSide/ServerGUI.html)
+
 *Class desc:* Where the server-side program starts running.
 Has a basic GUI for debug purposes. This GUI contains a label specifying the port, a label with the datetime
 of the most recent trade resolution, and a button that shuts down the server.
@@ -148,7 +157,7 @@ the protocol, and also automatically resolves trades every 5 minutes using a tim
 None of this class's members are public, because they don't need to be accessed outside the package.
 It has string constants for useful queries.
 
-[Go to JavaDoc]
+[Go to JavaDoc](../doc/ServerSide/NetworkServer.html)
 
 Here is the logic followed by trade reconciliation. Note that the selling unit's inventory of the sold asset and the
 buying unit's credit balance were reduced by the appropriate amounts when the orders were placed, so no reduction
@@ -278,6 +287,7 @@ so it makes the most sense to model it like this.
 
 
 ## Client program
+[Go to JavaDoc](../doc/ClientSide/package-summary.html)
 ###Main
 [Go to JavaDoc](../doc/ClientSide/Main.html)
 
