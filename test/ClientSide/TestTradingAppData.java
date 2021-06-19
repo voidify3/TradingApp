@@ -18,11 +18,42 @@ public class TestTradingAppData {
     void reset() {
         i.deleteEverything();
     }
+
+    @Test
+    void testSuccessLogin() {
+
+    }
+    @Test
+    void testFailLogin() {
+
+    }
+
+    //TODO:
+    // SELECT
+    // -normal cases: non-empty arraylists from straightforward methods
+    // -normal cases: empty arraylists from straightforward methods
+    // -normal cases: non-empty from non-straightforward methods (ensure correct behaviour)
+    // -exception cases: DoesNotExist due to non-key filter value
+    // -normal cases: single dataobjects
+    // -exception cases: DoesNotExist due to key filter value
+    // INSERT
+    // -normal cases
+    // -normal order placing cases; check that secondary operations took place
+    // -exception cases: DoesNotExist
+    // -exception cases: AlreadyExists
+    // UPDATE
+    // -normal cases
+    // -exception cases
+    // DELETE
+    // -normal cases
+    // -DoesNotExist cases
+
+
     /**
      * Test that when too many assets are attempted to be sold an exception is thrown.
      */
     @Test
-    public void TestSellTooMany() {
+    public void testSellTooMany() {
         SellOrder testSellOrder = new SellOrder(unitDev.getName(), assetDev1.getId(), 500, 10);
         assertThrows(OrderException.class, () -> {i.placeSellOrder(testSellOrder);});
 
@@ -32,7 +63,7 @@ public class TestTradingAppData {
      * Test that when the total cost of a buy order exceeds the organisations credits an exception is thrown
      */
     @Test
-    public void TestBuyTooExpensive() {
+    public void testBuyTooExpensive() {
         BuyOrder testBuyOrder = new BuyOrder(unitDev.getName(), assetDev1.getId(), 5, 1000);
         assertThrows(OrderException.class, () -> {i.placeBuyOrder(testBuyOrder);});
     }
