@@ -49,12 +49,17 @@
 * SATURDAY  
   - [x] finish unit tests for TradingAppData
   - [x] write unit tests for data object validation
-  - [ ] record individual video
-  - [ ] rehearse group video for time
+  - [x] record individual audio
+  - [x] rehearse group video for time
   - [x] write build script
   - [x] finish javadoc
 SUNDAY
-  - [ ] record main video
+  - [ ] record scrolling footage
+  - [ ] add outstanding order info to place order page
+  - [ ] record easy part of main audio
+  - [ ] record easy part of main footage
+  - [ ] record demonstration footage
+  - [ ] record demonstration audio in the editing stage
   - [ ] edit videos
   
 ##TASKS BELOW THIS POINT ARE HEREBY CANCELLED FOR TIME REASONS
