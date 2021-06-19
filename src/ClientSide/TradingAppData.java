@@ -546,17 +546,16 @@ class TradingAppData {
      * Place sell order
      * @param s SellOrder object
      * @throws OrderException if the unit doesn't have enough of the asset
-     * @throws DoesNotExist if the unit or asset referenced by the prder do not exist
+     * @throws DoesNotExist if the unit or asset referenced by the order do not exist
      */
     void placeSellOrder(SellOrder s) throws OrderException, DoesNotExist {
-        //OrgUnit unitInQuestion = dataSource.unitByKey(dataSource.userByKey(s.getUsername()).getUnit());
         InventoryRecord inventoryRecord = getInv(s.getUnit(), s.getAsset());
         int quantity = inventoryRecord.getQuantity();
         if (quantity < s.getQty()) {
             throw new OrderException("Insufficient quantity of asset- unit %s has %d but %d are needed to " +
                     "place this sell order", inventoryRecord.getUnitName(), quantity, s.getQty());
         } else {
-            inventoryRecord.setQuantity(inventoryRecord.getQuantity() - s.getQty());
+            inventoryRecord.adjustQuantity(-1*s.getQty());
             dataSource.insertOrUpdateInventory(inventoryRecord);
             dataSource.insertSellOrder(s);
         }
@@ -622,7 +621,7 @@ class TradingAppData {
      * @throws AlreadyExists if asset ID is duplicate (though this should never happen)
      */
     void addAsset(Asset a) throws AlreadyExists {
-        if (dataSource.insertAsset(a) == 0) throw new AlreadyExists("Asset '%i' already exists.", a.getId());
+        if (dataSource.insertAsset(a) == 0) throw new AlreadyExists("Asset '%d' already exists.", a.getId());
     }
 
     /**
@@ -632,7 +631,7 @@ class TradingAppData {
      */
     void setInventory(InventoryRecord i) throws DoesNotExist {
         if (dataSource.insertOrUpdateInventory(i) == -1) {
-            throw new DoesNotExist("Unit %s and/or asset %i not found.");
+            throw new DoesNotExist("Unit %s and/or asset %d not found.", i.getUnitName(), i.getAssetID());
         }
     }
 
@@ -647,7 +646,7 @@ class TradingAppData {
         InventoryRecord i = new InventoryRecord(unit, asset, adjustment);
         i.adjustQuantity(getInv(unit,asset).getQuantity()); //done this way to just set it to the value if no record exists
         if (dataSource.insertOrUpdateInventory(i) == -1) {
-            throw new DoesNotExist("Unit %s and/or asset %i not found.");
+            throw new DoesNotExist("Unit %s and/or asset %d not found.", i.getUnitName(), i.getAssetID());
         }
     }
 
@@ -681,29 +680,31 @@ class TradingAppData {
      * @throws DoesNotExist if asset ID does not exist
      */
     void updateAsset(Asset a) throws DoesNotExist {
-        if (dataSource.updateAsset(a) == 0) throw new DoesNotExist("Asset '%i' not found.", a.getId());
+        if (dataSource.updateAsset(a) == 0) throw new DoesNotExist("Asset '%d' not found.", a.getId());
     }
 
     /**
      * Update, replacing the details for the BuyOrder record wiht this ID
      * @param o BuyOrder object
      * @throws DoesNotExist if ID does not exist
+     * @throws ConstraintException if unit or asset don't exist
      */
-    void updateBuyOrder(BuyOrder o) throws DoesNotExist {
+    void updateBuyOrder(BuyOrder o) throws DoesNotExist, ConstraintException {
         int result = dataSource.updateBuyOrder(o);
-        if (result == 0) throw new DoesNotExist("Buy order '%i' not found.", o.getId());
-        else if (result == -1) throw new DoesNotExist("Unit and/or asset not found.");
+        if (result == 0) throw new DoesNotExist("Buy order '%d' not found.", o.getId());
+        else if (result == -1) throw new ConstraintException("Unit and/or asset not found.");
     }
 
     /**
      * Update, replacing the details for SellOrder record with this ID
      * @param o SellOrder object
      * @throws DoesNotExist if ID does not exist
+     * @throws ConstraintException if unit or asset don't exist
      */
-    void updateSellOrder(SellOrder o) throws DoesNotExist {
+    void updateSellOrder(SellOrder o) throws DoesNotExist, ConstraintException {
         int result = dataSource.updateSellOrder(o);
-        if (result == 0) throw new DoesNotExist("Sell order '%i' not found.", o.getId());
-        else if (result == -1) throw new DoesNotExist("Unit and/or asset not found.");
+        if (result == 0) throw new DoesNotExist("Sell order '%d' not found.", o.getId());
+        else if (result == -1) throw new ConstraintException("Unit and/or asset not found.");
     }
 
     /**

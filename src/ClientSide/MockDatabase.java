@@ -356,7 +356,7 @@ class MockDatabase {
     ArrayList<User> unitMembers(String unitName) {
         ArrayList<User> results = new ArrayList<>();
         for (User current : allUsers) {
-            if (current.getUnit().equalsIgnoreCase(unitName)) {
+            if (current.getUnit() != null && current.getUnit().equalsIgnoreCase(unitName)) {
                 results.add(current);
             }
         }

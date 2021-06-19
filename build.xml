@@ -113,10 +113,11 @@
                  destdir="${doc}"
                  author="true"
                  version="true"
+                 package="true"
                  use="true"
-                 windowtitle="Warehouse Ledger Project API">
-            <doctitle><![CDATA[<h1>Warehouse Ledger Simulation</h1>]]></doctitle>
-            <bottom><![CDATA[<i>Copyright &#169;  QUT. All Rights Reserved.</i>]]></bottom>
+                 windowtitle="Trading App">
+            <doctitle><![CDATA[<h1>Trading App</h1>]]></doctitle>
+            <bottom><![CDATA[<i>Copyright &#169; Sophia Walsh Long @ QUT. All Rights Reserved.</i>]]></bottom>
         </javadoc>
     </target>
     <target name="clean">

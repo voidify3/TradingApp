@@ -15,4 +15,8 @@ public class DoesNotExist extends Exception {
     public DoesNotExist(String s, int i) {
         this(String.format(s, i));
     }
+
+    public DoesNotExist(String s, String unitName, int assetID) {
+        this(String.format(s,unitName,assetID));
+    }
 }

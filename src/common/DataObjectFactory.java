@@ -29,7 +29,7 @@ public class DataObjectFactory {
         return o;
     }
     public static OrgUnit newOrgUnitValidated(String orgName) throws IllegalString {
-        if (orgName.equals("")) throw new IllegalString("Unit name may not be empty");
+        if (orgName.trim().equals("")) throw new IllegalString("Unit name may not be empty or all whitespace");
         if (orgName.length() > 30) throw new IllegalString("'%s' exceeds the maximum organisational unit" +
                 "name length of 30. Please try again.", orgName);
         return newOrgUnitNaive(orgName, OrgUnit.minBalance);

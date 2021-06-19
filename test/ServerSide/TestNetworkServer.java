@@ -29,6 +29,12 @@ public class TestNetworkServer {
     public static final String DATE_RESOLVED_IS_NULL = "dateResolved IS NULL";
     private static NetworkServer server;
     ByteArrayOutputStream outputStream;
+    @BeforeAll
+    static void start() throws SQLException {
+        server = new NetworkServer();
+        server.resetEverything();
+        server.setupTables();
+    }
     @BeforeEach
     void setupAndSuccessInsert() {
         server = new NetworkServer();
