@@ -16,7 +16,7 @@ public class TestUser {
     User mockAdminUser;
     User mockGuy; // kept empty before tests so we can test creation exceptions
     OrgUnit mockUnit;
-    //TradingAppData i = new TradingAppData(new MockDataSource());
+    TradingAppData i = new TradingAppData(new MockDataSource());
 
     // BEFORE & AFTER EACH TEST-----------------------------------------------------------------------------------------
     /***
@@ -27,6 +27,7 @@ public class TestUser {
     @BeforeEach
     @DisplayName("Before each... create new mock users & a unit")
     public void newMockUsers() throws AlreadyExists, IllegalString {
+        i.initialUsers();
         mockAdminUser = TradingAppData.adminDev; //sophia
         mockGenericUser = TradingAppData.userDev; //scott
         mockUnit = new OrgUnit("devs", 0);
