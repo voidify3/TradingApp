@@ -51,9 +51,9 @@
   - [ ] write unit tests for data object validation
   - [ ] record individual video
   - [ ] rehearse group video for time
-  - [ ] write build script
+  - [x] write build script
   - [ ] record requirements and design doc part of video
-  - [ ] finish javadoc
+  - [x] finish javadoc
 SUNDAY
   - [ ] record demonstration and build script part of video
   - [ ] edit video

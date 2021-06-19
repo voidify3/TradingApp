@@ -105,6 +105,7 @@ class TradingAppData {
      */
     void mockObjects() {
         try {
+            initialUsers();
             unitDev = new OrgUnit("Developers", 1000);
             unitDev2 = new OrgUnit("Marketing", 1000);
             adminDev = new User("sophia", "bo$$", true, unitDev2.getName());
@@ -116,8 +117,8 @@ class TradingAppData {
             assetDev2 = new Asset(2, "Another test asset for development!");
             dataSource.insertUnit(unitDev);
             dataSource.insertUnit(unitDev2);
-            dataSource.insertUser(adminDev);
-            dataSource.insertUser(userDev);
+            dataSource.updateUser(adminDev);
+            dataSource.updateUser(userDev);
             dataSource.insertUser(userDev2);
             dataSource.insertUser(userDev3);
             dataSource.insertUser(userDev4);
@@ -662,7 +663,7 @@ class TradingAppData {
     void updateUser(User u) throws DoesNotExist, ConstraintException {
         int result = dataSource.updateUser(u);
         if (result == 0) throw new DoesNotExist("User '%s' not found.", u.getUsername());
-        else if (result == -1) throw new DoesNotExist("Unit %s not found.", u.getUnit());
+        else if (result == -1) throw new ConstraintException("Unit %s not found.", u.getUnit());
     }
 
     /**

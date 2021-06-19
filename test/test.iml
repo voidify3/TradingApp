@@ -9,7 +9,25 @@
     <orderEntry type="sourceFolder" forTests="false" />
     <orderEntry type="module" module-name="majorProjectNew" />
     <orderEntry type="module" module-name="majorProjectNew" />
-    <orderEntry type="module-library" scope="TEST">
+    <orderEntry type="library" name="mariadb-java-client-2.7.2" level="project" />
+    <orderEntry type="module-library">
+      <library name="org.apache.ant:ant-junitlauncher:1.10.9" type="repository">
+        <properties maven-id="org.apache.ant:ant-junitlauncher:1.10.9" />
+        <CLASSES>
+          <root url="jar://$MODULE_DIR$/lib/ant-junitlauncher-1.10.9.jar!/" />
+          <root url="jar://$MODULE_DIR$/lib/ant-1.10.9.jar!/" />
+          <root url="jar://$MODULE_DIR$/lib/ant-launcher-1.10.9.jar!/" />
+          <root url="jar://$MODULE_DIR$/lib/junit-platform-launcher-1.2.0.jar!/" />
+          <root url="jar://$MODULE_DIR$/lib/apiguardian-api-1.0.0.jar!/" />
+          <root url="jar://$MODULE_DIR$/lib/junit-platform-engine-1.2.0.jar!/" />
+          <root url="jar://$MODULE_DIR$/lib/junit-platform-commons-1.2.0.jar!/" />
+          <root url="jar://$MODULE_DIR$/lib/opentest4j-1.1.0.jar!/" />
+        </CLASSES>
+        <JAVADOC />
+        <SOURCES />
+      </library>
+    </orderEntry>
+    <orderEntry type="module-library" exported="" scope="TEST">
       <library name="JUnit5.7.0">
         <CLASSES>
           <root url="jar://$MAVEN_REPOSITORY$/org/junit/jupiter/junit-jupiter/5.7.0/junit-jupiter-5.7.0.jar!/" />
@@ -25,6 +43,5 @@
         <SOURCES />
       </library>
     </orderEntry>
-    <orderEntry type="library" name="org.mariadb.jdbc:mariadb-java-client:2.7.2" level="project" />
   </component>
 </module>

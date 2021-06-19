@@ -1430,7 +1430,7 @@ class NewTradingAppGUI extends JFrame {
         void create() {
             try {
                 failIfNotAdmin("Create an organisational unit");
-                data.addUnit(DataObjectFactory.newOrgUnitValidated(old.getName(), (Integer) creditsInput.getValue()));
+                data.addUnit(DataObjectFactory.newOrgUnitValidated(nameField.getText(), (Integer) creditsInput.getValue()));
                 displayFeedback("Unit successfully created", "Click OK to return to admin portal");
                 exitToPortal();
             } catch (NotAuthorised notAuthorised) {

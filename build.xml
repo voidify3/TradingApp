@@ -1,5 +1,6 @@
 <project name="majorProjectNew" basedir=".">
-    <property name="base" value="artifacts" />
+    <property name="baseClient" value="artifactsClient" />
+    <property name="baseServer" value="artifactsServer" />
     <property name="testBase" value="testFiles" />
     <property name="doc" value="doc" />
     <property name="testClasses" value="utestclasses" />
@@ -8,21 +9,118 @@
     <property name="junitPlatformJar" value="lib/junit-platform-commons-1.4.2.jar" />
     <property name="opentestJar" value="lib/opentest4j-1.1.1.jar" />
     <property name="apiguardianJar" value="lib/apiguardian-api-1.0.0.jar" />
-
+    <property name="mariadbJar" value="lib/mariadb-java-client-2.7.2.jar"/>
     <property name="junitpath" value="${junitJar}:${junitPlatformJar}:${opentestJar}:${apiguardianJar}" />
 
     <target name="prepare">
-        <mkdir dir="${base}"/>
+        <mkdir dir="${baseClient}"/>
+        <mkdir dir="${baseServer}"/>
         <mkdir dir="${testBase}"/>
         <mkdir dir="${doc}"/>
         <mkdir dir="${testClasses}"/>
     </target>
 
+    <target name="compileClient" depends="prepare"
+            description="Compile client source" >
+        <javac srcdir="src" classpath="${baseClient}" destdir="${baseClient}"
+               includeantruntime="false">
+            <include name="ClientSide/*.java" />
+            <include name="common/*.java" />
+        </javac>
+    </target>
+    <target name="compileServer" depends="prepare"
+            description="Compile source" >
+        <javac srcdir="src" classpath="${baseServer}:${mariadbJar}" destdir="${baseServer}"
+               includeantruntime="false">
+            <include name="ServerSide/*.java" />
+            <include name="common/*.java" />
+        </javac>
+    </target>
+
+
+    <target name="compileTestsClient" depends="compileClient"
+            description="Compile unit test source for client">
+        <!-- Compile unit test source -->
+        <javac srcdir="test" classpath="${baseClient}:${junitJar}:${junitPlatformJar}:${opentestJar}:${apiguardianJar}"
+               destdir="${testClasses}" includeantruntime="false">
+            <include name="ClientSide/*.java" />
+            <include name="common/*.java" />
+        </javac>
+    </target>
+    <target name="compileTestsServer" depends="compileServer"
+            description="Compile unit test source for server">
+        <!-- Compile unit test source -->
+        <javac srcdir="test" classpath="${baseServer}:${junitJar}:${junitPlatformJar}:${opentestJar}:${apiguardianJar}:${mariadbJar}"
+               destdir="${testClasses}" includeantruntime="false">
+            <include name="ServerSide/*.java" />
+            <include name="common/*.java" />
+        </javac>
+    </target>
+
+
+    <target name="utest" depends="compileTestsClient, compileTestsServer" description="Run JUnit">
+        <junitlauncher printSummary="true"
+                       failureProperty="junit.failure"
+        >
+            <classpath>
+                <pathelement path="${testClasses}:${baseClient}:${baseServer}" />
+                <pathelement path="${junitJar}:${junitPlatformJar}:${opentestJar}:${apiguardianJar}" />
+            </classpath>
+            <testclasses outputDir="${testBase}">
+                <fileset dir="${testClasses}"/>
+                <listener type="legacy-xml"/>
+            </testclasses>
+        </junitlauncher>
+        <fail if="junit.failure" message="junit tests failed - aborting"/>
+    </target>
 
 
 
+    <target name="buildClient" depends="utest" >
+        <jar destfile="ClientApp.jar" basedir="${baseClient}">
+            <manifest>
+                <!-- Who is building this jar? -->
+                <attribute name="Built-By" value="${user.name}"/>
+                <!-- Information about the program itself -->
+                <attribute name="Implementation-Vendor" value="QUT"/>
+                <attribute name="Implementation-Title" value="CAB302 Major Project"/>
+                <attribute name="Implementation-Version" value="1.0.0"/>
+                <attribute name="Main-Class" value="ClientSide.Main"/>
+            </manifest>
+
+        </jar>
+    </target>
+    <target name="buildServer" depends="utest" >
+        <jar destfile="ServerApp.jar" basedir="${baseServer}">
+            <manifest>
+                <!-- Who is building this jar? -->
+                <attribute name="Built-By" value="${user.name}"/>
+                <!-- Information about the program itself -->
+                <attribute name="Class-Path" value="${mariadbJar}"/>
+                <attribute name="Implementation-Vendor" value="QUT"/>
+                <attribute name="Implementation-Title" value="CAB302 Major Project"/>
+                <attribute name="Implementation-Version" value="1.0.0"/>
+                <attribute name="Main-Class" value="ServerSide.ServerGUI"/>
+            </manifest>
+
+        </jar>
+    </target>
+    <target name="buildBoth" depends="buildClient, buildServer"/>
+
+    <target name="doc" depends="prepare">
+        <javadoc packagenames="ClientSide, ServerSide, common"
+                 sourcepath="src"
+                 destdir="${doc}"
+                 author="true"
+                 version="true"
+                 use="true"
+                 windowtitle="Warehouse Ledger Project API">
+            <doctitle><![CDATA[<h1>Warehouse Ledger Simulation</h1>]]></doctitle>
+            <bottom><![CDATA[<i>Copyright &#169;  QUT. All Rights Reserved.</i>]]></bottom>
+        </javadoc>
+    </target>
     <target name="clean">
-        <delete dir="${base}"/>
+        <delete dir="${baseClient}"/>
         <delete dir="${testBase}"/>
         <delete dir="${doc}"/>
         <delete dir="${testClasses}"/>
