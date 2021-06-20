@@ -70,7 +70,7 @@ class ServerGUI {
     private static void createAndShowGUI(NetworkServer server) {
         JDialog dialog = new JDialog();
         Container mainPanel = dialog.getContentPane();
-        dialog.setTitle("Network server for Address Book");
+        dialog.setTitle("Network server for Trading App");
         JButton shutdownButton = new JButton("Shut down server");
         JButton clearDBButton = new JButton("Drop all database tables");
         JButton setupDBButton = new JButton("Rerun table creation script");
