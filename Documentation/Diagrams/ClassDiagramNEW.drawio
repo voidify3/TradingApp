@@ -1,6 +1,6 @@
-<mxfile host="app.diagrams.net" modified="2021-06-20T00:44:42.226Z" agent="5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.106 Safari/537.36" etag="xPce3lVeFAivGy5-jINJ" version="14.7.7" type="github">
+<mxfile host="app.diagrams.net" modified="2021-06-20T00:47:43.267Z" agent="5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.106 Safari/537.36" etag="2ogzYEG7CKZKMxs2Jsd5" version="14.7.7" type="github">
   <diagram id="C5RBs43oDa-KdzZeNtuy" name="Page-1">
-    <mxGraphModel dx="4163" dy="1300" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1654" pageHeight="1169" math="0" shadow="0">
+    <mxGraphModel dx="2532" dy="455" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1654" pageHeight="1169" math="0" shadow="0">
       <root>
         <mxCell id="WIyWlLk6GJQsqaUBKTNV-0" />
         <mxCell id="WIyWlLk6GJQsqaUBKTNV-1" parent="WIyWlLk6GJQsqaUBKTNV-0" />
@@ -149,7 +149,7 @@
         <mxCell id="0jcatp8Q0D0t4g7Fgnds-165" value="" style="line;strokeWidth=1;fillColor=none;align=left;verticalAlign=middle;spacingTop=-1;spacingLeft=3;spacingRight=3;rotatable=0;labelPosition=right;points=[];portConstraint=eastwest;" parent="0jcatp8Q0D0t4g7Fgnds-163" vertex="1">
           <mxGeometry y="52" width="260" height="8" as="geometry" />
         </mxCell>
-        <mxCell id="0jcatp8Q0D0t4g7Fgnds-166" value="TradingAppData(TradingAppDataSource)&#xa;&#xa;See JavaDoc for method list.&#xa;&#xa;This class has a method for every data source&#xa;method, plus some more complicated methods&#xa;that call a data source method and perform some operation upon the results.&#xa;&#xa;The non-SELECT methods of this class throw exceptions when the query fails and the data source communicates this by returning 0 or -1" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;" parent="0jcatp8Q0D0t4g7Fgnds-163" vertex="1">
+        <mxCell id="0jcatp8Q0D0t4g7Fgnds-166" value="TradingAppData(TradingAppDataSource)&#xa;&#xa;See JavaDoc for method list.&#xa;&#xa;This class has a method for every data source&#xa;method, plus some more complicated methods&#xa;that call a data source method and perform some operation upon the results.&#xa;&#xa;The non-SELECT methods of the data source communicate failure by returning 0 or -1 for different types of failure; this class throws exceptions when these results occur" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;" parent="0jcatp8Q0D0t4g7Fgnds-163" vertex="1">
           <mxGeometry y="60" width="260" height="210" as="geometry" />
         </mxCell>
         <mxCell id="Zipq2_FpzFxxw_In5oZZ-6" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;endSize=10;startSize=10;endArrow=open;endFill=0;dashed=1;" parent="WIyWlLk6GJQsqaUBKTNV-1" source="0jcatp8Q0D0t4g7Fgnds-171" target="0jcatp8Q0D0t4g7Fgnds-126" edge="1">
