@@ -17,14 +17,6 @@ public class TestTradingAppData {
     @AfterEach
     void reset() {
         i.deleteEverything();
-        assertAll (
-                ()->assertTrue(i.getAllAssets().isEmpty()),
-                ()->assertTrue(i.getAllBuys().isEmpty()),
-                ()->assertTrue(i.getAllSells().isEmpty()),
-                ()->assertTrue(i.getAllInventories().isEmpty()),
-                ()->assertTrue(i.getAllUnits().isEmpty()),
-                ()->assertTrue(i.getAllUsers().isEmpty())
-        );
     }
 
     @Test
@@ -88,93 +80,23 @@ public class TestTradingAppData {
     }
 
     @Test
-    void selectNormalCases() {
-        assertAll (
-                ()-> assertFalse(i.getAllAssets().isEmpty()),
-                ()-> assertFalse(i.getAllBuys().isEmpty()),
-                ()-> assertFalse(i.getAllSells().isEmpty()),
-                ()-> assertFalse(i.getAllInventories().isEmpty()),
-                ()-> assertFalse(i.getAllUnits().isEmpty()),
-                ()-> assertFalse(i.getAllUsers().isEmpty()),
-                ()-> assertFalse(i.getInventoriesByOrgUnit(unitDev.getName()).isEmpty()),
-                ()-> assertFalse(i.getInventoriesByAsset(1).isEmpty()),
-                ()-> assertFalse(i.getHeldAssets(unitDev.getName()).isEmpty()),
-                ()-> assertFalse(i.getUnheldAssets(unitDev2.getName()).isEmpty()),
-                ()-> assertFalse(i.getBuysByUnit(unitDev.getName()).isEmpty()),
-                ()-> assertFalse(i.getSellsByUnit(unitDev.getName()).isEmpty()),
-                ()-> assertFalse(i.getResolvedBuysByAsset(1).isEmpty()),
-                ()-> assertFalse(i.getUnresolvedBuysByAsset(1).isEmpty()),
-                ()-> assertFalse(i.getResolvedSellsByAsset(1).isEmpty()),
-                ()-> assertFalse(i.getUnresolvedSellsByAsset(1).isEmpty()),
-                ()-> assertFalse(i.getHoldingUnits(1).isEmpty()),
-                ()-> assertFalse(i.getUnholdingUnits(2).isEmpty()),
-                ()-> assertFalse(i.getMembers(unitDev.getName()).isEmpty())
-        );
-    }
-    @Test
-    void selectEmptyCases() throws AlreadyExists, DoesNotExist {
-        assertTrue(i.getUnheldAssets(unitDev.getName()).isEmpty());
-        assertTrue(i.getUnholdingUnits(1).isEmpty());
-        i.addUnit(new OrgUnit("do", 0));
-        i.addAsset(new Asset(3, "aa"));
-        assertAll (
-                ()-> assertTrue(i.getInventoriesByOrgUnit("do").isEmpty()),
-                ()-> assertTrue(i.getInventoriesByAsset(3).isEmpty()),
-                ()-> assertTrue(i.getHeldAssets("do").isEmpty()),
-                ()-> assertTrue(i.getBuysByUnit("do").isEmpty()),
-                ()-> assertTrue(i.getSellsByUnit("do").isEmpty()),
-                ()-> assertTrue(i.getResolvedBuysByAsset(3).isEmpty()),
-                ()-> assertTrue(i.getUnresolvedBuysByAsset(3).isEmpty()),
-                ()-> assertTrue(i.getResolvedSellsByAsset(3).isEmpty()),
-                ()-> assertTrue(i.getUnresolvedSellsByAsset(3).isEmpty()),
-                ()-> assertTrue(i.getHoldingUnits(3).isEmpty()),
-                ()-> assertTrue(i.getMembers("do").isEmpty())
-        );
+    public void testGetHistoricalPrices() throws InvalidDate, DoesNotExist {
+        //TODO: TEST THAT VALUES ARE CORRECT
+//        i.getHistoricalPrices(assetDev1.getId(), TradingAppData.Intervals.DAYS);
+//        i.getHistoricalPrices(assetDev1.getId(), TradingAppData.Intervals.WEEKS);
+//        i.getHistoricalPrices(assetDev1.getId(), TradingAppData.Intervals.MONTHS);
+//        i.getHistoricalPrices(assetDev1.getId(), TradingAppData.Intervals.YEARS);
     }
 
-    @Test
-    void selectExceptionCases() {
-        //Cases where the foreign key search term is invalid
-        assertAll(
-                ()->assertThrows(DoesNotExist.class, ()->i.getInventoriesByOrgUnit("a")),
-                ()->assertThrows(DoesNotExist.class, ()->i.getHeldAssets("a")),
-                ()->assertThrows(DoesNotExist.class, ()->i.getUnheldAssets("a")),
-                ()->assertThrows(DoesNotExist.class, ()->i.getBuysByUnit("a")),
-                ()->assertThrows(DoesNotExist.class, ()->i.getSellsByUnit("a")),
-                ()->assertThrows(DoesNotExist.class, ()->i.getMembers("a")),
-                ()->assertThrows(DoesNotExist.class, ()->i.getInventoriesByAsset(5)),
-                ()->assertThrows(DoesNotExist.class, ()->i.getHoldingUnits(5)),
-                ()->assertThrows(DoesNotExist.class, ()->i.getUnholdingUnits(5)),
-                ()->assertThrows(DoesNotExist.class, ()->i.getResolvedBuysByAsset(5)),
-                ()->assertThrows(DoesNotExist.class, ()->i.getUnresolvedBuysByAsset(5)),
-                ()->assertThrows(DoesNotExist.class, ()->i.getResolvedSellsByAsset(5)),
-                ()->assertThrows(DoesNotExist.class, ()->i.getUnresolvedSellsByAsset(5))
-        );
-    }
-    @Test
-    void singleSelectNormalCases() {
-        assertDoesNotThrow(()->{
-            i.getUserByKey(userDev.getUsername());
-            i.getUnitByKey(unitDev.getName());
-            i.getAssetByKey(1);
-            i.getInv(unitDev.getName(), 1);
-            i.getInv(unitDev2.getName(), 2);
-            i.getBuyByKey(1);
-            i.getSellByKey(1);
-        });
-    }
-    @Test
-    void singleSelectExceptionCases() {
-        assertAll(
-                ()-> assertThrows(DoesNotExist.class, ()->i.getUserByKey("a")),
-                ()-> assertThrows(DoesNotExist.class, ()->i.getUnitByKey("a")),
-                ()-> assertThrows(DoesNotExist.class, ()->i.getAssetByKey(50)),
-                ()-> assertThrows(DoesNotExist.class, ()->i.getInv(unitDev.getName(), 50)),
-                ()-> assertThrows(DoesNotExist.class, ()->i.getInv("a", 1)),
-                ()-> assertThrows(DoesNotExist.class, ()->i.getBuyByKey(100000)),
-                ()-> assertThrows(DoesNotExist.class, ()->i.getSellByKey(100000))
-        );
-    }
+    //TODO:
+    // SELECT
+    // -normal cases: non-empty arraylists from straightforward methods
+    // -normal cases: empty arraylists from straightforward methods
+    // -normal cases: non-empty from non-straightforward methods (ensure correct behaviour)
+    // -exception cases: DoesNotExist due to non-key filter value
+    // -normal cases: single dataobjects
+    // -exception cases: DoesNotExist due to key filter value
+
 
     @Test
     void insertNormalCases() {

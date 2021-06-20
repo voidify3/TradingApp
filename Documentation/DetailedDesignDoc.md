@@ -348,19 +348,8 @@ Before deploying, ensure you have MariaDB installed, and a database and SQL user
 My MariaDB install was on a non-standard port due to a conflict with a pre-existing Postgres install, so you may need
 to change the port specified in the file. Also ensure that, if you want to run the server
 on a host other than localhost, that you update the host name constant in NetworkDataSource and
-the port constants in NetworkDataSource and NetworkServer.
-
-No need to create tables; the server will run a series of CREATE TABLE IF NOT EXISTS statements on startup.
-The client will automatically insert two users (an admin and a non-admin) on startup, which can be logged into via
-the Dev Tools menu on the menu bar.
+the port constants in NetworkDataSource and NetworkServer
 
 Whenever main is committed, the ant build script will automatically run the "build" target which builds both the client 
 and server programs into separate jar files. These jar files are ready to run with java -jar in the command prompt. If you only
 want to build one program, you can run just buildClient or just buildServer.
-
-Command line argument options: 
-* If the client is run as `java -jar ClientApp.jar TESTDATA` it will populate a bunch of example data in the database.
-  (Note that if you run this version twice without dropping and recreating the tables in between, strange things will happen)
-* If the client is run as `java -jar ClientApp.jar MOCK` it will use a mock structure instead of needing the server.
-    `MOCK TESTDATA` does what it sounds like.
-* If the server is run as `java -jar ServerApp.jar RESET` all tables will be dropped and recreated 
