@@ -1492,6 +1492,7 @@ class NewTradingAppGUI extends JFrame {
             super(isCreate);
             buttonRow.remove(saveEditButton);
             this.isBuy = isBuy;
+            this.id = id;
             String typeText = isBuy?"buy":"sell";
             infoLabel.setText(String.format("Placing new %s order for asset: ", typeText));
             numberKeyLabel.setText(String.valueOf(id));
@@ -1499,7 +1500,7 @@ class NewTradingAppGUI extends JFrame {
                     (isBuy?"":"If it has been involved in any transactions, the buy order(s) resolved in those transactions" +
                             "will also be deleted");
             if (isCreate){
-                this.id = id;
+
                 String yourMaxText;
                 String outstandingsText;
 
