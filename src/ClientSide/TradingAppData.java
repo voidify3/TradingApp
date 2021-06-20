@@ -48,6 +48,7 @@ class TradingAppData {
     static BuyOrder testBuyOrder;
     static BuyOrder testBuyOrder2;
     static SellOrder testSellOrder;
+    static SellOrder testSellOrder2;
 
 
     /**
@@ -76,12 +77,12 @@ class TradingAppData {
         LocalDateTime begin = LocalDateTime.now().minusDays(numdays);
         for (int i = 1; i <= numdays; i++) {
             LocalDateTime theDay = begin.plusDays(i);
-            addHistoricalPrice(i*6-4, assetDev1.getId(), unitDev.getName(), 10, theDay);
-            addHistoricalPrice(i*6-3, assetDev1.getId(), unitDev.getName(), 15, theDay);
-            addHistoricalPrice(i*6-2, assetDev1.getId(), unitDev.getName(), 20, theDay);
-            addHistoricalPrice(i*6-1, assetDev2.getId(), unitDev.getName(), 10, theDay);
-            addHistoricalPrice(i*6, assetDev2.getId(), unitDev.getName(), 30, theDay);
-            addHistoricalPrice(i*6+1, assetDev2.getId(), unitDev.getName(), 50, theDay);
+            addHistoricalPrice(i*6-3, assetDev1.getId(), unitDev.getName(), 10, theDay);
+            addHistoricalPrice(i*6-2, assetDev1.getId(), unitDev.getName(), 15, theDay);
+            addHistoricalPrice(i*6-1, assetDev1.getId(), unitDev.getName(), 20, theDay);
+            addHistoricalPrice(i*6, assetDev2.getId(), unitDev.getName(), 10, theDay);
+            addHistoricalPrice(i*6+1, assetDev2.getId(), unitDev.getName(), 30, theDay);
+            addHistoricalPrice(i*6+2, assetDev2.getId(), unitDev.getName(), 50, theDay);
         }
     }
 
@@ -93,8 +94,8 @@ class TradingAppData {
         try {
             adminDev = new User("sophia", "bo$$", true, null);
             userDev = new User("scott", "scotty", false, null);
-            dataSource.insertUser(adminDev);
-            dataSource.insertUser(userDev);
+            if (dataSource.insertUser(adminDev) == 0) adminDev = dataSource.userByKey("sophia");
+            if (dataSource.insertUser(userDev) == 0) userDev = dataSource.userByKey("scott");
         } catch (IllegalString illegalString) {
             illegalString.printStackTrace();
         }
@@ -130,6 +131,7 @@ class TradingAppData {
             testBuyOrder = new BuyOrder(unitDev.getName(), assetDev1.getId(), 20, 13);
             testBuyOrder2 = new BuyOrder(unitDev2.getName(), assetDev1.getId(), 30, 15);
             testSellOrder = new SellOrder(unitDev.getName(), assetDev1.getId(), 6, 47);
+            testSellOrder2 = new SellOrder(unitDev2.getName(), assetDev1.getId(), 30, 15);
             placeBuyOrder(testBuyOrder);
             placeBuyOrder(testBuyOrder2);
             placeSellOrder(testSellOrder);

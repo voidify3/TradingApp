@@ -1,4 +1,4 @@
-<project name="majorProjectNew" basedir=".">
+<project name="majorProjectNew" basedir="." default="build">
     <property name="baseClient" value="artifactsClient" />
     <property name="baseServer" value="artifactsServer" />
     <property name="testBase" value="testFiles" />

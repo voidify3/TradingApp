@@ -346,4 +346,10 @@ but uses a class of six Java collections to store data rather than the database.
 #Instructions for deployment
 Before deploying, ensure you have MariaDB installed, and a database and SQL user matching those specified in `src/db.props`.
 My MariaDB install was on a non-standard port due to a conflict with a pre-existing Postgres install, so you may need
-to change the port specified in the file.
+to change the port specified in the file. Also ensure that, if you want to run the server
+on a host other than localhost, that you update the host name constant in NetworkDataSource and
+the port constants in NetworkDataSource and NetworkServer
+
+Whenever main is committed, the ant build script will automatically run the "build" target which builds both the client 
+and server programs into separate jar files. These jar files are ready to run with java -jar in the command prompt. If you only
+want to build one program, you can run just buildClient or just buildServer.

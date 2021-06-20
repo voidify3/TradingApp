@@ -1,2 +1,2 @@
 # majorProject
-Team Project for CAB302 (Software Development)
+Major Project for CAB302 (Software Development)

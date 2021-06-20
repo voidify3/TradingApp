@@ -36,7 +36,7 @@ class NewTradingAppGUI extends JFrame {
     private TradingAppData data;
     // General variables
     private static final int WIDTH = 800;
-    private static final int HEIGHT = 500;
+    private static final int HEIGHT = 600;
     private static final String DARKGREY = "#4D4D5D";
     private static final String WHITE = "#FCFCFC";
     private static final String WRAP_DIALOG ="<html><body><p style='width: 200px;'>%s</p></body></html>";
@@ -765,7 +765,7 @@ class NewTradingAppGUI extends JFrame {
                     (info.length > 0 && columnNames.length != info[0].length)) {
                 throw new IllegalArgumentException("Cannot load table with mismatched arguments");
             }
-            setPreferredSize(new Dimension(600,275));
+            setPreferredSize(new Dimension(600,375));
             DefaultTableModel tableModel = new DefaultTableModel(info, columnNames) {
                 @Override
                 public boolean isCellEditable(int row, int column) {
@@ -1534,12 +1534,13 @@ class NewTradingAppGUI extends JFrame {
                         "Your organisational unit has " + yourMaxText + outstandingsText));
             }
             else {
-                o = data.getBuyByKey(id);
+                if (isBuy) o = data.getBuyByKey(id);
+                else o=data.getSellByKey(id);
                 infoLabel.setText(String.format("Info for %s order", typeText));
                 extraInfoLabel.setText(String.format(WRAP_DIALOG2, MessageFormat.format("Placed at {0} by a member of {1} for asset {2}; {3}",
                         o.getDatePlaced().toString(), o.getUnit(), o.getAsset(),
                         (o.getDateResolved() == null) ? "unresolved." : MessageFormat.format("resolved at {0}{1}.",
-                                o.getDateResolved().toString(), (o instanceof BuyOrder ? " with sell order " + ((BuyOrder) o).getBoughtFrom().toString() : "")))));
+                                o.getDateResolved().toString(), (isBuy ? " with sell order " + ((BuyOrder) o).getBoughtFrom().toString() : "")))));
                 quantityInput.setValue(o.getQty());
                 quantityInput.setEnabled(false);
                 priceInput.setValue(o.getPrice());
