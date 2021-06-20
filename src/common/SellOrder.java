@@ -3,7 +3,7 @@ package common;
 import java.time.LocalDateTime;
 
 /**
- * @author Alistair Ridge
+ * Models a record of the SellOrder table
  */
 public class SellOrder extends Order {
 

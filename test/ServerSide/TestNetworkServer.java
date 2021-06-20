@@ -15,8 +15,6 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.TreeMap;
 
-//TODO: make airtight
-
 public class TestNetworkServer {
     public static final String DATE_RESOLVED_IS_NOT_NULL = "dateResolved IS NOT NULL";
     public static final String TEST_USER = "testUser";

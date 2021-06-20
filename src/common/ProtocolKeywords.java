@@ -1,5 +1,8 @@
 package common;
 
+/**
+ * Useful keywords for the protocol
+ */
 public enum ProtocolKeywords {
     SELECT(),
     INSERT(),

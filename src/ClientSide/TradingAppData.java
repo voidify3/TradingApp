@@ -129,9 +129,9 @@ class TradingAppData {
             dataSource.insertOrUpdateInventory(new InventoryRecord(unitDev.getName(), assetDev1.getId(), 500));
             dataSource.insertOrUpdateInventory(new InventoryRecord(unitDev.getName(), assetDev2.getId(), 3500));
             testBuyOrder = new BuyOrder(unitDev.getName(), assetDev1.getId(), 20, 13);
-            testBuyOrder2 = new BuyOrder(unitDev2.getName(), assetDev1.getId(), 30, 15);
+            testBuyOrder2 = new BuyOrder(unitDev2.getName(), assetDev2.getId(), 30, 15);
             testSellOrder = new SellOrder(unitDev.getName(), assetDev1.getId(), 6, 47);
-            testSellOrder2 = new SellOrder(unitDev2.getName(), assetDev1.getId(), 30, 15);
+            testSellOrder2 = new SellOrder(unitDev2.getName(), assetDev1.getId(), 29, 16);
             placeBuyOrder(testBuyOrder);
             placeBuyOrder(testBuyOrder2);
             placeSellOrder(testSellOrder);
@@ -275,6 +275,7 @@ class TradingAppData {
      * @throws DoesNotExist if the unit does not exist
      */
     ArrayList<User> getMembers(String unit) throws DoesNotExist {
+        getUnitByKey(unit);
         return dataSource.usersByUnit(unit);
     }
 

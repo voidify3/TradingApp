@@ -11,8 +11,7 @@ import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 /***
- *
- * @author Scott Peachey
+ * Class modelling a record of the asset table
  */
 public class Asset extends DataObject {
     // INSTANCE VARIABLES-----------------------------------------------------------------------------------------------

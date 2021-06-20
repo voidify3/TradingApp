@@ -2,7 +2,9 @@ package common;
 
 import java.util.Arrays;
 
-//encodes table and column names
+/**
+ * encodes table and column names
+ */
 public enum DatabaseTables {
     UNIT("orgunit", new String[]{"name", "credits"}),
     ASSET("asset", new String[]{"idx", "description"}),

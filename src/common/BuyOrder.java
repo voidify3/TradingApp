@@ -5,7 +5,7 @@ import common.Exceptions.*;
 import java.time.LocalDateTime;
 
 /**
- * @author Alistair Ridge
+ * Class modelling a record of the Buyorder table
  */
 public class BuyOrder extends Order {
     public Integer getBoughtFrom() {

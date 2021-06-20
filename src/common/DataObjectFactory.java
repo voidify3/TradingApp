@@ -5,6 +5,9 @@ import common.Exceptions.InvalidAmount;
 
 import java.time.LocalDateTime;
 
+/**
+ * Partially implemented factory pattern for data object validation
+ */
 public class DataObjectFactory {
     public static Asset newAssetNaive(int id, String description) {
         return new Asset(id, description);

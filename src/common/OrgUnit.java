@@ -5,6 +5,9 @@ import java.util.HashMap;
 import java.util.Objects;
 import java.util.Set;
 
+/**
+ * Models a record of orgunit table
+ */
 public class OrgUnit extends DataObject implements Comparable<OrgUnit> {
 
     private final String orgName;

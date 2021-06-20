@@ -9,7 +9,7 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 
 /***
- * @author Johnny
+ * Models a record of the User table
  */
 public class User extends DataObject {
 

@@ -2,6 +2,9 @@ package common;
 
 import java.util.Objects;
 
+/**
+ * Models a record of Inventories table
+ */
 public class InventoryRecord extends DataObject {
     private final String unit;
     private final int asset;
