@@ -55,7 +55,7 @@
   - [x] finish javadoc
 SUNDAY
   - [ ] record scrolling footage
-  - [ ] add outstanding order info to place order page
+  - [x] add outstanding order info to place order page
   - [ ] record easy part of main audio
   - [ ] record easy part of main footage
   - [ ] record demonstration footage

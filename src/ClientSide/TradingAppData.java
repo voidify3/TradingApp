@@ -60,8 +60,8 @@ class TradingAppData {
      * @param dateTime Datetime to put for both orders' dates placed and resolved
      */
     void addHistoricalPrice(int idUpTo, int assetID, String unitResponsible, int price, LocalDateTime dateTime) {
-        SellOrder sell = new SellOrder(0, unitResponsible, assetID, 0, price, dateTime, dateTime);
-        BuyOrder buy = new BuyOrder(0, unitResponsible, assetID, 0, price, dateTime, dateTime, idUpTo);
+        SellOrder sell = new SellOrder(0, unitResponsible, assetID, 1, price, dateTime, dateTime);
+        BuyOrder buy = new BuyOrder(0, unitResponsible, assetID, 1, price, dateTime, dateTime, idUpTo);
         dataSource.insertSellOrder(sell);
         dataSource.insertBuyOrder(buy);
 
@@ -69,7 +69,7 @@ class TradingAppData {
 
     /**
      * Populate test data, plus historical prices for two assets going back a specified number of days
-     * starting at buy and sell ID 2
+     * starting at buy and sell ID 3
      * @param numdays How many days back to do the prices
      */
     void mockObjectsWithPrices(int numdays) {
@@ -131,10 +131,11 @@ class TradingAppData {
             testBuyOrder = new BuyOrder(unitDev.getName(), assetDev1.getId(), 20, 13);
             testBuyOrder2 = new BuyOrder(unitDev2.getName(), assetDev1.getId(), 30, 15);
             testSellOrder = new SellOrder(unitDev.getName(), assetDev1.getId(), 6, 47);
-            testSellOrder2 = new SellOrder(unitDev2.getName(), assetDev1.getId(), 30, 15);
+            testSellOrder2 = new SellOrder(unitDev2.getName(), assetDev1.getId(), 30, 16);
             placeBuyOrder(testBuyOrder);
             placeBuyOrder(testBuyOrder2);
             placeSellOrder(testSellOrder);
+            placeSellOrder(testSellOrder2);
         } catch (DoesNotExist | IllegalString | OrderException doesNotExist) {
             doesNotExist.printStackTrace();
         }
@@ -274,6 +275,7 @@ class TradingAppData {
      * @throws DoesNotExist if the unit does not exist
      */
     ArrayList<User> getMembers(String unit) throws DoesNotExist {
+        getUnitByKey(unit);
         return dataSource.usersByUnit(unit);
     }
 
