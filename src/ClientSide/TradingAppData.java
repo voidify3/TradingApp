@@ -135,6 +135,7 @@ class TradingAppData {
             placeBuyOrder(testBuyOrder);
             placeBuyOrder(testBuyOrder2);
             placeSellOrder(testSellOrder);
+            placeSellOrder(testSellOrder2);
         } catch (DoesNotExist | IllegalString | OrderException doesNotExist) {
             doesNotExist.printStackTrace();
         }
