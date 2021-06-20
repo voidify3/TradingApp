@@ -417,6 +417,28 @@ class TradingAppData {
     }
 
     /**
+     * Get all unresolved sell orders for an asset
+     * @param assetID asset ID
+     * @return ArrayList of resolved sells for the asset
+     * @throws DoesNotExist if the asset does not exist
+     */
+    ArrayList<SellOrder> getUnresolvedSellsByAsset(int assetID) throws DoesNotExist {
+        getAssetByKey(assetID);
+        return dataSource.sellOrdersByAsset(assetID, false);
+    }
+
+    /**
+     * Get all resolved sell orders for an asset
+     * @param assetID asset ID
+     * @return ArrayList of resolved sells for the asset
+     * @throws DoesNotExist if the asset does not exist
+     */
+    ArrayList<SellOrder> getResolvedSellsByAsset(int assetID) throws DoesNotExist {
+        getAssetByKey(assetID);
+        return dataSource.sellOrdersByAsset(assetID, false);
+    }
+
+    /**
      * Get all assets held by a unit
      * @param unitName name
      * @return ArrayList of assets held by the unit

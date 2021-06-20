@@ -1,6 +1,8 @@
 # Detailed Design Document
 ____
 
+![Class diagram](Diagrams/ClassDiagramNEW.png)
+
 ## Common package
 There are also some custom exceptions but none of them do anything very non-straightforward
 
@@ -340,3 +342,8 @@ the class "MockDataSource" which implements the same interface as this class and
 but uses a class of six Java collections to store data rather than the database.
 
 [Go to JavaDoc](../doc/ClientSide/NetworkDataSource.html)
+
+#Instructions for deployment
+Before deploying, ensure you have MariaDB installed, and a database and SQL user matching those specified in `src/db.props`.
+My MariaDB install was on a non-standard port due to a conflict with a pre-existing Postgres install, so you may need
+to change the port specified in the file.

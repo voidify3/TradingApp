@@ -40,6 +40,9 @@ class NewTradingAppGUI extends JFrame {
     private static final String DARKGREY = "#4D4D5D";
     private static final String WHITE = "#FCFCFC";
     private static final String WRAP_DIALOG ="<html><body><p style='width: 200px;'>%s</p></body></html>";
+    private static final String WRAP_DIALOG2 ="<html><body><p style='width: 400px;'>%s</p></body></html>";
+    private static final Comparator<Order> priceComp = Comparator.comparing(Order::getPrice);
+    private static final Comparator<Order> qtyComp = Comparator.comparing(Order::getQty);
     // Top-level components
     JPanel loginPanel;
     JPanel shellPanel;
@@ -1473,6 +1476,7 @@ class NewTradingAppGUI extends JFrame {
         JLabel numberKeyLabel;
         JSpinner quantityInput;
         JSpinner priceInput;
+
         OrderFormPage(int id, boolean isCreate, boolean isBuy) throws DoesNotExist {
             super(isCreate);
             buttonRow.remove(saveEditButton);
@@ -1485,13 +1489,54 @@ class NewTradingAppGUI extends JFrame {
                             "will also be deleted");
             if (isCreate){
                 this.id = id;
-                extraInfoLabel.setText("Your organisational unit has " + (isBuy? (data.getUnitByKey(user.getUnit()).getCredits())
-                        + " credits." : (data.getInv(user.getUnit(), id)).getQuantity() + " of this asset."));
+                String yourMaxText;
+                String outstandingsText;
+
+                if (isBuy) {
+                    yourMaxText = (data.getUnitByKey(user.getUnit()).getCredits()) + " credits. ";
+                    ArrayList<SellOrder> outstandings = data.getUnresolvedSellsByAsset(id);
+                    if (outstandings.isEmpty()) outstandingsText = "This asset has no outstanding sell orders.";
+                    else if (outstandings.size()==1) {
+                        SellOrder s = outstandings.get(0);
+                        outstandingsText = String.format("This asset has 1 outstanding sell order: quantity %d, " +
+                                "price %d", s.getQty(), s.getPrice());
+                    }
+                    else {
+                        SellOrder minPrice = outstandings.stream().min(priceComp).get();
+                        SellOrder minQty = outstandings.stream().min(qtyComp).get();
+                        SellOrder maxPrice = outstandings.stream().max(priceComp).get();
+                        SellOrder maxQty = outstandings.stream().max(qtyComp).get();
+                        outstandingsText = String.format("This asset has %d outstanding sell orders: quantities " +
+                                "ranging from %d to %d, prices ranging from %d to %d", outstandings.size(),
+                                minQty.getQty(), maxQty.getQty(), minPrice.getPrice(), maxPrice.getPrice());
+                    }
+                }
+                else {
+                    yourMaxText = (data.getInv(user.getUnit(), id)).getQuantity() + " of this asset. ";
+                    ArrayList<BuyOrder> outstandings = data.getUnresolvedBuysByAsset(id);
+                    if (outstandings.isEmpty()) outstandingsText = "This asset has no outstanding buy orders.";
+                    else if (outstandings.size()==1) {
+                        BuyOrder s = outstandings.get(0);
+                        outstandingsText = String.format("This asset has 1 outstanding buy order: quantity %d, " +
+                                "price %d", s.getQty(), s.getPrice());
+                    }
+                    else {
+                        BuyOrder minPrice = outstandings.stream().min(priceComp).get();
+                        BuyOrder minQty = outstandings.stream().min(qtyComp).get();
+                        BuyOrder maxPrice = outstandings.stream().max(priceComp).get();
+                        BuyOrder maxQty = outstandings.stream().max(qtyComp).get();
+                        outstandingsText = String.format("This asset has %d outstanding buy orders: quantities " +
+                                        "ranging from %d to %d, prices ranging from %d to %d", outstandings.size(),
+                                minQty.getQty(), maxQty.getQty(), minPrice.getPrice(), maxPrice.getPrice());
+                    }
+                }
+                extraInfoLabel.setText(String.format(WRAP_DIALOG2,
+                        "Your organisational unit has " + yourMaxText + outstandingsText));
             }
             else {
                 o = data.getBuyByKey(id);
                 infoLabel.setText(String.format("Info for %s order", typeText));
-                extraInfoLabel.setText(String.format(WRAP_DIALOG, MessageFormat.format("Placed at {0} by a member of {1} for asset {2}; {3}",
+                extraInfoLabel.setText(String.format(WRAP_DIALOG2, MessageFormat.format("Placed at {0} by a member of {1} for asset {2}; {3}",
                         o.getDatePlaced().toString(), o.getUnit(), o.getAsset(),
                         (o.getDateResolved() == null) ? "unresolved." : MessageFormat.format("resolved at {0}{1}.",
                                 o.getDateResolved().toString(), (o instanceof BuyOrder ? " with sell order " + ((BuyOrder) o).getBoughtFrom().toString() : "")))));
