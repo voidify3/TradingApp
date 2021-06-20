@@ -60,8 +60,8 @@ class TradingAppData {
      * @param dateTime Datetime to put for both orders' dates placed and resolved
      */
     void addHistoricalPrice(int idUpTo, int assetID, String unitResponsible, int price, LocalDateTime dateTime) {
-        SellOrder sell = new SellOrder(0, unitResponsible, assetID, 0, price, dateTime, dateTime);
-        BuyOrder buy = new BuyOrder(0, unitResponsible, assetID, 0, price, dateTime, dateTime, idUpTo);
+        SellOrder sell = new SellOrder(0, unitResponsible, assetID, 1, price, dateTime, dateTime);
+        BuyOrder buy = new BuyOrder(0, unitResponsible, assetID, 1, price, dateTime, dateTime, idUpTo);
         dataSource.insertSellOrder(sell);
         dataSource.insertBuyOrder(buy);
 
@@ -69,7 +69,7 @@ class TradingAppData {
 
     /**
      * Populate test data, plus historical prices for two assets going back a specified number of days
-     * starting at buy and sell ID 2
+     * starting at buy and sell ID 3
      * @param numdays How many days back to do the prices
      */
     void mockObjectsWithPrices(int numdays) {

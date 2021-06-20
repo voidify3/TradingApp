@@ -54,13 +54,9 @@
   - [x] write build script
   - [x] finish javadoc
 SUNDAY
-  - [ ] record scrolling footage
-  - [ ] add outstanding order info to place order page
-  - [ ] record easy part of main audio
-  - [ ] record easy part of main footage
-  - [ ] record demonstration footage
-  - [ ] record demonstration audio in the editing stage
-  - [ ] edit videos
+  - [x] record scrolling footage
+  - [x] add outstanding order info to place order page
+  - [ ] VIDEOS
   
 ##TASKS BELOW THIS POINT ARE HEREBY CANCELLED FOR TIME REASONS
 * [ ] THIRD PRIORITY: have socket and hostname read from a file
