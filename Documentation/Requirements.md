@@ -37,7 +37,7 @@ and resolve the trades if so. Older buy and sell orders will be prioritised over
 ## Client-side core functionality
 Requirements that are needed for the Client-side to be functional.
 
-###Program components
+### Program components
 | Requirement               | Description                                                   | Priority   |
 | :---                      | :---                                                          | :---:      |
 | Order placing checks | The total price of a buy order, and quantity of a sell order, shouldn't be allowed to exceed the unit's available credits/holding of the asset | Must have |
@@ -49,7 +49,7 @@ Requirements that are needed for the Client-side to be functional.
 
 These requirements will be enforced on the client side of the client-server communication
 
-###Admin abilities
+### Admin abilities
 
 | Requirement               | Description                                                   | Priority   |
 | :---                      | :---                                                          | :---:      |
@@ -63,7 +63,7 @@ These requirements will be enforced on the client side of the client-server comm
 | Create organisational unit | As an IT admin I want to create new organisational units  | Must have  |
 | Edit inventories | As an IT admin I want to modify the asset quantities held by units  | Must have  |
 
-###User abilities
+### User abilities
 
 | Requirement               | Description                                                   | Priority   |
 | :---                      | :---                                                          | :---:      |
