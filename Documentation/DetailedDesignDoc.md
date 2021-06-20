@@ -9,7 +9,7 @@ There are also some custom exceptions but none of them do anything very non-stra
 [Go to JavaDoc](../doc/common/package-summary.html)
 
 
-###DataObjectFactory
+### DataObjectFactory
 This class was introduced very late in the game to be the factory pattern for all DataObject subclasses. I ran out of 
 time before I could finish it. 
 
@@ -17,14 +17,14 @@ Basically the idea is that it covers validation for data objects so that excepti
 
 [Go to JavaDoc](../doc/common/DataObjectFactory.html)
 
-###DataObject
+### DataObject
 This class's reason for existence is to serve as a shared superclass for all the classes representing database records
 so that the serialised `ArrayList`s that result from a SELECT query would be of a more specific type than `Object`.
 
 It has no fields or methods; the only thing of note about it is that it `implements Serializable`.
 
 
-###User
+### User
 This DataObject subclass represents a record in the `User` table. Its non-static fields are the following (all private
 with public getters):
 * username (has no public setter)
@@ -59,7 +59,7 @@ contained any whitespace
 If hashPassword threw an exception, the password change is aborted, and the exception is passed to the caller.
 
 
-###OrgUnit
+### OrgUnit
 This DataObject subclass represents a record in the `orgunit` table. Its fields (private with public getters) are:
 * name (no setter)
 * credits int (public setter)
@@ -68,39 +68,39 @@ The class has no methods other than accessors and mutators.
 
 NAME LENGTH RESTRICTION, CREDITS POSITIVE RESTRICTION
 
-###Asset
+### Asset
 This DataObject subclass represents a record in the `Asset` table. Its fields (private with public getters) are:
 * id (no setter)
 * description (no setter)
 
-###InventoryRecord
+### InventoryRecord
 This DataObject subclass represents a record in the ``
 
-###Order
+### Order
 This DataObject subclass contains fields for all properties shared by both buy and sell orders. 
 These (all private with public getters and setters) are:
 * id (int)
 * unit (String)
 * asset (int)
 
-###SellOrder
+### SellOrder
 This class represents a record in the `SellOrder` table. Its direct superclass is `Order`. 
 It has no fields or methods beyond those in its superclass.
 
-###BuyOrder
+### BuyOrder
 This DataObject subclass represents a record in the `BuyOrder` table. Its direct superclass is `Order`.
 It has one field beyond its superclass: `boughtFrom`, a nullable Integer which is private with public getter.
 A public setter is not needed because trade resolution happens server-side.
 
-###DataPacket
+### DataPacket
 This serializable class is used in the protocol to contain all information about a query other than its type.
 
-###Enums
-####DatabaseTables
+### Enums
+#### DatabaseTables
 This enum has values for each database table. Each one has a table name string and column name string array.
 All references to table or column names are computed using this enum, including the create script, so renaming
 a table or column is trivial by just changing the value in this enum, then dropping and recreating tables.
-####ProtocolKeywords
+#### ProtocolKeywords
 A value of this enum is always the first transmission by the client in a request.
 It has values for SELECT, INSERT, UPDATE, DELETE and also SPECIAL which is used for all other necessary requests
 
@@ -139,7 +139,7 @@ The protocol connecting the server and client programs works like this:
 
 [Go to JavaDoc](../doc/ServerSide/package-summary.html)
 
-###ServerGUI
+### ServerGUI
 
 [Go to JavaDoc](../doc/ServerSide/ServerGUI.html)
 
@@ -152,7 +152,7 @@ and one which re-runs the table creation script
 **main()**<br/>
 *Method desc:* Initialises the server-side GUI and starts up the server.
 
-###NetworkServer
+### NetworkServer
 This class is the back end of the server side. It deals with information sent over the connection as dictated by 
 the protocol, and also automatically resolves trades every 5 minutes using a timer thread.
 
@@ -205,7 +205,7 @@ Unit 2 gains 30 credits; Unit 1 gains 10 widgets and 20 credits because there wa
                   there is a try/catch around this whole thing that does a rollback if a SQLException occurs 
                 * Update tracking variables
 
-###Database
+### Database
 For this assignment a MariaDB database will be used to store six tables of data:
 - [User](#user-table)
 - [OrgUnit](#orgunit-table)
@@ -290,14 +290,14 @@ so it makes the most sense to model it like this.
 
 ## Client program
 [Go to JavaDoc](../doc/ClientSide/package-summary.html)
-###Main
+### Main
 [Go to JavaDoc](../doc/ClientSide/Main.html)
 
 This is where client execution will start. For debug purposes, if run with an args array starting with "MOCK", the
 mock database will be used instead of the real one, and if run with an args array ending with "TESTDATA", it will
 populate a lot of test data (otherwise it will just populate one admin and one non-admin user).
 
-###TradingAppGUI
+### TradingAppGUI
 [Go to JavaDoc](../doc/ClientSide/NewTradingAppGUI.html)
 
 This is the GUI class. It is a Swing GUI implemented as a JFrame subclass, and has the following pages, implemented
@@ -323,27 +323,27 @@ This is an old diagram of the GUI data flow. It is outdated but still has some u
 ![image](Diagrams/GUI_Diagram.jpg)
 
 
-##GuiSearch
+## GuiSearch
 [Go to JavaDoc](../doc/ClientSide/GuiSearch.html)
 
 This is a JComboBox subclass used for dropdowns in the GUI. I'm not entirely sure why we needed it,
 but the boys implemented it before the group split and I assumed it was useful
 
-###TradingAppData
+### TradingAppData
 This class mediates between the GUI and NetworkDataSource. The GUI owns an instance of this class, and this
 class owns an instance of NetworkDataSource (or MockDataSource if the program was run with {"MOCK"}). 
 
 [Go to JavaDoc](../doc/ClientSide/TradingAppData.html)
 
 
-###NetworkDataSource
+### NetworkDataSource
 This is the back end of the client program. It communicates with the server using the protocol. For debug purposes there also exists
 the class "MockDataSource" which implements the same interface as this class and imitates its I/O behaviour
 but uses a class of six Java collections to store data rather than the database.
 
 [Go to JavaDoc](../doc/ClientSide/NetworkDataSource.html)
 
-#Instructions for deployment
+# Instructions for deployment
 Before deploying, ensure you have MariaDB installed, and a database and SQL user matching those specified in `src/db.props`.
 My MariaDB install was on a non-standard port due to a conflict with a pre-existing Postgres install, so you may need
 to change the port specified in the file. Also ensure that, if you want to run the server
