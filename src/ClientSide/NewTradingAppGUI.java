@@ -443,7 +443,13 @@ class NewTradingAppGUI extends JFrame {
                     displayError("Could not load due to unexpected error", doesNotExist.getMessage());
                 }
             }
-            else if (e.getSource() == ordersButton) shellPanel(new OrdersTablePage(true, true, false), false);
+            else if (e.getSource() == ordersButton) {
+                try {
+                    shellPanel(new OrdersTablePage(true, true, false), false);
+                } catch (DoesNotExist doesNotExist) {
+                    displayError("Could not load due to unexpected error", doesNotExist.getMessage());
+                }
+            }
             else if (e.getSource() == adminButton) shellPanel(new AdminPortal(), false, "ADMIN PORTAL");
             else if (e.getSource() == assetsButton) {
                 try {
@@ -760,7 +766,8 @@ class NewTradingAppGUI extends JFrame {
         JTable table;
         JPanel beforePanel;
         JScrollPane scrollPane;
-        TablePage(String[] columnNames, String[][] info, int[] widths, boolean[] isPreferred) {
+        TablePage(String[] columnNames, String[][] info, int[] widths, boolean[] isPreferred) throws DoesNotExist {
+            user = data.getUserByKey(user.getUsername());
             if (columnNames.length != widths.length || columnNames.length != isPreferred.length ||
                     (info.length > 0 && columnNames.length != info[0].length)) {
                 throw new IllegalArgumentException("Cannot load table with mismatched arguments");
@@ -800,7 +807,7 @@ class NewTradingAppGUI extends JFrame {
      * Home page (holdings of the unit of the logged in user, with recent prices)
      */
     private class HomePage extends TablePage {
-        private HomePage(String[][] info) {
+        private HomePage(String[][] info) throws DoesNotExist {
             super(new String[]{"Asset ID", "Description", "Qty", "$ Current"}, info,
                     new int[]{25, 400, 20, 30}, new boolean[]{false, true, false, false});
             this.remove(beforePanel);
@@ -835,7 +842,7 @@ class NewTradingAppGUI extends JFrame {
         JRadioButton fromUs = new JRadioButton("From my organisational unit");
         JRadioButton fromAllUnits = new JRadioButton("From all organisational units");
         JButton applyButton = new JButton("Apply filters");
-        private OrdersTablePage(String[][] info) {
+        private OrdersTablePage(String[][] info) throws DoesNotExist {
             super(new String[]{"ID", "Unit", "Asset", "Quantity", "Price", "Placed", "Resolved"}, info,
                     new int[]{50,50,50,50,50,50,50}, new boolean[7]);
             isResolved.add(resolved);
@@ -857,7 +864,7 @@ class NewTradingAppGUI extends JFrame {
             beforePanel.add(applyButton);
             applyButton.addActionListener(this);
         }
-        OrdersTablePage(boolean justOurs, boolean isBuy, boolean resolvedFlag) {
+        OrdersTablePage(boolean justOurs, boolean isBuy, boolean resolvedFlag) throws DoesNotExist {
             this(populateOrderTable(data.getOrdersForTable(user.getUnit(), justOurs,isBuy,resolvedFlag)));
             this.isBuy = isBuy;
             this.justOurs = justOurs;
@@ -883,7 +890,11 @@ class NewTradingAppGUI extends JFrame {
         @Override
         public void actionPerformed(ActionEvent e) {
             if (e.getSource() == applyButton) {
-                shellPanel(new OrdersTablePage(fromUs.isSelected(), buys.isSelected(), resolved.isSelected()), false);
+                try {
+                    shellPanel(new OrdersTablePage(fromUs.isSelected(), buys.isSelected(), resolved.isSelected()), false);
+                } catch (DoesNotExist doesNotExist) {
+                    displayError("Could not load due to unexpected error", doesNotExist.getMessage());
+                }
             }
         }
     }
@@ -893,7 +904,7 @@ class NewTradingAppGUI extends JFrame {
      */
     private class AssetTablePage extends TablePage {
 
-        AssetTablePage(String[][] info) {
+        AssetTablePage(String[][] info) throws DoesNotExist {
             super(new String[]{"Asset ID", "Description", "$ Current"}, info,
                     new int[]{25, 400, 50}, new boolean[]{false, true, false});
             this.remove(beforePanel);
@@ -931,7 +942,7 @@ class NewTradingAppGUI extends JFrame {
         String[] options = {"Save changes", "Delete record", "Cancel"};
         String[] options2 = {"Save", "Cancel"};
         GuiSearch dialogSearch;
-        InventoryTablePage(String[][] info) {
+        InventoryTablePage(String[][] info) throws DoesNotExist {
             super(new String[]{"Organisational unit", "Asset ID", "Asset description", "Quantity"}, info,
                     new int[]{50, 25, 380, 20}, new boolean[]{false, false, true, false});
             filter.add(showAll);
@@ -1550,7 +1561,13 @@ class NewTradingAppGUI extends JFrame {
         }
         void done(String title, int asset) {
             if (displayConfirm(title, "Go to order list rather than asset page?")
-                == JOptionPane.YES_OPTION) shellPanel(new OrdersTablePage(true, isBuy, false), false);
+                == JOptionPane.YES_OPTION) {
+                try {
+                    shellPanel(new OrdersTablePage(true, isBuy, false), false);
+                } catch (DoesNotExist doesNotExist) {
+                    displayError("Could not load due to unexpected error", doesNotExist.getMessage());
+                }
+            }
             else shellPanel(new AssetInfoPage(asset), false);
         }
 
